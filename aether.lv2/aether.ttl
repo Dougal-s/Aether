@@ -1,0 +1,590 @@
+@prefix atom:  <http://lv2plug.in/ns/ext/atom#>.
+@prefix doap:  <http://usefulinc.com/ns/doap#>.
+@prefix foaf:  <http://xmlns.com/foaf/0.1/>.
+@prefix lv2:   <http://lv2plug.in/ns/lv2core#>.
+@prefix props: <http://lv2plug.in/ns/ext/port-props#>.
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix ui:    <http://lv2plug.in/ns/extensions/ui#>.
+@prefix units: <http://lv2plug.in/ns/extensions/units#>.
+@prefix urid:  <http://lv2plug.in/ns/ext/urid#>.
+@prefix param: <http://lv2plug.in/ns/ext/parameters#>.
+@prefix pg:    <http://lv2plug.in/ns/ext/port-groups#>.
+
+<http://dougal-s.github.io>
+	a foaf:Person;
+	foaf:name "Dougal Stewart";
+	foaf:mbox <mailto:dougal.koji@gmail.com>;
+	foaf:homepage <http://dougal-s.github.io>.
+
+<http://dougal-s.github.io#plugins>
+	a doap:project;
+	doap:maintainer <http://dougal-s.github.io>;
+	doap:name "Aether".
+
+<http://github.com/Dougal-s/Aether#input>
+	a pg:StereoGroup, pg:InputGroup.
+
+<http://github.com/Dougal-s/Aether#output>
+	a pg:StereoGroup, pg:OutputGroup;
+	pg:source <http://github.com/Dougal-s/Aether#input>.
+
+<http://github.com/Dougal-s/Aether>
+	a lv2:Plugin, lv2:ReverbPlugin;
+	doap:name "Aether";
+	lv2:project <http://dougal-s.github.io#plugins>;
+	lv2:minorVersion 1;
+	lv2:microVersion 0;
+	doap:license <http://opensource.org/licenses/MIT>;
+
+	ui:ui <http://github.com/Dougal-s/Aether#ui>;
+	lv2:requiredFeature urid:map, props:supportsStrictBounds;
+	lv2:optionalFeature lv2:hardRTCapable;
+
+	rdfs:comment "A stereo algorithmic reverb based on Cloudseed";
+
+	pg:mainInput <http://github.com/Dougal-s/Aether#input>;
+	pg:mainOutput <http://github.com/Dougal-s/Aether#output>;
+	# Control Ports
+	lv2:port [
+		a lv2:InputPort, atom:AtomPort;
+		atom:BufferType atom:Sequence;
+		lv2:designation lv2:control ;
+		lv2:index 0;
+		lv2:symbol "control";
+		lv2:name "control";
+		rdfs:comment "UI -> DSP communication"
+	], [
+		a lv2:OutputPort, atom:AtomPort;
+		atom:BufferType atom:Sequence;
+		lv2:designation lv2:control ;
+		lv2:index 1;
+		lv2:symbol "notify";
+		lv2:name "Notify";
+		rdfs:comment "DSP -> UI communication"
+	], [
+		a lv2:InputPort, lv2:AudioPort;
+		lv2:index 2;
+		lv2:symbol "in_left";
+		lv2:name "In Left";
+		pg:group <http://github.com/Dougal-s/Aether#input>;
+		lv2:designation pg:left
+	], [
+		a lv2:InputPort, lv2:AudioPort;
+		lv2:index 3;
+		lv2:symbol "in_right";
+		lv2:name "In Right";
+		pg:group <http://github.com/Dougal-s/Aether#input>;
+		lv2:designation pg:right
+	], [
+		a lv2:OutputPort, lv2:AudioPort;
+		lv2:index 4;
+		lv2:symbol "out_left";
+		lv2:name "Out Left";
+		pg:group <http://github.com/Dougal-s/Aether#output>;
+		lv2:designation pg:left
+	], [
+		a lv2:OutputPort, lv2:AudioPort;
+		lv2:index 5;
+		lv2:symbol "out_right";
+		lv2:name "Out Right";
+		pg:group <http://github.com/Dougal-s/Aether#output>;
+		lv2:designation pg:right
+	];
+
+	# Mixer
+	lv2:port [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:designation param:wetDryRatio;
+		lv2:index 6;
+		lv2:symbol "mix";
+		lv2:name "Mix";
+		rdfs:comment "dry/wet ratio";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:default 100.0;
+		lv2:minimum 0.0;
+		lv2:maximum 100.0;
+		units:unit units:pc
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 7;
+		lv2:symbol "dry_level";
+		lv2:name "Dry Level";
+		rdfs:comment "Level of the dry signal mixed into the output";
+		lv2:default 80.0;
+		lv2:minimum 0.0;
+		lv2:maximum 100.0;
+		units:unit units:pc
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 8;
+		lv2:symbol "predelay_level";
+		lv2:name "Predelay Level";
+		rdfs:comment "Level of the predelayed signal mixed into the output";
+		lv2:default 20.0;
+		lv2:minimum 0.0;
+		lv2:maximum 100.0;
+		units:unit units:pc
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 9;
+		lv2:symbol "early_level";
+		lv2:name "Early Level";
+		rdfs:comment "Level of the early reflections signal mixed into the output";
+		lv2:default 10.0;
+		lv2:minimum 0.0;
+		lv2:maximum 100.0;
+		units:unit units:pc
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 10;
+		lv2:symbol "late_level";
+		lv2:name "Late Level";
+		rdfs:comment "Level of the late reverberations signal mixed into the output";
+		lv2:default 20.0;
+		lv2:minimum 0.0;
+		lv2:maximum 100.0;
+		units:unit units:pc
+	];
+
+	# Predelay/Interpolation
+	lv2:port [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 11;
+		lv2:symbol "interpolate";
+		lv2:name "Interpolate";
+		rdfs:comment "Enables or disables linear interpolation in the late diffusion block";
+		lv2:portProperty lv2:toggled;
+		lv2:default true;
+		lv2:minimum 0;
+		lv2:maximum 1
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 12;
+		lv2:symbol "crossover";
+		lv2:name "Crossover";
+		rdfs:comment "Stereo width of the input";
+		lv2:default 0.0;
+		lv2:minimum 0.0;
+		lv2:maximum 100.0;
+		units:unit units:pc
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 13;
+		lv2:symbol "predelay";
+		lv2:name "Predelay";
+		rdfs:comment "Delay between the input signal and the first reverberations";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:default 20.0;
+		lv2:minimum 0.0;
+		lv2:maximum 400.0;
+		units:unit units:ms
+	];
+
+	# early
+	lv2:port [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 14;
+		lv2:symbol "early_low_cut_enabled";
+		lv2:name "Early Low Cut Enabled";
+		rdfs:comment "Enables/Disables the low cut filter applied before the signal enters the reverberation unit";
+		lv2:portProperty lv2:toggled;
+		lv2:default true;
+		lv2:minimum 0;
+		lv2:maximum 1
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 15;
+		lv2:symbol "early_low_cut_cutoff";
+		lv2:name "Early Low Cut Cutoff";
+		rdfs:comment "The cutoff frequency of the low cut filter applied before the signal enters the reverberation unit";
+		lv2:portProperty lv2:sampleRate;
+		lv2:default 20.0;
+		lv2:minimum 0.0;
+		lv2:maximum 0.5;
+		units:unit units:hz
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 16;
+		lv2:symbol "early_high_cut_enabled";
+		lv2:name "Early High Cut Enabled";
+		rdfs:comment "Enables/Disables the high cut filter applied before the signal enters the reverberation unit";
+		lv2:portProperty lv2:toggled;
+		lv2:default true;
+		lv2:minimum 0;
+		lv2:maximum 1
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 17;
+		lv2:symbol "early_high_cut_cutoff";
+		lv2:name "Early High Cut Cutoff";
+		rdfs:comment "The cutoff frequency of the high cut filter applied before the signal enters the reverberation unit";
+		lv2:portProperty lv2:sampleRate;
+		lv2:default 20000;
+		lv2:minimum 0.0;
+		lv2:maximum 0.5;
+		units:unit units:hz
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 18;
+		lv2:symbol "early_taps";
+		lv2:name "Delay Taps";
+		rdfs:comment "The number of delay taps in the early reflections multitap delay";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:portProperty lv2:integer;
+		lv2:default 12;
+		lv2:minimum 1;
+		lv2:maximum 50
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 19;
+		lv2:symbol "early_tap_length";
+		lv2:name "Early Delay Length";
+		rdfs:comment "The length of the early reflections multitap delay";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:default 200.0;
+		lv2:minimum 0.0;
+		lv2:maximum 500.0;
+		units:unit units:ms
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 20;
+		lv2:symbol "early_tap_mix";
+		lv2:name "Early Tap Mix";
+		rdfs:comment "Dry/wet ratio of the multitap delay";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:default 100.0;
+		lv2:minimum 0.0;
+		lv2:maximum 100.0;
+		units:unit units:pc
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 21;
+		lv2:symbol "early_tap_decay";
+		lv2:name "Early Tap Decay";
+		rdfs:comment "The curvature of the early reflections impulse response";
+		lv2:default 0.5;
+		lv2:minimum 0;
+		lv2:maximum 1
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 22;
+		lv2:symbol "early_diffusion_stages";
+		lv2:name "Early Diffusion Stages";
+		rdfs:comment "The number of series allpass filters in the early reflections diffusion block";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:portProperty lv2:integer;
+		lv2:default 7;
+		lv2:minimum 0;
+		lv2:maximum 8
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 23;
+		lv2:symbol "early_diffusion_delay";
+		lv2:name "Early Diffusion Delay";
+		rdfs:comment "The delay in the early reflections diffusion block";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:default 20;
+		lv2:minimum 10;
+		lv2:maximum 100;
+		units:unit units:ms
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 24;
+		lv2:symbol "early_diffusion_mod_depth";
+		lv2:name "Early Diffusion Mod Depth";
+		rdfs:comment "The modulation depth of the early reflections diffusion block delay";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:default 0.0;
+		lv2:minimum 0.0;
+		lv2:maximum 3.0;
+		units:unit units:ms
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 25;
+		lv2:symbol "early_diffusion_mod_rate";
+		lv2:name "Early Diffusion Mod Rate";
+		rdfs:comment "The modulation rate of the early reflections diffusion block delay";
+		lv2:default 1;
+		lv2:minimum 0;
+		lv2:maximum 5;
+		units:unit units:hz
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 26;
+		lv2:symbol "early_diffusion_feedback";
+		lv2:name "Early Diffusion Feedback";
+		rdfs:comment "The feedback in the early reflections diffusion block";
+		lv2:default 0.7;
+		lv2:minimum 0;
+		lv2:maximum 1;
+		units:unit units:coef
+	];
+	# Late
+	lv2:port [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 27;
+		lv2:symbol "late_order";
+		lv2:name "Late Order";
+		rdfs:comment "Controls the signal path in the late reverberation unit";
+		lv2:portProperty lv2:integer, lv2:enumeration, props:hasStrictBounds;
+		lv2:scalePoints
+			[ rdfs:label "Pre"; rdf:value 0 ],
+			[ rdfs:label "Post"; rdf:value 1 ];
+		lv2:default 0;
+		lv2:minimum 0;
+		lv2:maximum 1
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 28;
+		lv2:symbol "late_delay_lines";
+		lv2:name "Late Delay Lines";
+		rdfs:comment "The number of delay lines in the late reverberation unit";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:portProperty lv2:integer;
+		lv2:default 3;
+		lv2:minimum 1;
+		lv2:maximum 12
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 29;
+		lv2:symbol "late_Delay";
+		lv2:name "Late Delay";
+		rdfs:comment "The delay time in the late reverberation delay lines";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:default 100.0;
+		lv2:minimum 0.05;
+		lv2:maximum 1000.0;
+		units:unit units:ms
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 30;
+		lv2:symbol "late_delay_mod_depth";
+		lv2:name "Late Delay Mod Depth";
+		rdfs:comment "The modulation depth of the line delay";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:default 0.2;
+		lv2:minimum 0.0;
+		lv2:maximum 50.0;
+		units:unit units:ms
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 31;
+		lv2:symbol "late_delay_mod_rate";
+		lv2:name "Late Line Mod Rate";
+		rdfs:comment "The modulation rate of the line delay";
+		lv2:default 1.0;
+		lv2:minimum 0.0;
+		lv2:maximum 5.0;
+		units:unit units:hz
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 32;
+		lv2:symbol "late_delay_line_feedback";
+		lv2:name "Late Delay Line Feedback";
+		rdfs:comment "The delay line feedback";
+		lv2:default 0.7;
+		lv2:minimum 0.0;
+		lv2:maximum 1.0;
+		units:unit units:coef
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 33;
+		lv2:symbol "late_diffusion_stages";
+		lv2:name "Late Diffusion Stages";
+		rdfs:comment "The number of series allpass filters in the late diffusion block";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:portProperty lv2:integer;
+		lv2:default 7;
+		lv2:minimum 0;
+		lv2:maximum 8
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 34;
+		lv2:symbol "late_diffusion_delay";
+		lv2:name "Late Diffusion Delay";
+		rdfs:comment "The delay in the late diffusion block";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:default 50;
+		lv2:minimum 10;
+		lv2:maximum 100;
+		units:unit units:ms
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 35;
+		lv2:symbol "late_diffusion_mod_depth";
+		lv2:name "Late Diffusion Mod Depth";
+		rdfs:comment "The modulation depth of the late diffusion block delay";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:default 0.2;
+		lv2:minimum 0.0;
+		lv2:maximum 3.0;
+		units:unit units:ms
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 36;
+		lv2:symbol "late_diffusion_mod_rate";
+		lv2:name "Late Diffusion Mod Rate";
+		rdfs:comment "The modulation rate of the late diffusion block delay";
+		lv2:default 0.5;
+		lv2:minimum 0.0;
+		lv2:maximum 5.0;
+		units:unit units:hz
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 37;
+		lv2:symbol "late_diffusion_feedback";
+		lv2:name "Late Diffusion Feedback";
+		rdfs:comment "The feedback in the late diffusion block";
+		lv2:default 0.7;
+		lv2:minimum 0.0;
+		lv2:maximum 1.0;
+		units:unit units:coef
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 38;
+		lv2:symbol "late_low_shelf_enabled";
+		lv2:name "Late Low Shelf Enabled";
+		rdfs:comment "Enables/Disables the late reverberations low shelf filter";
+		lv2:portProperty lv2:toggled;
+		lv2:default true;
+		lv2:minimum 0;
+		lv2:maximum 1
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 39;
+		lv2:symbol "late_low_shelf_cutoff";
+		lv2:name "Late Low Shelf Cutoff";
+		rdfs:comment "The cutoff frequency of the late reverberations low shelf filter";
+		lv2:portProperty lv2:sampleRate;
+		lv2:default 0.0;
+		lv2:minimum 0.0;
+		lv2:maximum 0.5;
+		units:unit units:hz
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 40;
+		lv2:symbol "late_low_shelf_gain";
+		lv2:name "Late Low Shelf Gain";
+		rdfs:comment "The gain of the late reverberations low shelf filter";
+		lv2:default 0.0;
+		lv2:minimum -24.0;
+		lv2:maximum 0.0;
+		units:unit units:db
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 41;
+		lv2:symbol "late_high_shelf_enabled";
+		lv2:name "Late high Shelf Enabled";
+		rdfs:comment "Enables/Disables the late reverberations high shelf filter";
+		lv2:portProperty lv2:toggled;
+		lv2:default true;
+		lv2:minimum 0;
+		lv2:maximum 1
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 42;
+		lv2:symbol "late_high_shelf_cutoff";
+		lv2:name "Late high Shelf Cutoff";
+		rdfs:comment "The cutoff frequency of the late reverberations high shelf filter";
+		lv2:portProperty lv2:sampleRate;
+		lv2:default 0.0;
+		lv2:minimum 0.0;
+		lv2:maximum 0.5;
+		units:unit units:hz
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 43;
+		lv2:symbol "late_high_shelf_gain";
+		lv2:name "Late high Shelf Gain";
+		rdfs:comment "The gain of the late reverberations high shelf filter";
+		lv2:default 0.0;
+		lv2:minimum -24.0;
+		lv2:maximum 0.0;
+		units:unit units:db
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 44;
+		lv2:symbol "late_high_cut_enabled";
+		lv2:name "Late High Cut Enabled";
+		rdfs:comment "Enables/Disables the late reverberations high cut filter";
+		lv2:portProperty lv2:toggled;
+		lv2:default true;
+		lv2:minimum 0;
+		lv2:maximum 1
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 45;
+		lv2:symbol "late_high_cut_cutoff";
+		lv2:name "Late High Cut Cutoff";
+		rdfs:comment "The cutoff frequency of the late reverberations high cut filter";
+		lv2:portProperty lv2:sampleRate;
+		lv2:default 20000;
+		lv2:minimum 0.0;
+		lv2:maximum 0.5;
+		units:unit units:hz
+	];
+	# Seeds
+	lv2:port [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 46;
+		lv2:symbol "seed_crossmix";
+		lv2:name "Seed Crossmix";
+		rdfs:comment "How much random values for the left and right channels are mixed";
+		lv2:portProperty props:hasStrictBounds;
+		lv2:default 80.0;
+		lv2:minimum 0.0;
+		lv2:maximum 100.0;
+		units:unit units:pc
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 47;
+		lv2:portProperty props:causesArtifacts;
+		lv2:symbol "tap_seed";
+		lv2:name "Tap Seed";
+		rdfs:comment "The seed used by the early reflections multitap delay";
+		lv2:portProperty lv2:integer;
+		lv2:default 1;
+		lv2:minimum 1;
+		lv2:maximum 1000000
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 48;
+		lv2:portProperty props:causesArtifacts;
+		lv2:symbol "early_diffusion_seed";
+		lv2:name "Early Diffusion Seed";
+		rdfs:comment "The seed used by the early reflections diffusion block";
+		lv2:portProperty lv2:integer;
+		lv2:default 1;
+		lv2:minimum 1;
+		lv2:maximum 1000000
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 49;
+		lv2:portProperty props:causesArtifacts;
+		lv2:symbol "delay_seed";
+		lv2:name "Delay Seed";
+		rdfs:comment "The seed used by the late reverberations modulated delay line";
+		lv2:portProperty lv2:integer;
+		lv2:default 1;
+		lv2:minimum 1;
+		lv2:maximum 1000000
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 50;
+		lv2:portProperty props:causesArtifacts;
+		lv2:symbol "late_diffusion_seed";
+		lv2:name "Late Diffusion Seed";
+		rdfs:comment "The seed used by the late reverberations diffusion block";
+		lv2:portProperty lv2:integer;
+		lv2:default 1;
+		lv2:minimum 1;
+		lv2:maximum 1000000
+	].
+
+<http://github.com/Dougal-s/Aether#ui>
+	a ui:X11UI;
+	lv2:binary <aether_ui.so>;
+	lv2:requiredFeature ui:idleInterface;
+	lv2:extensionData ui:idleInterface, ui:showInterface;
+    lv2:optionalFeature ui:parent, ui:resize.

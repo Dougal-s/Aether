@@ -1,0 +1,12 @@
+[submodule "extern/nanovg"]
+	path = extern/nanovg
+	url = https://github.com/memononen/nanovg.git
+[submodule "extern/pugl"]
+	path = extern/pugl
+	url = https://github.com/lv2/pugl.git
+[submodule "extern/googletest"]
+	path = extern/googletest
+	url = https://github.com/google/googletest.git
+[submodule "extern/benchmark"]
+	path = extern/benchmark
+	url = https://github.com/google/benchmark.git
