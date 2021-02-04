@@ -16,9 +16,9 @@
 
 // NanoVG
 #include <nanovg.h>
-#include <nanovg_gl.h>
 
 #include "aether_ui.hpp"
+#include "ui_tree.hpp"
 
 namespace {
 	void GLAPIENTRY opengl_err_callback(
@@ -36,12 +36,43 @@ namespace {
 				  << " severity = " << severity
 				  << ": " << message << std::endl;
 	}
+
+	void attach_panel_background(Group* g) {
+		// Background
+		g->add_child<RoundedRect>(UIElement::CreateInfo{
+			.visible = true, .inert = true, .connections = {},
+			.style = {
+				{"x", "0"}, {"y", "0"}, {"r", "5sp"},
+				{"width", "100%"}, {"height", "100%"},
+				{"fill", "#32333c"}
+			}
+		});
+
+		// Top bar
+		g->add_child<RoundedRect>(UIElement::CreateInfo{
+			.visible = true, .inert = true, .connections = {},
+			.style = {
+				{"x", "0"}, {"y", "0"}, {"r", "5sp"},
+				{"width", "100%"}, {"height", "10sp"},
+				{"fill", "#4b4f56"}
+			}
+		});
+
+		g->add_child<Rect>(UIElement::CreateInfo{
+			.visible = true, .inert = true, .connections = {},
+			.style = {
+				{"x", "0"}, {"y", "5sp"},
+				{"width", "100%"}, {"height", "15sp"},
+				{"fill", "#4b4f56"}
+			}
+		});
+	}
 }
 
 namespace Aether {
 	class UI::View : public pugl::View {
 	public:
-		explicit View(pugl::World& world);
+		View(pugl::World& world, std::filesystem::path bundle_path);
 		View(const View&) = delete;
 		~View() = default;
 
@@ -70,18 +101,23 @@ namespace Aether {
 
 	private:
 		mutable NVGcontext* m_nvg_context = nullptr;
+		UIElement* m_active = nullptr;
 
 		bool m_should_close = false;
+
+		UITree ui_tree;
 	};
 
 	/*
 		View member function
 	*/
 
-	UI::View::View(pugl::World& world) : pugl::View(world) {
+	UI::View::View(pugl::World& world, std::filesystem::path bundle_path) :
+		pugl::View(world), ui_tree(1230, 700, bundle_path)
+	{
 		setEventHandler(*this);
 		setWindowTitle("Aether");
-		setDefaultSize(1280, 720);
+		setDefaultSize(1230, 700);
 		setMinSize(256, 144);
 		setAspectRatio(16, 9, 16, 9);
 
@@ -92,30 +128,305 @@ namespace Aether {
 		setHint(pugl::ViewHint::doubleBuffer, true);
 		setHint(pugl::ViewHint::contextVersionMajor, 4);
 		setHint(pugl::ViewHint::contextVersionMinor, 6);
+
+		// Border
+		ui_tree.root().add_child<RoundedRect>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.style = {
+				{"left","0"}, {"width","1175sp"}, {"r", "1sp"},
+				{"bottom","390sp"}, {"height","2sp"},
+				{"fill", "#b6bfcc80"}
+			}
+		});
+
+		auto panels = ui_tree.root().add_child<Group>(UIElement::CreateInfo{
+			.visible = true, .inert = false,
+			.style = {
+				{"left","10sp"}, {"right","10sp"},
+				{"bottom","10sp"}, {"height","340sp"}
+			}
+		});
+
+		{
+			auto dry = panels->add_child<Group>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.style = {
+					{"x", "0"}, {"y", "0"},
+					{"width", "60sp"}, {"height", "100%"},
+				}
+			});
+
+			attach_panel_background(dry);
+
+			// Shadow
+			dry->add_child<Rect>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.style = {
+					{"x", "0"}, {"y", "20sp"},
+					{"width", "100%"}, {"height", "10sp"},
+					{"fill", "linear-gradient(0 20sp #00000020 0 26sp #0000)"}
+				}
+			});
+		}
+
+		{
+			auto predelay = panels->add_child<Group>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.style = {
+					{"x", "70sp"}, {"y", "0"},
+					{"width", "160sp"}, {"height", "100%"},
+				}
+			});
+
+			attach_panel_background(predelay);
+
+			// Shadow
+			predelay->add_child<Rect>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.style = {
+					{"x", "0"}, {"y", "20sp"},
+					{"width", "100%"}, {"height", "10sp"},
+					{"fill", "linear-gradient(0 20sp #00000020 0 26sp #0000)"}
+				}
+			});
+		}
+
+		{
+			auto early = panels->add_child<Group>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.style = {
+					{"x", "240sp"}, {"y", "0"},
+					{"width", "455sp"}, {"height", "100%"},
+				}
+			});
+
+			attach_panel_background(early);
+
+			{
+				auto diffusion = early->add_child<Group>(UIElement::CreateInfo{
+					.visible = true, .inert = false,
+					.style = {
+						{"x", "170sp"}, {"width", "225sp"},
+						{"top", "20sp"}, {"bottom", "0"}
+					}
+				});
+
+				// Background
+				diffusion->add_child<Rect>(UIElement::CreateInfo{
+					.visible = true, .inert = false,
+					.style = {
+						{"x", "0"}, {"y", "0"},
+						{"width", "100%"}, {"height", "100%"},
+						{"fill", "#1b1d23"}
+					}
+				});
+
+				// Shadows
+
+				//horizontal
+				diffusion->add_child<Rect>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "0"}, {"y", "0"},
+						{"width", "100%"}, {"height", "15sp"},
+						{"fill", "linear-gradient(0 0sp #00000020 0 8sp #0000)"}
+					}
+				});
+				diffusion->add_child<Rect>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "0"}, {"y", "160sp"},
+						{"width", "100%"}, {"height", "15sp"},
+						{"fill", "linear-gradient(0 160sp #00000030 0 168sp #0000)"}
+					}
+				});
+
+				// vertical
+				diffusion->add_child<Rect>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "0"}, {"y", "0"},
+						{"width", "10sp"}, {"height", "50%"},
+						{"fill", "linear-gradient(0 0 #00000020 6sp 0 #0000)"}
+					}
+				});
+				diffusion->add_child<Rect>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "0"}, {"y", "50%"},
+						{"width", "10sp"}, {"height", "50%"},
+						{"fill", "linear-gradient(0 0 #00000030 6sp 0 #0000)"}
+					}
+				});
+
+				diffusion->add_child<Rect>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "215sp"}, {"y", "0"},
+						{"width", "10sp"}, {"height", "50%"},
+						{"fill", "linear-gradient(225sp 0 #00000020 219sp 0 #0000)"}
+					}
+				});
+				diffusion->add_child<Rect>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "215sp"}, {"y", "50%"},
+						{"width", "10sp"}, {"height", "50%"},
+						{"fill", "linear-gradient(225sp 0 #00000030 219sp 0 #0000)"}
+					}
+				});
+			}
+
+			// Shadows
+			early->add_child<Rect>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.style = {
+					{"x", "0"}, {"y", "20sp"},
+					{"width", "170sp"}, {"height", "10sp"},
+					{"fill", "linear-gradient(0 20sp #00000020 0 26sp #0000)"}
+				}
+			});
+			early->add_child<Rect>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.style = {
+					{"x", "395sp"}, {"y", "20sp"},
+					{"width", "60sp"}, {"height", "10sp"},
+					{"fill", "linear-gradient(0 20sp #00000020 0 26sp #0000)"}
+				}
+			});
+		}
+
+		{
+			auto late = panels->add_child<Group>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.style = {
+					{"x", "705sp"}, {"y", "0"},
+					{"width", "505sp"}, {"height", "100%"},
+				}
+			});
+
+			attach_panel_background(late);
+
+			{
+				auto delay = late->add_child<Group>(UIElement::CreateInfo{
+					.visible = true, .inert = false,
+					.style = {
+						{"x", "0"}, {"y", "20sp"},
+						{"width", "275sp"}, {"height", "150sp"}
+					}
+				});
+
+				// Background
+				delay->add_child<Rect>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "0"}, {"y", "0"},
+						{"width", "100%"}, {"height", "100%"},
+						{"fill", "#1b1d23"}
+					}
+				});
+
+				// Shadow
+
+				//horizontal
+				delay->add_child<Rect>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "0"}, {"y", "0"},
+						{"width", "100%"}, {"height", "10sp"},
+						{"fill", "linear-gradient(0 0sp #00000020 0 8sp #0000)"}
+					}
+				});
+				// vertical
+				delay->add_child<Rect>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "215sp"}, {"y", "0"},
+						{"width", "10sp"}, {"height", "100%"},
+						{"fill", "linear-gradient(225sp 0 #00000020 215sp 0 #0000)"}
+					}
+				});
+			}
+
+			{
+				auto delay = late->add_child<Group>(UIElement::CreateInfo{
+					.visible = true, .inert = false,
+					.style = {
+						{"x", "0"}, {"y", "190sp"},
+						{"width", "275sp"}, {"height", "150sp"}
+					}
+				});
+
+				// Background
+				delay->add_child<Rect>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "0"}, {"y", "0"},
+						{"width", "100%"}, {"height", "100%"},
+						{"fill", "#1b1d23"}
+					}
+				});
+
+				// Shadow
+
+				//horizontal
+				delay->add_child<Rect>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "0"}, {"y", "0"},
+						{"width", "100%"}, {"height", "10sp"},
+						{"fill", "linear-gradient(0 0sp #00000020 0 8sp #0000)"}
+					}
+				});
+				// vertical
+				delay->add_child<Rect>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "215sp"}, {"y", "0"},
+						{"width", "10sp"}, {"height", "100%"},
+						{"fill", "linear-gradient(225sp 0 #00000020 215sp 0 #0000)"}
+					}
+				});
+			}
+
+			// Shadow
+			late->add_child<Rect>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.style = {
+					{"x", "275.5sp"}, {"y", "20sp"},
+					{"right", "0"}, {"height", "10sp"},
+					{"fill", "linear-gradient(0 20sp #00000020 0 26sp #0000)"}
+				}
+			});
+		}
 	}
 
 	pugl::Status UI::View::onEvent(const pugl::CreateEvent&) noexcept {
 		if (!gladLoadGLLoader((GLADloadproc)&pugl::getProcAddress))
 			return pugl::Status::failure;
 
-		m_nvg_context = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-		if (!m_nvg_context)
-			return pugl::Status::failure;
-
 		glEnable(GL_DEBUG_OUTPUT);
 		glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 0, nullptr, GL_FALSE);
 		glDebugMessageCallback(opengl_err_callback, 0);
+
+		try {
+			ui_tree.initialize_context();
+		} catch (const std::exception& e) {
+			std::cerr << e.what() << std::endl;
+			return pugl::Status::failure;
+		}
 
 		return pugl::Status::success;
 	}
 
 	pugl::Status UI::View::onEvent(const pugl::DestroyEvent&) noexcept {
-		nvgDeleteGL3(m_nvg_context);
+		ui_tree.destroy_context();
 		return pugl::Status::success;
 	}
 
 	pugl::Status UI::View::onEvent(const pugl::ConfigureEvent& event) noexcept {
 		glViewport(0, 0, event.width, event.height);
+		ui_tree.update_viewport(event.width, event.height);
 		return pugl::Status::success;
 	}
 
@@ -137,30 +448,31 @@ namespace Aether {
 	/*
 		Mouse Events
 	*/
-	pugl::Status UI::View::onEvent(const pugl::ButtonPressEvent&) noexcept {
+	pugl::Status UI::View::onEvent(const pugl::ButtonPressEvent& event) noexcept {
+		m_active = ui_tree.root().element_at(event.x, event.y);
+		if (m_active)
+			m_active->btn_press(event);
 		return pugl::Status::success;
 	}
 
-	pugl::Status UI::View::onEvent(const pugl::ButtonReleaseEvent&) noexcept {
+	pugl::Status UI::View::onEvent(const pugl::ButtonReleaseEvent& event) noexcept {
+		if (m_active)
+			m_active->btn_release(event);
+		m_active = nullptr;
 		return pugl::Status::success;
 	}
 
-	pugl::Status UI::View::onEvent(const pugl::MotionEvent&) noexcept {
+	pugl::Status UI::View::onEvent(const pugl::MotionEvent& event) noexcept {
+		if (m_active)
+			m_active->motion(event);
 		return pugl::Status::success;
 	}
 
 	// draw frame
 	void UI::View::draw() const {
-		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glClearColor(16/255.f, 16/255.f, 20/255.f, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-		nvgBeginFrame(m_nvg_context, width(), height(), 1);
-		nvgBeginPath(m_nvg_context);
-		nvgRect(m_nvg_context, 0,0, width(), height());
-		nvgFillColor(m_nvg_context, nvgRGBA(16, 16, 20, 255));
-		nvgFill(m_nvg_context);
-		nvgClosePath(m_nvg_context);
-		nvgEndFrame(m_nvg_context);
+		ui_tree.draw();
 	}
 
 	int UI::View::width() const noexcept { return this->frame().width; }
@@ -215,7 +527,7 @@ namespace Aether {
 		auto world = std::make_unique<pugl::World>(pugl::WorldType::module);
 		world->setClassName("Pulsar");
 
-		auto view = std::make_unique<View>(*world);
+		auto view = std::make_unique<View>(*world, create_info.bundle_path);
 		if (create_info.parent)
 			view->setParentWindow(pugl::NativeView(create_info.parent));
 		if (auto status = view->show(); status != pugl::Status::success)

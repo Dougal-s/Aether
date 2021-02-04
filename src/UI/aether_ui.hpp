@@ -10,10 +10,10 @@
 
 namespace Aether {
 
-	/**
-	 * Pulsar UI
-	 * Handles all ui related activities
-	 */
+	/*
+		Pulsar UI
+		Handles all ui related activities
+	*/
 	class UI {
 	public:
 		static constexpr const char* URI = "http://github.com/Dougal-s/Aether#ui";
@@ -25,41 +25,41 @@ namespace Aether {
 			LV2UI_Write_Function write_function;
 		};
 
-		/**
-		 * Creates and destroys the plugin ui
-		 */
+		/*
+			Creates and destroys the plugin ui
+		*/
 		explicit UI(const CreateInfo& create_info);
 		UI(const UI&) = delete;
 		~UI();
 
 		UI& operator=(const UI&) = delete;
 
-		/**
-		 * Processes events and renders a new frame
-		 * returns 0 on success and 1 on failure
-		 */
+		/*
+			Processes events and renders a new frame
+			returns 0 on success and 1 on failure
+		*/
 		int update_display() noexcept;
 
-		/**
-		 * creates and destroys the window
-		 */
+		/*
+			creates and destroys the window
+		*/
 		void open();
 		void close();
 
-		/**
-		 * returns the current window dimensions
-		 */
+		/*
+			returns the current window dimensions
+		*/
 		int width() const noexcept;
 		int height() const noexcept;
 
-		/**
-		 * returns the handle to the native window
-		 */
+		/*
+			returns the handle to the native window
+		*/
 		pugl::NativeView widget() noexcept;
 
-		/**
-		 * callback to update ui whenever a parameter is modified by the host
-		 */
+		/*
+			callback to update ui whenever a parameter is modified by the host
+		*/
 		void port_event(
 			uint32_t port_index,
 			uint32_t buffer_size,

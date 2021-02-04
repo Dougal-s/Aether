@@ -37,10 +37,12 @@ add_library(aether_ui MODULE
 	src/UI/aether_ui.hpp
 	src/UI/gl_helper.cpp
 	src/UI/gl_helper.hpp
+	src/UI/ui_tree.cpp
+	src/UI/ui_tree.hpp
 )
 
 target_compile_options(aether_ui PRIVATE
-	-Wall -Wextra -Wpedantic -Wshadow -Weffc++ -Wstrict-aliasing
+	-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing
 	-Wunreachable-code -Wdouble-promotion -Werror
 	"$<$<CONFIG:DEBUG>:-O0;-ggdb>"
 	"$<$<CONFIG:RELEASE>:-O3>"
