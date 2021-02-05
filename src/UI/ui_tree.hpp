@@ -159,6 +159,8 @@ private:
 	/*
 
 	*/
+	void apply_transforms() const;
+
 	void set_new_render_target() const;
 	void apply_filter(const std::string& filter) const;
 };

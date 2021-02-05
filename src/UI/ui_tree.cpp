@@ -127,6 +127,10 @@ void UIElement::draw() const {
 		}
 
 		nvgReset(m_root->ctx->nvg_ctx);
+
+		if (m_inert)
+			apply_transforms();
+
 		draw_impl();
 
 		if (filter != style.end()) {
@@ -359,6 +363,27 @@ bool UIElement::set_stroke() const {
 	}
 
 	return has_stroke;
+}
+
+void UIElement::apply_transforms() const {
+	if (m_parent != m_root)
+		m_parent->apply_transforms();
+
+	if (auto it = style.find("transform"); it != style.end()) {
+		std::string_view transform = style.find("transform")->second;
+
+		auto p_bounds = m_parent->bounds();
+		nvgTranslate(m_root->ctx->nvg_ctx, p_bounds[0], p_bounds[1]);
+
+		if (transform.starts_with("rotate")) {
+			auto [rad, ptr] = to_rad(transform.data()+sizeof("rotate"));
+			nvgRotate(m_root->ctx->nvg_ctx, rad);
+		} else {
+			throw std::runtime_error("unrecognized transform type");
+		}
+
+		nvgTranslate(m_root->ctx->nvg_ctx, -p_bounds[0], -p_bounds[1]);
+	}
 }
 
 void UIElement::set_new_render_target() const {

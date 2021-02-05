@@ -162,8 +162,8 @@ namespace Aether {
 			dry->add_child<Text>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
 				.style = {
-					{"x", "14sp"}, {"y", "17sp"},
-					{"font-family", "Roboto-Regular"}, {"font-size", "17.333333sp"},
+					{"x", "13sp"}, {"y", "17sp"},
+					{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
 					{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
 					{"text", "DRY"}
 				}
@@ -195,8 +195,8 @@ namespace Aether {
 			predelay->add_child<Text>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
 				.style = {
-					{"x", "40sp"}, {"y", "17sp"},
-					{"font-family", "Roboto-Regular"}, {"font-size", "17.333333sp"},
+					{"x", "39sp"}, {"y", "17sp"},
+					{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
 					{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
 					{"text", "PREDELAY"}
 				}
@@ -229,7 +229,7 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "50sp"}, {"y", "17sp"},
-					{"font-family", "Roboto-Regular"}, {"font-size", "17.333333sp"},
+					{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
 					{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
 					{"text", "EARLY REFLECTIONS"}
 				}
@@ -251,6 +251,17 @@ namespace Aether {
 						{"x", "0"}, {"y", "0"},
 						{"width", "100%"}, {"height", "100%"},
 						{"fill", "#1b1d23"}
+					}
+				});
+
+				// section name
+				diffusion->add_child<Text>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "18sp"}, {"y", "27sp"},
+						{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
+						{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
+						{"text", "DIFFUSION"}
 					}
 				});
 
@@ -345,7 +356,7 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "50sp"}, {"y", "17sp"},
-					{"font-family", "Roboto-Regular"}, {"font-size", "17.333333sp"},
+					{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
 					{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
 					{"text", "LATE REVERBERATIONS"}
 				}
@@ -367,6 +378,18 @@ namespace Aether {
 						{"x", "0"}, {"y", "0"},
 						{"width", "100%"}, {"height", "100%"},
 						{"fill", "#1b1d23"}
+					}
+				});
+
+				// Side text
+				delay->add_child<Text>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "-98sp"}, {"y", "255sp"},
+						{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
+						{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
+						{"text", "DELAY"},
+						{"transform", "rotate(-90deg)"}
 					}
 				});
 
@@ -393,7 +416,7 @@ namespace Aether {
 			}
 
 			{
-				auto delay = late->add_child<Group>(UIElement::CreateInfo{
+				auto diffusion = late->add_child<Group>(UIElement::CreateInfo{
 					.visible = true, .inert = false,
 					.style = {
 						{"x", "0"}, {"y", "190sp"},
@@ -402,7 +425,7 @@ namespace Aether {
 				});
 
 				// Background
-				delay->add_child<Rect>(UIElement::CreateInfo{
+				diffusion->add_child<Rect>(UIElement::CreateInfo{
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "0"}, {"y", "0"},
@@ -411,10 +434,23 @@ namespace Aether {
 					}
 				});
 
+				// Side text
+
+				diffusion->add_child<Text>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "-130sp"}, {"y", "255sp"},
+						{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
+						{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
+						{"text", "DIFFUSION"},
+						{"transform", "rotate(-90deg)"}
+					}
+				});
+
 				// Shadow
 
 				//horizontal
-				delay->add_child<Rect>(UIElement::CreateInfo{
+				diffusion->add_child<Rect>(UIElement::CreateInfo{
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "0"}, {"y", "0"},
@@ -423,7 +459,7 @@ namespace Aether {
 					}
 				});
 				// vertical
-				delay->add_child<Rect>(UIElement::CreateInfo{
+				diffusion->add_child<Rect>(UIElement::CreateInfo{
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "215sp"}, {"y", "0"},
