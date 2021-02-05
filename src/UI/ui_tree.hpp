@@ -216,15 +216,15 @@ class Text : public Rect {
 public:
 	Text(Root* root, Group* parent, CreateInfo create_info) noexcept :
 		Rect(root, parent, create_info) {}
-
-	void set_text(std::string text) noexcept;
 protected:
 
-	const std::string& font_face() const;
+	[[nodiscard]] const std::string& font_face() const;
 	[[nodiscard]] const std::string& text() const;
 
 	[[nodiscard]] std::array<float, 4> bounds() const;
 	[[nodiscard]] float font_size() const;
+
+	std::optional<float> defined_width() const;
 
 	/*
 		Virtual functions

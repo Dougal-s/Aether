@@ -662,7 +662,11 @@ std::array<float, 4> Text::bounds() const {
 	nvgReset(m_root->ctx->nvg_ctx);
 	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(font_face()));
 	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
-	nvgTextBounds(m_root->ctx->nvg_ctx, corner[0], corner[1], text().c_str(), nullptr, bounds.data());
+
+	if (auto width = defined_width(); width)
+		nvgTextBoxBounds(m_root->ctx->nvg_ctx, corner[0], corner[1], *width, text().c_str(), nullptr, bounds.data());
+	else
+		nvgTextBounds(m_root->ctx->nvg_ctx, corner[0], corner[1], text().c_str(), nullptr, bounds.data());
 	bounds[2] -= bounds[0];
 	bounds[3] -= bounds[1];
 	return bounds;
@@ -694,7 +698,11 @@ std::array<float, 2> Text::render_corner() const {
 	nvgReset(m_root->ctx->nvg_ctx);
 	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(font_face()));
 	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
-	nvgTextBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, text().c_str(), nullptr, text_bounds);
+
+	if (auto width = defined_width(); width)
+		nvgTextBoxBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, *width, text().c_str(), nullptr, text_bounds);
+	else
+		nvgTextBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, text().c_str(), nullptr, text_bounds);
 
 	if (!left) {
 		float right;
@@ -726,6 +734,27 @@ float Text::font_size() const {
 	throw std::runtime_error("text has undefined font size");
 }
 
+std::optional<float> Text::defined_width() const {
+	if (auto it = style.find("width"); it != style.end())
+		return to_horizontal_px(it->second.c_str()).val;
+
+	auto left = style.find("x");
+	if (left == style.end())
+		left = style.find("left");
+	if (left == style.end())
+		return {};
+
+	auto right = style.find("right");
+	if (right == style.end())
+		return {};
+
+	auto p_width = m_parent->width();
+
+	return p_width -
+		to_horizontal_px(left->second.c_str()).val -
+		to_horizontal_px(left->second.c_str()).val;
+}
+
 void Text::draw_impl() const {
 	nvgBeginPath(m_root->ctx->nvg_ctx);
 
@@ -734,7 +763,11 @@ void Text::draw_impl() const {
 	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
 	auto corner = render_corner();
 	set_fill();
-	nvgText(m_root->ctx->nvg_ctx, corner[0], corner[1], text().c_str(), nullptr);
+
+	if (auto width = defined_width(); width)
+		nvgTextBox(m_root->ctx->nvg_ctx, corner[0], corner[1], *width, text().c_str(), nullptr);
+	else
+		nvgText(m_root->ctx->nvg_ctx, corner[0], corner[1], text().c_str(), nullptr);
 
 	nvgClosePath(m_root->ctx->nvg_ctx);
 }
