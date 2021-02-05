@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstddef>
 #include <filesystem>
 #include <functional>
@@ -25,6 +26,21 @@ struct ParseResult {
 	operator std::tuple<A, B>() { return {val, end}; }
 };
 
+// only supports interpolation between two values of the form "%f unit"
+template <class T>
+static std::string interpolate_style(
+	float t,
+	const std::pair<std::string, std::string>& range
+) {
+	char* num1_end;
+	float val1 = std::strtof(range.first.c_str(), &num1_end);
+	char* num2_end;
+	float val2 = std::strtof(range.second.c_str(), &num2_end);
+	T val = static_cast<T>(std::lerp(val1, val2, t));
+
+	return std::to_string(val) + num1_end;
+}
+
 class UIElement {
 public:
 
@@ -38,6 +54,11 @@ public:
 		std::string style;
 		std::pair<float, float> in_range;
 		std::pair<std::string, std::string> out_range;
+
+		std::function<std::string (
+				float,
+				const std::pair<std::string, std::string>&
+			)> interpolate = interpolate_style<float>;
 
 		//
 		mutable float last_value = std::numeric_limits<float>::quiet_NaN();
@@ -225,6 +246,10 @@ protected:
 	[[nodiscard]] float font_size() const;
 
 	std::optional<float> defined_width() const;
+
+	void set_alignment() const;
+
+	void set_text_styling() const;
 
 	/*
 		Virtual functions

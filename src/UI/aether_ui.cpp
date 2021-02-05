@@ -139,6 +139,119 @@ namespace Aether {
 			}
 		});
 
+		// global settings (seeds, interpolation, etc)
+		{
+			auto global_settings = ui_tree.root().add_child<Group>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.style = {
+					{"left","10sp"}, {"width","1175sp"},
+					{"bottom","360sp"}, {"height","20sp"}
+				}
+			});
+			{
+				auto seeds = global_settings->add_child<Group>(UIElement::CreateInfo{
+					.visible = true, .inert = false,
+					.style = {
+						{"left","600sp"}, {"width","250sp"},
+						{"y","2.5sp"}, {"height","15sp"}
+					}
+				});
+
+				seeds->add_child<Text>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "0"}, {"y", "100%"},
+						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
+						{"fill", "#c1c1c1"},
+						{"text", "Seeds"}
+					}
+				});
+
+				seeds->add_child<Text>(UIElement::CreateInfo{
+					.visible = true, .inert = false,
+					.connections = {
+						{
+							.param_idx = 47,
+							.style = "text",
+							.in_range = {0, 1000000},
+							.out_range = {"0", "1000000"},
+							.interpolate = interpolate_style<int>
+						}
+					},
+					.style = {
+						{"x", "60sp"}, {"y", "100%"}, {"width", "80sp"},
+						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
+						{"text-align", "right"}, {"fill", "#c1c1c1"}
+					}
+				});
+
+				seeds->add_child<Text>(UIElement::CreateInfo{
+					.visible = true, .inert = false,
+					.connections = {
+						{
+							.param_idx = 48,
+							.style = "text",
+							.in_range = {0, 1000000},
+							.out_range = {"0", "1000000"},
+							.interpolate = interpolate_style<int>
+						}
+					},
+					.style = {
+						{"x", "140sp"}, {"y", "100%"}, {"width", "80sp"},
+						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
+						{"text-align", "right"}, {"fill", "#c1c1c1"}
+					}
+				});
+
+				seeds->add_child<Text>(UIElement::CreateInfo{
+					.visible = true, .inert = false,
+					.connections = {
+						{
+							.param_idx = 49,
+							.style = "text",
+							.in_range = {0, 1000000},
+							.out_range = {"0", "1000000"},
+							.interpolate = interpolate_style<int>
+						}
+					},
+					.style = {
+						{"x", "220sp"}, {"y", "100%"}, {"width", "80sp"},
+						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
+						{"text-align", "right"}, {"fill", "#c1c1c1"}
+					}
+				});
+
+				seeds->add_child<Text>(UIElement::CreateInfo{
+					.visible = true, .inert = false,
+					.connections = {
+						{
+							.param_idx = 50,
+							.style = "text",
+							.in_range = {0, 1000000},
+							.out_range = {"0", "1000000"},
+							.interpolate = interpolate_style<int>
+						}
+					},
+					.style = {
+						{"x", "300sp"}, {"y", "100%"}, {"width", "80sp"},
+						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
+						{"text-align", "right"}, {"fill", "#c1c1c1"},
+						{"text", "1000000"}
+					}
+				});
+			}
+
+			global_settings->add_child<Text>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.style = {
+					{"x", "1035sp"}, {"bottom", "0"},
+					{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
+					{"fill", "#c1c1c1"},
+					{"text", "Interpolate"}
+				}
+			});
+		}
+
 		auto panels = ui_tree.root().add_child<Group>(UIElement::CreateInfo{
 			.visible = true, .inert = false,
 			.style = {
@@ -147,6 +260,7 @@ namespace Aether {
 			}
 		});
 
+		// dry
 		{
 			auto dry = panels->add_child<Group>(UIElement::CreateInfo{
 				.visible = true, .inert = false,
@@ -164,7 +278,7 @@ namespace Aether {
 				.style = {
 					{"x", "13sp"}, {"y", "17sp"},
 					{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
-					{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
+					{"fill", "#b6bfcc"},
 					{"text", "DRY"}
 				}
 			});
@@ -180,6 +294,7 @@ namespace Aether {
 			});
 		}
 
+		// predelay
 		{
 			auto predelay = panels->add_child<Group>(UIElement::CreateInfo{
 				.visible = true, .inert = false,
@@ -197,7 +312,7 @@ namespace Aether {
 				.style = {
 					{"x", "39sp"}, {"y", "17sp"},
 					{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
-					{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
+					{"fill", "#b6bfcc"},
 					{"text", "PREDELAY"}
 				}
 			});
@@ -213,6 +328,7 @@ namespace Aether {
 			});
 		}
 
+		// early
 		{
 			auto early = panels->add_child<Group>(UIElement::CreateInfo{
 				.visible = true, .inert = false,
@@ -230,7 +346,7 @@ namespace Aether {
 				.style = {
 					{"x", "50sp"}, {"y", "17sp"},
 					{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
-					{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
+					{"fill", "#b6bfcc"},
 					{"text", "EARLY REFLECTIONS"}
 				}
 			});
@@ -260,7 +376,7 @@ namespace Aether {
 					.style = {
 						{"x", "18sp"}, {"y", "27sp"},
 						{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
-						{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
+						{"fill", "#b6bfcc"},
 						{"text", "DIFFUSION"}
 					}
 				});
@@ -340,6 +456,7 @@ namespace Aether {
 			});
 		}
 
+		// late
 		{
 			auto late = panels->add_child<Group>(UIElement::CreateInfo{
 				.visible = true, .inert = false,
@@ -357,7 +474,7 @@ namespace Aether {
 				.style = {
 					{"x", "50sp"}, {"y", "17sp"},
 					{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
-					{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
+					{"fill", "#b6bfcc"},
 					{"text", "LATE REVERBERATIONS"}
 				}
 			});
@@ -387,7 +504,7 @@ namespace Aether {
 					.style = {
 						{"x", "-98sp"}, {"y", "255sp"},
 						{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
-						{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
+						{"fill", "#b6bfcc"},
 						{"text", "DELAY"},
 						{"transform", "rotate(-90deg)"}
 					}
@@ -441,7 +558,7 @@ namespace Aether {
 					.style = {
 						{"x", "-130sp"}, {"y", "255sp"},
 						{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
-						{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
+						{"fill", "#b6bfcc"},
 						{"text", "DIFFUSION"},
 						{"transform", "rotate(-90deg)"}
 					}

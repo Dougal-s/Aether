@@ -74,21 +74,6 @@ namespace {
 
 		throw std::invalid_argument("unrecognized color format!");
 	}
-
-
-	// only supports interpolation between two values of the form "%f unit"
-	static std::string interpolate(
-		float t,
-		const std::pair<std::string, std::string>& range
-	) {
-		char* num1_end;
-		float val1 = std::strtof(range.first.c_str(), &num1_end);
-		char* num2_end;
-		float val2 = std::strtof(range.second.c_str(), &num2_end);
-		float val = std::lerp(val1, val2, t);
-
-		return std::to_string(val) + num1_end;
-	}
 }
 
 // UIElement
@@ -113,7 +98,7 @@ void UIElement::draw() const {
 				float value = m_root->parameters[con.param_idx];
 				value = (value - con.in_range.first) / con.in_range.second;
 
-				style.insert_or_assign(con.style, interpolate(value, con.out_range));
+				style.insert_or_assign(con.style, con.interpolate(value, con.out_range));
 
 				con.last_value = m_root->parameters[con.param_idx];
 			}
@@ -662,6 +647,7 @@ std::array<float, 4> Text::bounds() const {
 	nvgReset(m_root->ctx->nvg_ctx);
 	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(font_face()));
 	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
+	set_alignment();
 
 	if (auto width = defined_width(); width)
 		nvgTextBoxBounds(m_root->ctx->nvg_ctx, corner[0], corner[1], *width, text().c_str(), nullptr, bounds.data());
@@ -695,10 +681,7 @@ std::array<float, 2> Text::render_corner() const {
 		return {p_bounds[0]+*left, p_bounds[1]+*top};
 
 	float text_bounds[4];
-	nvgReset(m_root->ctx->nvg_ctx);
-	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(font_face()));
-	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
-
+	// styling has already been set outside this function
 	if (auto width = defined_width(); width)
 		nvgTextBoxBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, *width, text().c_str(), nullptr, text_bounds);
 	else
@@ -711,7 +694,7 @@ std::array<float, 2> Text::render_corner() const {
 		else
 			throw std::runtime_error("text x position undefined");
 
-		left = p_bounds[0] + p_bounds[2] - right - p_bounds[2];
+		left = p_bounds[2] - right - text_bounds[2];
 	}
 
 	if (!top) {
@@ -721,10 +704,10 @@ std::array<float, 2> Text::render_corner() const {
 		else
 			throw std::runtime_error("text x position undefined");
 
-		top = p_bounds[1] + p_bounds[3] - bottom - p_bounds[3];
+		top = p_bounds[3] - bottom - text_bounds[3];
 	}
 
-	return {*left, *top};
+	return {p_bounds[0] + *left, p_bounds[1] + *top};
 
 }
 
@@ -755,26 +738,46 @@ std::optional<float> Text::defined_width() const {
 		to_horizontal_px(left->second.c_str()).val;
 }
 
-void Text::draw_impl() const {
-	nvgBeginPath(m_root->ctx->nvg_ctx);
-
-
-	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(font_face()));
-	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
-
+void Text::set_alignment() const {
+	int alignment = 0;
 	if (auto it = style.find("text-align"); it != style.end()) {
 		if (it->second == "left")
-			nvgTextAlign(m_root->ctx->nvg_ctx, NVG_ALIGN_LEFT);
+			alignment |= NVG_ALIGN_LEFT;
 		else if (it->second == "center")
-			nvgTextAlign(m_root->ctx->nvg_ctx, NVG_ALIGN_CENTER);
+			alignment |= NVG_ALIGN_CENTER;
 		else if (it->second == "right")
-			nvgTextAlign(m_root->ctx->nvg_ctx, NVG_ALIGN_RIGHT);
+			alignment |= NVG_ALIGN_RIGHT;
 		else
 			throw std::runtime_error("unrecognized alignment specified");
 	}
 
-	set_fill();
+	if (auto it = style.find("vertical-align"); it != style.end()) {
+		if (it->second == "top")
+			alignment |= NVG_ALIGN_TOP;
+		else if (it->second == "middle")
+			alignment |= NVG_ALIGN_MIDDLE;
+		else if (it->second == "bottom")
+			alignment |= NVG_ALIGN_BOTTOM;
+		else if (it->second == "baseline")
+			alignment |= NVG_ALIGN_BASELINE;
+		else
+			throw std::runtime_error("unrecognized alignment specified");
+	}
 
+	if (alignment)
+		nvgTextAlign(m_root->ctx->nvg_ctx, alignment);
+}
+
+void Text::set_text_styling() const {
+	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(font_face()));
+	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
+	set_alignment();
+	set_fill();
+}
+
+void Text::draw_impl() const {
+	nvgBeginPath(m_root->ctx->nvg_ctx);
+	set_text_styling();
 	auto corner = render_corner();
 	if (auto width = defined_width(); width)
 		nvgTextBox(m_root->ctx->nvg_ctx, corner[0], corner[1], *width, text().c_str(), nullptr);
@@ -785,6 +788,8 @@ void Text::draw_impl() const {
 }
 
 UIElement* Text::element_at_impl(float x, float y) {
+	nvgReset(m_root->ctx->nvg_ctx);
+	set_text_styling();
 	auto b = bounds();
 	return ((x -= b[0]) >= 0 && x <= b[2] && (y -= b[1]) >= 0 && y <= b[3]) ? this : nullptr;
 }
