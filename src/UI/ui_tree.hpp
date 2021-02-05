@@ -207,6 +207,35 @@ protected:
 	virtual void draw_impl() const override;
 };
 
+/*
+
+*/
+class Text : public Rect {
+public:
+	Text(Root* root, Group* parent, CreateInfo create_info) noexcept :
+		Rect(root, parent, create_info) {}
+
+	void set_text(std::string text) noexcept;
+protected:
+
+	const std::string& font_face() const;
+	[[nodiscard]] const std::string& text() const;
+
+	[[nodiscard]] std::array<float, 4> bounds() const;
+	[[nodiscard]] float font_size() const;
+
+	/*
+		Virtual functions
+	*/
+	virtual void draw_impl() const override;
+	virtual UIElement* element_at_impl(float x, float y) override;
+
+private:
+	std::array<float, 2> render_corner() const;
+};
+
+
+
 class Group : public Rect {
 public:
 	Group(Root* root, Group* parent, CreateInfo create_info) noexcept :
@@ -271,6 +300,8 @@ struct Root final : public Group {
 	std::array<float, 51> parameters = {};
 
 	mutable DrawingContext* ctx;
+
+	int get_font(const std::string& font_face);
 };
 
 struct DrawingContext {

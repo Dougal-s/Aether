@@ -158,6 +158,17 @@ namespace Aether {
 
 			attach_panel_background(dry);
 
+			// Title
+			dry->add_child<Text>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.style = {
+					{"x", "14sp"}, {"y", "17sp"},
+					{"font-family", "Roboto-Regular"}, {"font-size", "17.333333sp"},
+					{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
+					{"text", "DRY"}
+				}
+			});
+
 			// Shadow
 			dry->add_child<Rect>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
@@ -180,6 +191,17 @@ namespace Aether {
 
 			attach_panel_background(predelay);
 
+			// Title
+			predelay->add_child<Text>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.style = {
+					{"x", "40sp"}, {"y", "17sp"},
+					{"font-family", "Roboto-Regular"}, {"font-size", "17.333333sp"},
+					{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
+					{"text", "PREDELAY"}
+				}
+			});
+
 			// Shadow
 			predelay->add_child<Rect>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
@@ -201,6 +223,17 @@ namespace Aether {
 			});
 
 			attach_panel_background(early);
+
+			// Title
+			early->add_child<Text>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.style = {
+					{"x", "50sp"}, {"y", "17sp"},
+					{"font-family", "Roboto-Regular"}, {"font-size", "17.333333sp"},
+					{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
+					{"text", "EARLY REFLECTIONS"}
+				}
+			});
 
 			{
 				auto diffusion = early->add_child<Group>(UIElement::CreateInfo{
@@ -306,6 +339,17 @@ namespace Aether {
 			});
 
 			attach_panel_background(late);
+
+			// Title
+			late->add_child<Text>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.style = {
+					{"x", "50sp"}, {"y", "17sp"},
+					{"font-family", "Roboto-Regular"}, {"font-size", "17.333333sp"},
+					{"fill", "#b6bfcc"}, {"stroke_width", "1sp"},
+					{"text", "LATE REVERBERATIONS"}
+				}
+			});
 
 			{
 				auto delay = late->add_child<Group>(UIElement::CreateInfo{

@@ -617,6 +617,108 @@ void RoundedRect::draw_impl() const {
 	nvgClosePath(m_root->ctx->nvg_ctx);
 }
 
+// Text
+
+const std::string& Text::font_face() const {
+	if (auto face = style.find("font-family"); face != style.end())
+		return face->second;
+	throw std::runtime_error("text has undefined font family");
+}
+
+const std::string& Text::text() const {
+	if (auto face = style.find("text"); face != style.end())
+		return face->second;
+	throw std::runtime_error("text has no text property");
+}
+
+std::array<float, 4> Text::bounds() const {
+	auto corner = render_corner();
+	std::array<float, 4> bounds;
+	nvgReset(m_root->ctx->nvg_ctx);
+	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(font_face()));
+	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
+	nvgTextBounds(m_root->ctx->nvg_ctx, corner[0], corner[1], text().c_str(), nullptr, bounds.data());
+	bounds[2] -= bounds[0];
+	bounds[3] -= bounds[1];
+	return bounds;
+}
+
+std::array<float, 2> Text::render_corner() const {
+	std::optional<float> left, top;
+
+	{
+		auto it = style.find("x");
+		if (it == style.end())
+			it = style.find("left");
+		if (it != style.end())
+			left = to_horizontal_px(it->second.c_str()).val;
+	} {
+		auto it = style.find("y");
+		if (it == style.end())
+			it = style.find("top");
+		if (it != style.end())
+			top = to_vertical_px(it->second.c_str()).val;
+	}
+
+	auto p_bounds = m_parent->bounds();
+
+	if (left && top)
+		return {p_bounds[0]+*left, p_bounds[1]+*top};
+
+	float text_bounds[4];
+	nvgReset(m_root->ctx->nvg_ctx);
+	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(font_face()));
+	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
+	nvgTextBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, text().c_str(), nullptr, text_bounds);
+
+	if (!left) {
+		float right;
+		if (auto it = style.find("right"); it != style.end())
+			right = to_horizontal_px(it->second.c_str()).val;
+		else
+			throw std::runtime_error("text x position undefined");
+
+		left = p_bounds[0] + p_bounds[2] - right - p_bounds[2];
+	}
+
+	if (!top) {
+		float bottom;
+		if (auto it = style.find("bottom"); it != style.end())
+			bottom = to_vertical_px(it->second.c_str()).val;
+		else
+			throw std::runtime_error("text x position undefined");
+
+		top = p_bounds[1] + p_bounds[3] - bottom - p_bounds[3];
+	}
+
+	return {*left, *top};
+
+}
+
+float Text::font_size() const {
+	if (auto it = style.find("font-size"); it != style.end())
+		return to_px(it->second.c_str()).val;
+	throw std::runtime_error("text has undefined font size");
+}
+
+void Text::draw_impl() const {
+	nvgBeginPath(m_root->ctx->nvg_ctx);
+
+
+	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(font_face()));
+	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
+	auto corner = render_corner();
+	set_fill();
+	nvgText(m_root->ctx->nvg_ctx, corner[0], corner[1], text().c_str(), nullptr);
+
+	nvgClosePath(m_root->ctx->nvg_ctx);
+}
+
+UIElement* Text::element_at_impl(float x, float y) {
+	auto b = bounds();
+	return ((x -= b[0]) >= 0 && x <= b[2] && (y -= b[1]) >= 0 && y <= b[3]) ? this : nullptr;
+}
+
 // UI Root
 
 Root::Root(
@@ -636,6 +738,15 @@ Root::Root(
 	bundle_path{std::move(path)},
 	ctx{context}
 {}
+
+int Root::get_font(const std::string& font_face) {
+	int font_id = nvgFindFont(ctx->nvg_ctx, font_face.c_str());
+	if (font_id == -1) {
+		const auto path = bundle_path / "fonts" / (font_face + ".ttf");
+		font_id = nvgCreateFont(ctx->nvg_ctx, font_face.c_str(), path.c_str());
+	}
+	return font_id;
+}
 
 // Drawing Context
 
