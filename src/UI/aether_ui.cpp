@@ -233,6 +233,144 @@ namespace Aether {
 			}
 		});
 
+		{
+			auto global_volume = ui_tree.root().add_child<Group>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.style = {
+					{"right","5sp"}, {"top","10sp"},
+					{"width","40sp"}, {"height","330sp"}
+				}
+			});
+
+			// Background
+			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.style = {
+					{"x", "5sp"}, {"y", "0"}, {"r", "1sp"},
+					{"width", "5sp"}, {"height", "280sp"},
+					{"fill", "#33343b"}
+				}
+			});
+			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.style = {
+					{"x", "12sp"}, {"y", "0"}, {"r", "1sp"},
+					{"width", "5sp"}, {"height", "280sp"},
+					{"fill", "#33343b"}
+				}
+			});
+			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.style = {
+					{"x", "23sp"}, {"y", "0"}, {"r", "1sp"},
+					{"width", "5sp"}, {"height", "280sp"},
+					{"fill", "#33343b"}
+				}
+			});
+			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.style = {
+					{"x", "30sp"}, {"y", "0"}, {"r", "1sp"},
+					{"width", "5sp"}, {"height", "280sp"},
+					{"fill", "#33343b"}
+				}
+			});
+
+			const auto color_interpolate = [](float t, auto) -> std::string {
+				using namespace std::string_literals;
+				if (t > 1.f/1.5f) // turn red if level goes above 1
+					return "#a52f3b"s;
+				return "linear-gradient(0 0 #526db0 0 280sp #3055a4)"s;
+			};
+
+			// levels
+			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.connections = {
+					{
+						.param_idx = 1,
+						.style ="fill",
+						.in_range = {0.f, 1.5f},
+						.out_range = {"", ""}, // unused
+						.interpolate = color_interpolate
+					}, {
+						.param_idx = 1,
+						.style ="height",
+						.in_range = {0.f, 1.5f},
+						.out_range = {"0sp", "280sp"}
+					}
+				},
+				.style = {
+					{"x", "5sp"}, {"bottom", "50sp"}, {"r", "1sp"},
+					{"width", "5sp"}
+				}
+			});
+			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.connections = {
+					{
+						.param_idx = 1,
+						.style ="fill",
+						.in_range = {0.f, 1.5f},
+						.out_range = {"", ""}, // unused
+						.interpolate = color_interpolate
+					}, {
+						.param_idx = 1,
+						.style ="height",
+						.in_range = {0.f, 1.5f},
+						.out_range = {"0sp", "280sp"}
+					}
+				},
+				.style = {
+					{"x", "12sp"}, {"bottom", "50sp"}, {"r", "1sp"},
+					{"width", "5sp"}
+				}
+			});
+			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.connections = {
+					{
+						.param_idx = 2,
+						.style ="fill",
+						.in_range = {0.f, 1.5f},
+						.out_range = {"", ""}, // unused
+						.interpolate = color_interpolate
+					}, {
+						.param_idx = 2,
+						.style ="height",
+						.in_range = {0.f, 1.5f},
+						.out_range = {"0sp", "280sp"}
+					}
+				},
+				.style = {
+					{"x", "23sp"}, {"bottom", "50sp"}, {"r", "1sp"},
+					{"width", "5sp"}
+				}
+			});
+			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.connections = {
+					{
+						.param_idx = 2,
+						.style ="fill",
+						.in_range = {0.f, 1.5f},
+						.out_range = {"", ""}, // unused
+						.interpolate = color_interpolate
+					}, {
+						.param_idx = 2,
+						.style ="height",
+						.in_range = {0.f, 1.5f},
+						.out_range = {"0sp", "280sp"}
+					}
+				},
+				.style = {
+					{"x", "30sp"}, {"bottom", "50sp"}, {"r", "1sp"},
+					{"width", "5sp"}
+				}
+			});
+		}
+
+
 		// global settings (seeds, interpolation, etc)
 		{
 			auto global_settings = ui_tree.root().add_child<Group>(UIElement::CreateInfo{
