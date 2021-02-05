@@ -126,6 +126,7 @@ void UIElement::draw() const {
 			nvgBeginFrame(m_root->ctx->nvg_ctx, 100*m_root->vw, 100*m_root->vh, 1);
 		}
 
+		nvgReset(m_root->ctx->nvg_ctx);
 		draw_impl();
 
 		if (filter != style.end()) {
@@ -574,7 +575,6 @@ std::array<float, 4> Rect::bounds() const {
 }
 
 void Rect::draw_impl() const {
-	nvgReset(m_root->ctx->nvg_ctx);
 	nvgBeginPath(m_root->ctx->nvg_ctx);
 	auto bounds = this->bounds();
 	nvgRect(m_root->ctx->nvg_ctx, bounds[0], bounds[1], bounds[2], bounds[3]);
@@ -607,7 +607,6 @@ float RoundedRect::r() const {
 }
 
 void RoundedRect::draw_impl() const {
-	nvgReset(m_root->ctx->nvg_ctx);
 	nvgBeginPath(m_root->ctx->nvg_ctx);
 	auto bounds = this->bounds();
 	nvgRoundedRect(m_root->ctx->nvg_ctx, bounds[0], bounds[1], bounds[2], bounds[3], r());
@@ -655,15 +654,11 @@ void DrawingContext::destroy() noexcept {
 	nvgDeleteGL3(nvg_ctx);
 }
 
-
 // UITree
 
 UITree::UITree(uint32_t width, uint32_t height, std::filesystem::path bundle_path) :
-	m_ctx{},
-	m_root{width, height, bundle_path, &m_ctx}
-{
-
-}
+	m_ctx{}, m_root{width, height, bundle_path, &m_ctx}
+{}
 
 void UITree::draw() const {
 	nvgEndFrame(m_root.ctx->nvg_ctx);
