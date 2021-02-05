@@ -761,9 +761,21 @@ void Text::draw_impl() const {
 
 	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(font_face()));
 	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
-	auto corner = render_corner();
+
+	if (auto it = style.find("text-align"); it != style.end()) {
+		if (it->second == "left")
+			nvgTextAlign(m_root->ctx->nvg_ctx, NVG_ALIGN_LEFT);
+		else if (it->second == "center")
+			nvgTextAlign(m_root->ctx->nvg_ctx, NVG_ALIGN_CENTER);
+		else if (it->second == "right")
+			nvgTextAlign(m_root->ctx->nvg_ctx, NVG_ALIGN_RIGHT);
+		else
+			throw std::runtime_error("unrecognized alignment specified");
+	}
+
 	set_fill();
 
+	auto corner = render_corner();
 	if (auto width = defined_width(); width)
 		nvgTextBox(m_root->ctx->nvg_ctx, corner[0], corner[1], *width, text().c_str(), nullptr);
 	else
