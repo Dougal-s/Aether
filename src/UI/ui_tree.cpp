@@ -97,6 +97,7 @@ void UIElement::draw() const {
 			if (con.last_value != m_root->parameters[con.param_idx]) {
 				float value = m_root->parameters[con.param_idx];
 				value = (value - con.in_range.first) / con.in_range.second;
+				value = std::clamp(value, 0.f, 1.f);
 
 				style.insert_or_assign(con.style, con.interpolate(value, con.out_range));
 
@@ -425,6 +426,92 @@ void UIElement::apply_filter(const std::string& filter) const {
 /*
 	Subclasses
 */
+
+// Path
+
+const std::string& Path::path() const {
+	if (auto it = style.find("path"); it != style.end())
+		return it->second;
+	throw std::runtime_error("path has undefined path");
+}
+
+void Path::draw_impl() const {
+	nvgBeginPath(m_root->ctx->nvg_ctx);
+
+	{
+		float x = [&](){
+			auto it = style.find("x");
+			if (it == style.end())
+				it = style.find("left");
+			if (it == style.end())
+				throw std::runtime_error("path has undefined x position");
+			return to_horizontal_px(it->second.c_str()).val + m_parent->x();
+		}();
+
+		float y = [&](){
+			auto it = style.find("y");
+			if (it == style.end())
+				it = style.find("top");
+			if (it == style.end())
+				throw std::runtime_error("path has undefined y position");
+			return to_vertical_px(it->second.c_str()).val + m_parent->y();
+		}();
+
+		nvgTranslate(m_root->ctx->nvg_ctx, x, y);
+	}
+
+	const auto sp2px = [&](float sp) { return sp*100*m_root->vw/1230; };
+	const auto extract_nums = [&]<size_t nums>(const char*& c) {
+			std::array<float, nums> numbers;
+			for (float& num : numbers)
+				num = sp2px(std::strtof(c, const_cast<char**>(&c)));
+			return numbers;
+	};
+
+	std::string_view path = this->path();
+	for (auto c = path.begin(); c != path.end(); ++c) {
+		switch (*c++) {
+			case 'M': {
+				auto [x, y] = extract_nums.template operator()<2>(c);
+				nvgMoveTo(m_root->ctx->nvg_ctx, x, y);
+			} break;
+
+			case 'L': {
+				auto [x, y] = extract_nums.template operator()<2>(c);
+				nvgLineTo(m_root->ctx->nvg_ctx, x, y);
+			} break;
+
+			case 'C': {
+				auto [x1, y1, x2, y2, x, y] = extract_nums.template operator()<6>(c);
+				nvgBezierTo(m_root->ctx->nvg_ctx, x1, y1, x2, y2, x, y);
+			} break;
+
+			case 'Q': {
+				auto [cx, cy, x, y] = extract_nums.template operator()<4>(c);
+				nvgQuadTo(m_root->ctx->nvg_ctx, cx, cy, x, y);
+			} break;
+
+			case 'A': {
+				auto [x1, y1, x2, y2, r] = extract_nums.template operator()<5>(c);
+				nvgArcTo(m_root->ctx->nvg_ctx, x1, y1, x2, y2, r);
+			} break;
+
+			case 'Z':
+			case 'z':
+				c = path.end()-1;
+				break;
+
+			default:
+				throw std::runtime_error("unrecognized path symbol");
+		}
+	}
+
+
+	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
+	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
+
+	nvgClosePath(m_root->ctx->nvg_ctx);
+}
 
 // Rect
 

@@ -190,6 +190,20 @@ private:
 	Subclasses
 */
 
+class Path : public UIElement {
+public:
+	Path(Root* root, Group* parent, CreateInfo create_info) noexcept :
+		UIElement(root, parent, create_info) {}
+
+	[[nodiscard]] const std::string& path() const;
+protected:
+	/*
+		Virtual functions
+	*/
+	virtual void draw_impl() const override;
+	virtual UIElement* element_at_impl(float, float) override { return nullptr; }
+};
+
 class Rect : public UIElement {
 public:
 	Rect(Root* root, Group* parent, CreateInfo create_info) noexcept :
@@ -230,9 +244,7 @@ protected:
 	virtual void draw_impl() const override;
 };
 
-/*
 
-*/
 class Text : public Rect {
 public:
 	Text(Root* root, Group* parent, CreateInfo create_info) noexcept :
@@ -260,6 +272,7 @@ protected:
 private:
 	std::array<float, 2> render_corner() const;
 };
+
 
 
 

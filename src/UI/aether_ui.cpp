@@ -67,6 +67,100 @@ namespace {
 			}
 		});
 	}
+
+	void attach_level_meter(Group* g, size_t l_vol_idx, size_t r_vol_idx, size_t mixer_ctrl_idx) {
+		(void) mixer_ctrl_idx;
+
+		// Background
+		g->add_child<RoundedRect>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.style = {
+				{"x", "0"}, {"y", "0"}, {"r", "2sp"},
+				{"width", "10sp"}, {"height", "100%"},
+				{"fill", "#1b1d23"}
+			}
+		});
+		g->add_child<RoundedRect>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.style = {
+				{"right", "15sp"}, {"y", "0"}, {"r", "2sp"},
+				{"width", "10sp"}, {"height", "100%"},
+				{"fill", "#1b1d23"}
+			}
+		});
+
+		// meters
+		const auto color_interpolate = [](float t, auto) -> std::string {
+			using namespace std::string_literals;
+			if (t > 1.f/1.5f) // turn red if level goes above 1
+				return "#a52f3b"s;
+			return "linear-gradient(0 0 #526db0 0 100% #3055a4)"s;
+		};
+
+		g->add_child<RoundedRect>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.connections = {
+				{
+					.param_idx = l_vol_idx,
+					.style ="fill",
+					.in_range = {0.f, 1.5f},
+					.out_range = {"", ""}, // unused
+					.interpolate = color_interpolate
+				}, {
+					.param_idx = l_vol_idx,
+					.style ="height",
+					.in_range = {0.f, 1.5f},
+					.out_range = {"0%", "100%"}
+				}
+			},
+			.style = {
+				{"x", "0"}, {"bottom", "0"}, {"r", "2sp"}, {"width", "10sp"}
+			}
+		});
+		g->add_child<RoundedRect>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.connections = {
+				{
+					.param_idx = r_vol_idx,
+					.style ="fill",
+					.in_range = {0.f, 1.5f},
+					.out_range = {"", ""}, // unused
+					.interpolate = color_interpolate
+				}, {
+					.param_idx = r_vol_idx,
+					.style ="height",
+					.in_range = {0.f, 1.5f},
+					.out_range = {"0%", "100%"}
+				}
+			},
+			.style = {
+				{"right", "15sp"}, {"bottom", "0"}, {"r", "2sp"}, {"width", "10sp"}
+			}
+		});
+
+		g->add_child<Path>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.connections = {{
+				.param_idx = mixer_ctrl_idx,
+				.style ="y",
+				.in_range = {0.f, 1.5f},
+				.out_range = {"100%", "0%"}
+			}},
+			.style = {
+				{"x", "100%"},
+				{"fill", "#b3b3b3"},
+				{"path", "M 0 5 L -8.66025404 0 L 0 -5 L 0 5 Z"}
+			}
+		});
+
+		// control surface
+		g->add_child<Rect>(UIElement::CreateInfo{
+			.visible = false, .inert = false,
+			.style = {
+				{"x", "0"}, {"y", "0"}, {"width", "100%"}, {"height", "100%"}
+			}
+		});
+	}
 }
 
 namespace Aether {
@@ -283,6 +377,17 @@ namespace Aether {
 				}
 			});
 
+			// level meter
+			auto level = dry->add_child<Group>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.style = {
+					{"right", "5sp"}, {"y", "30sp"},
+					{"width", "40sp"}, {"height", "300sp"},
+				}
+			});
+
+			attach_level_meter(level, 0, 0, 7);
+
 			// Shadow
 			dry->add_child<Rect>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
@@ -317,6 +422,17 @@ namespace Aether {
 				}
 			});
 
+			// level meter
+			auto level = predelay->add_child<Group>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.style = {
+					{"right", "5sp"}, {"y", "30sp"},
+					{"width", "40sp"}, {"height", "300sp"},
+				}
+			});
+
+			attach_level_meter(level, 0, 0, 8);
+
 			// Shadow
 			predelay->add_child<Rect>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
@@ -350,6 +466,17 @@ namespace Aether {
 					{"text", "EARLY REFLECTIONS"}
 				}
 			});
+
+			// level meter
+			auto level = early->add_child<Group>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.style = {
+					{"right", "5sp"}, {"y", "30sp"},
+					{"width", "40sp"}, {"height", "300sp"},
+				}
+			});
+
+			attach_level_meter(level, 0, 0, 9);
 
 			{
 				auto diffusion = early->add_child<Group>(UIElement::CreateInfo{
@@ -478,6 +605,17 @@ namespace Aether {
 					{"text", "LATE REVERBERATIONS"}
 				}
 			});
+
+			// level meter
+			auto level = late->add_child<Group>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.style = {
+					{"right", "5sp"}, {"y", "30sp"},
+					{"width", "40sp"}, {"height", "300sp"},
+				}
+			});
+
+			attach_level_meter(level, 0, 0, 10);
 
 			{
 				auto delay = late->add_child<Group>(UIElement::CreateInfo{
