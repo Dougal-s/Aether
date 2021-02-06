@@ -74,7 +74,7 @@ namespace {
 namespace Aether {
 	class UI::View : public pugl::View {
 	public:
-		View(pugl::World& world, std::filesystem::path bundle_path, auto update_paramaeter_fn);
+		View(pugl::World& world, std::filesystem::path bundle_path, auto update_parameter_fn);
 		View(const View&) = delete;
 		~View() = default;
 
@@ -1076,7 +1076,7 @@ namespace Aether {
 					return;
 				}
 
-				float sensitivity = (e.state & pugl::Mod::PUGL_MOD_CTRL) ? 0.2f : 1.f;
+				float sensitivity = (e.state & pugl::Mod::PUGL_MOD_CTRL) ? 0.1f : 1.f;
 				auto bounds = dynamic_cast<Rect*>(elem)->bounds();
 				float dy = sensitivity*(mouse_callback_info.y - static_cast<float>(e.y))/bounds[3];
 				float new_value = std::clamp(get_parameter(mixer_ctrl_idx) + 100*dy, 0.f, 100.f);
