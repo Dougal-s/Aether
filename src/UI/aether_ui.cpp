@@ -124,6 +124,16 @@ namespace Aether {
 		void dial_btn_motion_cb(size_t param_idx, UIElement* elem, const pugl::MotionEvent& e, float sensitivity = 1.f);
 
 		void attach_level_meter(Group* g, size_t l_vol_idx, size_t r_vol_idx, size_t mixer_ctrl_idx);
+
+		void attach_dial(
+			Group* g,
+			size_t param_idx,
+			const std::string& param_name,
+			int dial_size,
+			float cx,
+			float cy,
+			const std::string& center_fill
+		);
 	};
 
 	/*
@@ -149,6 +159,7 @@ namespace Aether {
 
 		setHint(pugl::ViewHint::resizable, true);
 		setHint(pugl::ViewHint::samples, 4);
+		setHint(pugl::ViewHint::stencilBits, 8);
 		setHint(pugl::ViewHint::doubleBuffer, true);
 		setHint(pugl::ViewHint::contextVersionMajor, 4);
 		setHint(pugl::ViewHint::contextVersionMinor, 6);
@@ -298,6 +309,8 @@ namespace Aether {
 					{"width", "5sp"}
 				}
 			});
+
+			attach_dial(global_volume, 6, "", 20, 20, 307, "#1b1d23");
 		}
 
 
@@ -1089,6 +1102,94 @@ namespace Aether {
 			},
 			.style = {
 				{"x", "0"}, {"y", "0"}, {"width", "100%"}, {"height", "100%"}
+			}
+		});
+	}
+
+	void UI::View::attach_dial(
+		Group* g,
+		size_t param_idx,
+		const std::string&,
+		int dial_size,
+		float cx,
+		float cy,
+		const std::string& center_fill
+	) {
+		float strk_width = dial_size/24.f;
+
+		auto center_group = g->add_child<Group>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.style = {
+				{"x", std::to_string(cx) + "sp"}, {"width", "0"},
+				{"y", std::to_string(cy) + "sp"}, {"height", "0"}
+			}
+		});
+
+		center_group->add_child<Arc>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.style = {
+				{"cx", "0"},
+				{"cy", "0"},
+				{"r", std::to_string(dial_size-strk_width/2) + "sp"},
+				{"a0", "-135deg"}, {"a1", "135deg"},
+				{"fill", "#1b1d23"},
+				{"transform", "rotate(-90deg)"}
+			}
+		});
+		center_group->add_child<Arc>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.connections = {{
+				.param_idx = param_idx,
+				.style ="a1",
+				.in_range = {parameter_infos[param_idx].min, parameter_infos[param_idx].max},
+				.out_range = {"-135deg", "135deg"}
+			}},
+			.style = {
+				{"cx", "0"},
+				{"cy", "0"},
+				{"r", std::to_string(dial_size-strk_width/2) + "sp"},
+				{"a0", "-135deg"},
+				{"fill", "#43444b"},
+				{"stroke", "#b6bfcc"}, {"stroke_width", std::to_string(strk_width) + "sp"},
+				{"transform", "rotate(-90deg)"}
+			}
+		});
+		center_group->add_child<Circle>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.style = {
+				{"cx", "0"},
+				{"cy", "0"},
+				{"r", std::to_string(20*dial_size/24.f) + "sp"},
+				{"fill", center_fill},
+				{"stroke", "#b6bfcc"}, {"stroke_width", std::to_string(strk_width) + "sp"}
+			}
+		});
+		center_group->add_child<Rect>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.connections = {{
+				.param_idx = param_idx,
+				.style ="transform",
+				.in_range = {parameter_infos[param_idx].min, parameter_infos[param_idx].max},
+				.out_range = {},
+				.interpolate = [](float t, auto){
+					return "rotate(" + std::to_string(std::lerp(-135, 135, t)) + "deg)";
+				}
+			}},
+			.style = {
+				{"x", std::to_string(-dial_size/24.f) + "sp"}, {"width", std::to_string(dial_size/12.f) + "sp"},
+				{"y", std::to_string(-dial_size) + "sp"}, {"height", std::to_string(dial_size-strk_width/2.f) + "sp"},
+				{"fill", "#b6bfcc"}
+			}
+		});
+		g->add_child<Circle>(UIElement::CreateInfo{
+			.visible = false, .inert = false,
+			.btn_press_callback = [param_idx, this](UIElement* elem, auto e){dial_btn_press_cb(param_idx, elem, e);},
+			.motion_callback = [param_idx, this](UIElement* elem, auto e){dial_btn_motion_cb(param_idx, elem, e);},
+			.style = {
+				{"cx", std::to_string(cx) + "sp"},
+				{"cy", std::to_string(cy) + "sp"},
+				{"r", std::to_string(20*dial_size/24.f) + "sp"},
+				{"stroke", "#b6bfcc"}, {"stroke_width", std::to_string(strk_width) + "sp"}
 			}
 		});
 	}

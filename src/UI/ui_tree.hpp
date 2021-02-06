@@ -190,6 +190,40 @@ private:
 	Subclasses
 */
 
+class Circle : public UIElement {
+public:
+	Circle(Root* root, Group* parent, CreateInfo create_info) noexcept :
+		UIElement(root, parent, create_info) {}
+protected:
+
+	[[nodiscard]] float cx() const;
+	[[nodiscard]] float cy() const;
+	[[nodiscard]] float r() const;
+
+	/*
+		Virtual functions
+	*/
+	virtual void draw_impl() const override;
+	virtual UIElement* element_at_impl(float x, float y) override;
+};
+
+class Arc : public Circle {
+public:
+	Arc(Root* root, Group* parent, CreateInfo create_info) noexcept :
+		Circle(root, parent, create_info) {}
+protected:
+
+	[[nodiscard]] float a0() const;
+	[[nodiscard]] float a1() const;
+
+	/*
+		Virtual functions
+	*/
+	virtual void draw_impl() const override;
+	virtual UIElement* element_at_impl(float x, float y) override;
+};
+
+
 class Path : public UIElement {
 public:
 	Path(Root* root, Group* parent, CreateInfo create_info) noexcept :

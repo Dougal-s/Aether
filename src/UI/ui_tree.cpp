@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <numbers>
+#include <numeric>
 #include <iostream>
 
 // Glad
@@ -427,6 +428,86 @@ void UIElement::apply_filter(const std::string& filter) const {
 	Subclasses
 */
 
+// Circle
+
+float Circle::cx() const {
+	if (auto it = style.find("cx"); it != style.end())
+		return to_horizontal_px(it->second.c_str()).val + m_parent->x();
+	throw std::runtime_error("circle has undefined center x position");
+}
+float Circle::cy() const {
+	if (auto it = style.find("cy"); it != style.end())
+		return to_vertical_px(it->second.c_str()).val + m_parent->y();
+	throw std::runtime_error("circle has undefined center y position");
+}
+float Circle::r() const {
+	if (auto it = style.find("r"); it != style.end())
+		return to_px(it->second.c_str()).val;
+	throw std::runtime_error("circle has undefined radius");
+}
+
+void Circle::draw_impl() const {
+	nvgBeginPath(m_root->ctx->nvg_ctx);
+
+	nvgBeginPath(m_root->ctx->nvg_ctx);
+
+	nvgCircle(m_root->ctx->nvg_ctx, cx(), cy(), r());
+
+	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
+	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
+
+	nvgClosePath(m_root->ctx->nvg_ctx);
+}
+
+UIElement* Circle::element_at_impl(float x, float y) {
+	float dx = x-this->cx();
+	float dy = y-this->cy();
+	float r = this->r();
+
+	if (set_stroke())
+		if (auto it = style.find("stroke-width"); it != style.end())
+			r += 0.5f*to_px(it->second.c_str()).val;
+
+	return (dx*dx + dy*dy < r*r) ? this : nullptr;
+}
+
+// Arc
+
+float Arc::a0() const {
+	if (auto it = style.find("a0"); it != style.end())
+		return to_rad(it->second.c_str()).val;
+	throw std::runtime_error("arc has undefined start angle");
+}
+float Arc::a1() const {
+	if (auto it = style.find("a1"); it != style.end())
+		return to_rad(it->second.c_str()).val;
+	throw std::runtime_error("arc has undefined start angle");
+}
+
+void Arc::draw_impl() const {
+
+	float cx = this->cx();
+	float cy = this->cy();
+	float r = this->r();
+	float a0 = this->a0();
+	float a1 = this->a1();
+
+	nvgBeginPath(m_root->ctx->nvg_ctx);
+
+	nvgMoveTo(m_root->ctx->nvg_ctx, cx, cy);
+
+	nvgArc(m_root->ctx->nvg_ctx, cx, cy, r, a0, a1, NVG_CW);
+
+	nvgClosePath(m_root->ctx->nvg_ctx);
+
+	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
+	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
+}
+
+UIElement* Arc::element_at_impl(float, float) {
+	return nullptr;
+}
+
 // Path
 
 const std::string& Path::path() const {
@@ -535,7 +616,7 @@ float Rect::x() const {
 		throw std::runtime_error("rectangle has undefined x position");
 	}
 
-	if (m_parent != m_root)
+	if (m_parent != m_root && this != m_root)
 		x += m_parent->x();
 
 	return x;
@@ -561,7 +642,7 @@ float Rect::y() const {
 		throw std::runtime_error("rectangle has undefined y position");
 	}
 
-	if (m_parent != m_root)
+	if (m_parent != m_root && this != m_root)
 		y += m_parent->y();
 
 	return y;
