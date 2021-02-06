@@ -542,6 +542,11 @@ namespace Aether {
 
 			attach_level_meter(level, 0, 0, 8);
 
+			// Crossover/Predelay
+
+			attach_dial(predelay, 12, "CROSSOVER", 24, 60, 100, "#33343b");
+			attach_dial(predelay, 13, "PREDELAY", 24, 60, 215, "#33343b");
+
 			// Shadow
 			predelay->add_child<Rect>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
@@ -586,6 +591,12 @@ namespace Aether {
 			});
 
 			attach_level_meter(level, 0, 0, 9);
+
+			// Multitap diffuser
+			attach_dial(early, 18, "TAPS", 24, 47, 60, "#33343b");
+			attach_dial(early, 19, "LENGTH", 24, 123, 60, "#33343b");
+			attach_dial(early, 20, "MIX", 24, 47, 147, "#33343b");
+			attach_dial(early, 21, "DECAY", 24, 123, 147, "#33343b");
 
 			{
 				auto diffusion = early->add_child<Group>(UIElement::CreateInfo{
@@ -966,7 +977,7 @@ namespace Aether {
 		sensitivity *= 0.002f*(e.state & pugl::Mod::PUGL_MOD_CTRL ? 0.1f : 1.f);
 		float dx = sensitivity*(static_cast<float>(e.x) - mouse_callback_info.x);
 		float dy = sensitivity*(mouse_callback_info.y - static_cast<float>(e.y));
-		float dval = std::lerp(parameter_infos[param_idx].min, parameter_infos[param_idx].max, dx + dy);
+		float dval = (parameter_infos[param_idx].max-parameter_infos[param_idx].min)*(dx + dy);
 		float new_value = std::clamp(
 			get_parameter(param_idx) + dval,
 			parameter_infos[param_idx].min,
@@ -1109,7 +1120,7 @@ namespace Aether {
 	void UI::View::attach_dial(
 		Group* g,
 		size_t param_idx,
-		const std::string&,
+		const std::string& param_name,
 		int dial_size,
 		float cx,
 		float cy,
@@ -1142,7 +1153,13 @@ namespace Aether {
 				.param_idx = param_idx,
 				.style ="a1",
 				.in_range = {parameter_infos[param_idx].min, parameter_infos[param_idx].max},
-				.out_range = {"-135deg", "135deg"}
+				.out_range = {"-135deg", "135deg"},
+				.interpolate = [param_idx](float t, auto out) {
+					if (parameter_infos[param_idx].integer)
+						t = static_cast<int>(t * (parameter_infos[param_idx].range()))
+							/ (parameter_infos[param_idx].range());
+					return interpolate_style<float>(t, out);
+				}
 			}},
 			.style = {
 				{"cx", "0"},
@@ -1171,7 +1188,10 @@ namespace Aether {
 				.style ="transform",
 				.in_range = {parameter_infos[param_idx].min, parameter_infos[param_idx].max},
 				.out_range = {},
-				.interpolate = [](float t, auto){
+				.interpolate = [param_idx](float t, auto) {
+					if (parameter_infos[param_idx].integer)
+						t = static_cast<int>(t * (parameter_infos[param_idx].range()))
+							/ (parameter_infos[param_idx].range());
 					return "rotate(" + std::to_string(std::lerp(-135, 135, t)) + "deg)";
 				}
 			}},
@@ -1192,6 +1212,19 @@ namespace Aether {
 				{"stroke", "#b6bfcc"}, {"stroke_width", std::to_string(strk_width) + "sp"}
 			}
 		});
+
+		if (!param_name.empty()) {
+			center_group->add_child<Text>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.style = {
+					{"x", "-100sp"}, {"width", "200sp"},
+					{"y", std::to_string(1.7f*dial_size) + "sp"},
+					{"font-family", "Roboto-Light"},
+					{"font-size", std::to_string(16*dial_size/24) + "sp"},
+					{"text", param_name}, {"text-align", "center"}, {"fill", "#b6bfcc"}
+				}
+			});
+		}
 	}
 
 	/*

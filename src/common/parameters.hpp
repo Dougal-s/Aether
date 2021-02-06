@@ -7,6 +7,8 @@ struct ParameterInfo {
 	float max;
 	float dflt;
 	bool integer;
+
+	float range() const noexcept { return max - min; }
 };
 
 static constexpr ParameterInfo parameter_infos[] = {
