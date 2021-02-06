@@ -143,7 +143,7 @@ namespace {
 			.connections = {{
 				.param_idx = mixer_ctrl_idx,
 				.style ="y",
-				.in_range = {0.f, 1.5f},
+				.in_range = {0.f, 100.f},
 				.out_range = {"100%", "0%"}
 			}},
 			.style = {
@@ -192,6 +192,8 @@ namespace Aether {
 		int height() const noexcept;
 
 		bool should_close() const noexcept;
+
+		void parameter_update(size_t index, float new_value) noexcept;
 
 	private:
 		mutable NVGcontext* m_nvg_context = nullptr;
@@ -953,6 +955,12 @@ namespace Aether {
 
 	bool UI::View::should_close() const noexcept { return m_should_close; }
 
+	void UI::View::parameter_update(size_t idx, float val) noexcept {
+		assert(idx < ui_tree.root().parameters.size());
+		std::cout << idx << std::endl;
+		ui_tree.root().parameters[idx] = val;
+	}
+
 	/*
 		UI member functions
 	*/
@@ -994,7 +1002,10 @@ namespace Aether {
 	int UI::height() const noexcept { return m_view->height(); }
 	pugl::NativeView UI::widget() noexcept { return m_view->nativeWindow(); }
 
-	void UI::port_event(uint32_t, uint32_t, uint32_t, const void*) noexcept {}
+	void UI::port_event(uint32_t port_index, uint32_t, uint32_t format, const void* buffer) noexcept {
+		if (format == 0)
+			m_view->parameter_update(port_index, *reinterpret_cast<const float*>(buffer));
+	}
 
 	UI::View* UI::create_view(const CreateInfo& create_info) {
 		auto world = std::make_unique<pugl::World>(pugl::WorldType::module);
