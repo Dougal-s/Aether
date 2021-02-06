@@ -455,8 +455,6 @@ void Circle::draw_impl() const {
 
 	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
 	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
-
-	nvgClosePath(m_root->ctx->nvg_ctx);
 }
 
 UIElement* Circle::element_at_impl(float x, float y) {
@@ -579,6 +577,7 @@ void Path::draw_impl() const {
 
 			case 'Z':
 			case 'z':
+				nvgClosePath(m_root->ctx->nvg_ctx);
 				c = path.end()-1;
 				break;
 
@@ -590,8 +589,6 @@ void Path::draw_impl() const {
 
 	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
 	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
-
-	nvgClosePath(m_root->ctx->nvg_ctx);
 }
 
 // Rect
@@ -759,8 +756,6 @@ void Rect::draw_impl() const {
 
 	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
 	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
-
-	nvgClosePath(m_root->ctx->nvg_ctx);
 }
 
 UIElement* Rect::element_at_impl(float x, float y) {
@@ -791,8 +786,6 @@ void RoundedRect::draw_impl() const {
 
 	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
 	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
-
-	nvgClosePath(m_root->ctx->nvg_ctx);
 }
 
 // Text
@@ -948,8 +941,6 @@ void Text::draw_impl() const {
 		nvgTextBox(m_root->ctx->nvg_ctx, corner[0], corner[1], *width, text().c_str(), nullptr);
 	else
 		nvgText(m_root->ctx->nvg_ctx, corner[0], corner[1], text().c_str(), nullptr);
-
-	nvgClosePath(m_root->ctx->nvg_ctx);
 }
 
 UIElement* Text::element_at_impl(float x, float y) {
