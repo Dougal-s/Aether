@@ -39,6 +39,7 @@ add_library(aether_ui MODULE
 	src/UI/gl_helper.hpp
 	src/UI/ui_tree.cpp
 	src/UI/ui_tree.hpp
+	src/common/parameters.hpp
 )
 
 target_compile_options(aether_ui PRIVATE

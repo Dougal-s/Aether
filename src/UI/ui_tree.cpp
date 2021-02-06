@@ -731,11 +731,6 @@ const std::string& Text::text() const {
 std::array<float, 4> Text::bounds() const {
 	auto corner = render_corner();
 	std::array<float, 4> bounds;
-	nvgReset(m_root->ctx->nvg_ctx);
-	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(font_face()));
-	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
-	set_alignment();
-
 	if (auto width = defined_width(); width)
 		nvgTextBoxBounds(m_root->ctx->nvg_ctx, corner[0], corner[1], *width, text().c_str(), nullptr, bounds.data());
 	else
@@ -859,6 +854,8 @@ void Text::set_text_styling() const {
 	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(font_face()));
 	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
 	set_alignment();
+	if (auto line_height = style.find("line_height"); line_height != style.end())
+		nvgTextLineHeight(m_root->ctx->nvg_ctx, std::stof(line_height->second));
 	set_fill();
 }
 

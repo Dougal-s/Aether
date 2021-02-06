@@ -198,10 +198,9 @@
 		lv2:symbol "early_low_cut_cutoff";
 		lv2:name "Early Low Cut Cutoff";
 		rdfs:comment "The cutoff frequency of the low cut filter applied before the signal enters the reverberation unit";
-		lv2:portProperty lv2:sampleRate;
 		lv2:default 20.0;
-		lv2:minimum 0.0;
-		lv2:maximum 0.5;
+		lv2:minimum 15.0;
+		lv2:maximum 22000;
 		units:unit units:hz
 	], [
 		a lv2:InputPort, lv2:ControlPort;
@@ -219,10 +218,9 @@
 		lv2:symbol "early_high_cut_cutoff";
 		lv2:name "Early High Cut Cutoff";
 		rdfs:comment "The cutoff frequency of the high cut filter applied before the signal enters the reverberation unit";
-		lv2:portProperty lv2:sampleRate;
 		lv2:default 20000;
-		lv2:minimum 0.0;
-		lv2:maximum 0.5;
+		lv2:minimum 15.0;
+		lv2:maximum 22000;
 		units:unit units:hz
 	], [
 		a lv2:InputPort, lv2:ControlPort;
@@ -456,10 +454,9 @@
 		lv2:symbol "late_low_shelf_cutoff";
 		lv2:name "Late Low Shelf Cutoff";
 		rdfs:comment "The cutoff frequency of the late reverberations low shelf filter";
-		lv2:portProperty lv2:sampleRate;
 		lv2:default 0.0;
-		lv2:minimum 0.0;
-		lv2:maximum 0.5;
+		lv2:minimum 15.0;
+		lv2:maximum 22000;
 		units:unit units:hz
 	], [
 		a lv2:InputPort, lv2:ControlPort;
@@ -487,10 +484,9 @@
 		lv2:symbol "late_high_shelf_cutoff";
 		lv2:name "Late high Shelf Cutoff";
 		rdfs:comment "The cutoff frequency of the late reverberations high shelf filter";
-		lv2:portProperty lv2:sampleRate;
 		lv2:default 0.0;
-		lv2:minimum 0.0;
-		lv2:maximum 0.5;
+		lv2:minimum 15.0;
+		lv2:maximum 22000;
 		units:unit units:hz
 	], [
 		a lv2:InputPort, lv2:ControlPort;
@@ -518,10 +514,9 @@
 		lv2:symbol "late_high_cut_cutoff";
 		lv2:name "Late High Cut Cutoff";
 		rdfs:comment "The cutoff frequency of the late reverberations high cut filter";
-		lv2:portProperty lv2:sampleRate;
 		lv2:default 20000;
-		lv2:minimum 0.0;
-		lv2:maximum 0.5;
+		lv2:minimum 15.0;
+		lv2:maximum 22000;
 		units:unit units:hz
 	];
 	# Seeds
@@ -546,7 +541,7 @@
 		lv2:portProperty lv2:integer;
 		lv2:default 1;
 		lv2:minimum 1;
-		lv2:maximum 1000000
+		lv2:maximum 99999
 	], [
 		a lv2:InputPort, lv2:ControlPort;
 		lv2:index 48;
@@ -557,7 +552,7 @@
 		lv2:portProperty lv2:integer;
 		lv2:default 1;
 		lv2:minimum 1;
-		lv2:maximum 1000000
+		lv2:maximum 99999
 	], [
 		a lv2:InputPort, lv2:ControlPort;
 		lv2:index 49;
@@ -568,7 +563,7 @@
 		lv2:portProperty lv2:integer;
 		lv2:default 1;
 		lv2:minimum 1;
-		lv2:maximum 1000000
+		lv2:maximum 99999
 	], [
 		a lv2:InputPort, lv2:ControlPort;
 		lv2:index 50;
@@ -579,7 +574,7 @@
 		lv2:portProperty lv2:integer;
 		lv2:default 1;
 		lv2:minimum 1;
-		lv2:maximum 1000000
+		lv2:maximum 99999
 	].
 
 <http://github.com/Dougal-s/Aether#ui>

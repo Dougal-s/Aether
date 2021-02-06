@@ -1,3 +1,4 @@
+#include <cassert>
 #include <iostream>
 #include <string>
 #include <stdexcept>
@@ -17,6 +18,7 @@
 // NanoVG
 #include <nanovg.h>
 
+#include "../common/parameters.hpp"
 #include "aether_ui.hpp"
 #include "ui_tree.hpp"
 
@@ -67,106 +69,12 @@ namespace {
 			}
 		});
 	}
-
-	void attach_level_meter(Group* g, size_t l_vol_idx, size_t r_vol_idx, size_t mixer_ctrl_idx) {
-		(void) mixer_ctrl_idx;
-
-		// Background
-		g->add_child<RoundedRect>(UIElement::CreateInfo{
-			.visible = true, .inert = true,
-			.style = {
-				{"x", "0"}, {"y", "0"}, {"r", "2sp"},
-				{"width", "10sp"}, {"height", "100%"},
-				{"fill", "#1b1d23"}
-			}
-		});
-		g->add_child<RoundedRect>(UIElement::CreateInfo{
-			.visible = true, .inert = true,
-			.style = {
-				{"right", "15sp"}, {"y", "0"}, {"r", "2sp"},
-				{"width", "10sp"}, {"height", "100%"},
-				{"fill", "#1b1d23"}
-			}
-		});
-
-		// meters
-		const auto color_interpolate = [](float t, auto) -> std::string {
-			using namespace std::string_literals;
-			if (t > 1.f/1.5f) // turn red if level goes above 1
-				return "#a52f3b"s;
-			return "linear-gradient(0 0 #526db0 0 100% #3055a4)"s;
-		};
-
-		g->add_child<RoundedRect>(UIElement::CreateInfo{
-			.visible = true, .inert = true,
-			.connections = {
-				{
-					.param_idx = l_vol_idx,
-					.style ="fill",
-					.in_range = {0.f, 1.5f},
-					.out_range = {"", ""}, // unused
-					.interpolate = color_interpolate
-				}, {
-					.param_idx = l_vol_idx,
-					.style ="height",
-					.in_range = {0.f, 1.5f},
-					.out_range = {"0%", "100%"}
-				}
-			},
-			.style = {
-				{"x", "0"}, {"bottom", "0"}, {"r", "2sp"}, {"width", "10sp"}
-			}
-		});
-		g->add_child<RoundedRect>(UIElement::CreateInfo{
-			.visible = true, .inert = true,
-			.connections = {
-				{
-					.param_idx = r_vol_idx,
-					.style ="fill",
-					.in_range = {0.f, 1.5f},
-					.out_range = {"", ""}, // unused
-					.interpolate = color_interpolate
-				}, {
-					.param_idx = r_vol_idx,
-					.style ="height",
-					.in_range = {0.f, 1.5f},
-					.out_range = {"0%", "100%"}
-				}
-			},
-			.style = {
-				{"right", "15sp"}, {"bottom", "0"}, {"r", "2sp"}, {"width", "10sp"}
-			}
-		});
-
-		g->add_child<Path>(UIElement::CreateInfo{
-			.visible = true, .inert = true,
-			.connections = {{
-				.param_idx = mixer_ctrl_idx,
-				.style ="y",
-				.in_range = {0.f, 100.f},
-				.out_range = {"100%", "0%"}
-			}},
-			.style = {
-				{"x", "100%"},
-				{"fill", "#b3b3b3"},
-				{"path", "M 0 5 L -8.66025404 0 L 0 -5 L 0 5 Z"}
-			}
-		});
-
-		// control surface
-		g->add_child<Rect>(UIElement::CreateInfo{
-			.visible = false, .inert = false,
-			.style = {
-				{"x", "0"}, {"y", "0"}, {"width", "100%"}, {"height", "100%"}
-			}
-		});
-	}
 }
 
 namespace Aether {
 	class UI::View : public pugl::View {
 	public:
-		View(pugl::World& world, std::filesystem::path bundle_path);
+		View(pugl::World& world, std::filesystem::path bundle_path, auto update_paramaeter_fn);
 		View(const View&) = delete;
 		~View() = default;
 
@@ -194,22 +102,42 @@ namespace Aether {
 		bool should_close() const noexcept;
 
 		void parameter_update(size_t index, float new_value) noexcept;
+		float get_parameter(size_t index) const noexcept;
 
 	private:
 		mutable NVGcontext* m_nvg_context = nullptr;
 		UIElement* m_active = nullptr;
 
+		//
+		struct MouseCallbackInfo {
+			float x;
+			float y;
+		} mouse_callback_info;
+
+		std::function<void (size_t, float)> update_dsp_param;
+
 		bool m_should_close = false;
 
 		UITree ui_tree;
+
+		void dial_btn_press_cb(size_t param_idx, UIElement* elem, const pugl::ButtonPressEvent& e, float sensitivity = 1.f);
+		void dial_btn_motion_cb(size_t param_idx, UIElement* elem, const pugl::MotionEvent& e, float sensitivity = 1.f);
+
+		void attach_level_meter(Group* g, size_t l_vol_idx, size_t r_vol_idx, size_t mixer_ctrl_idx);
 	};
 
 	/*
 		View member function
 	*/
 
-	UI::View::View(pugl::World& world, std::filesystem::path bundle_path) :
-		pugl::View(world), ui_tree(1230, 700, bundle_path)
+	UI::View::View(
+		pugl::World& world,
+		std::filesystem::path bundle_path,
+		auto update_function
+	) :
+		pugl::View(world),
+		update_dsp_param{update_function},
+		ui_tree(1230, 700, bundle_path)
 	{
 		setEventHandler(*this);
 		setWindowTitle("Aether");
@@ -382,11 +310,12 @@ namespace Aether {
 					{"bottom","360sp"}, {"height","20sp"}
 				}
 			});
+
 			{
 				auto seeds = global_settings->add_child<Group>(UIElement::CreateInfo{
 					.visible = true, .inert = false,
 					.style = {
-						{"left","600sp"}, {"width","250sp"},
+						{"left","615sp"}, {"right","200sp"},
 						{"y","2.5sp"}, {"height","15sp"}
 					}
 				});
@@ -403,17 +332,19 @@ namespace Aether {
 
 				seeds->add_child<Text>(UIElement::CreateInfo{
 					.visible = true, .inert = false,
+					.btn_press_callback = [&](UIElement* elem, auto e){dial_btn_press_cb(47, elem, e, 0.1f);},
+					.motion_callback = [&](UIElement* elem, auto e){dial_btn_motion_cb(47, elem, e, 0.1f);},
 					.connections = {
 						{
 							.param_idx = 47,
 							.style = "text",
-							.in_range = {0, 1000000},
-							.out_range = {"0", "1000000"},
+							.in_range = {0, 100000},
+							.out_range = {"0", "100000"},
 							.interpolate = interpolate_style<int>
 						}
 					},
 					.style = {
-						{"x", "60sp"}, {"y", "100%"}, {"width", "80sp"},
+						{"x", "60sp"}, {"y", "100%"}, {"width", "75sp"},
 						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
 						{"text-align", "right"}, {"fill", "#c1c1c1"}
 					}
@@ -421,17 +352,19 @@ namespace Aether {
 
 				seeds->add_child<Text>(UIElement::CreateInfo{
 					.visible = true, .inert = false,
+					.btn_press_callback = [&](UIElement* elem, auto e){dial_btn_press_cb(48, elem, e, 0.1f);},
+					.motion_callback = [&](UIElement* elem, auto e){dial_btn_motion_cb(48, elem, e, 0.1f);},
 					.connections = {
 						{
 							.param_idx = 48,
 							.style = "text",
-							.in_range = {0, 1000000},
-							.out_range = {"0", "1000000"},
+							.in_range = {0, 100000},
+							.out_range = {"0", "100000"},
 							.interpolate = interpolate_style<int>
 						}
 					},
 					.style = {
-						{"x", "140sp"}, {"y", "100%"}, {"width", "80sp"},
+						{"x", "135sp"}, {"y", "100%"}, {"width", "75sp"},
 						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
 						{"text-align", "right"}, {"fill", "#c1c1c1"}
 					}
@@ -439,17 +372,19 @@ namespace Aether {
 
 				seeds->add_child<Text>(UIElement::CreateInfo{
 					.visible = true, .inert = false,
+					.btn_press_callback = [&](UIElement* elem, auto e){dial_btn_press_cb(49, elem, e, 0.1f);},
+					.motion_callback = [&](UIElement* elem, auto e){dial_btn_motion_cb(49, elem, e, 0.1f);},
 					.connections = {
 						{
 							.param_idx = 49,
 							.style = "text",
-							.in_range = {0, 1000000},
-							.out_range = {"0", "1000000"},
+							.in_range = {0, 100000},
+							.out_range = {"0", "100000"},
 							.interpolate = interpolate_style<int>
 						}
 					},
 					.style = {
-						{"x", "220sp"}, {"y", "100%"}, {"width", "80sp"},
+						{"x", "210sp"}, {"y", "100%"}, {"width", "75sp"},
 						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
 						{"text-align", "right"}, {"fill", "#c1c1c1"}
 					}
@@ -457,17 +392,19 @@ namespace Aether {
 
 				seeds->add_child<Text>(UIElement::CreateInfo{
 					.visible = true, .inert = false,
+					.btn_press_callback = [&](UIElement* elem, auto e){dial_btn_press_cb(50, elem, e, 0.1f);},
+					.motion_callback = [&](UIElement* elem, auto e){dial_btn_motion_cb(50, elem, e, 0.1f);},
 					.connections = {
 						{
 							.param_idx = 50,
 							.style = "text",
-							.in_range = {0, 1000000},
-							.out_range = {"0", "1000000"},
+							.in_range = {0, 100000},
+							.out_range = {"0", "100000"},
 							.interpolate = interpolate_style<int>
 						}
 					},
 					.style = {
-						{"x", "300sp"}, {"y", "100%"}, {"width", "80sp"},
+						{"x", "285sp"}, {"y", "100%"}, {"width", "75sp"},
 						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
 						{"text-align", "right"}, {"fill", "#c1c1c1"},
 						{"text", "1000000"}
@@ -477,10 +414,29 @@ namespace Aether {
 
 			global_settings->add_child<Text>(UIElement::CreateInfo{
 				.visible = true, .inert = false,
+				.btn_release_callback = [this](UIElement* elem, const pugl::ButtonReleaseEvent& e){
+					if (!elem->element_at(e.x, e.y))
+						return;
+
+					float param = get_parameter(11);
+					param = param > 0.f ? 0.f : 1.f;
+					update_dsp_param(11, param);
+					parameter_update(11, param);
+				},
+				.connections = {
+					{
+						.param_idx = 11,
+						.style ="fill",
+						.in_range = {0.f, 1.f},
+						.out_range = {}, // unused
+						.interpolate = [](float t, auto) -> std::string {
+							return (t > 0.f) ? "#c1c1c1" : "#c1c1c180";
+						}
+					}
+				},
 				.style = {
 					{"x", "1035sp"}, {"bottom", "0"},
 					{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
-					{"fill", "#c1c1c1"},
 					{"text", "Interpolate"}
 				}
 			});
@@ -522,7 +478,7 @@ namespace Aether {
 				.visible = true, .inert = false,
 				.style = {
 					{"right", "5sp"}, {"y", "30sp"},
-					{"width", "40sp"}, {"height", "300sp"},
+					{"width", "45sp"}, {"height", "300sp"},
 				}
 			});
 
@@ -567,7 +523,7 @@ namespace Aether {
 				.visible = true, .inert = false,
 				.style = {
 					{"right", "5sp"}, {"y", "30sp"},
-					{"width", "40sp"}, {"height", "300sp"},
+					{"width", "45sp"}, {"height", "300sp"},
 				}
 			});
 
@@ -612,7 +568,7 @@ namespace Aether {
 				.visible = true, .inert = false,
 				.style = {
 					{"right", "5sp"}, {"y", "30sp"},
-					{"width", "40sp"}, {"height", "300sp"},
+					{"width", "45sp"}, {"height", "300sp"},
 				}
 			});
 
@@ -751,7 +707,7 @@ namespace Aether {
 				.visible = true, .inert = false,
 				.style = {
 					{"right", "5sp"}, {"y", "30sp"},
-					{"width", "40sp"}, {"height", "300sp"},
+					{"width", "45sp"}, {"height", "300sp"},
 				}
 			});
 
@@ -957,8 +913,184 @@ namespace Aether {
 
 	void UI::View::parameter_update(size_t idx, float val) noexcept {
 		assert(idx < ui_tree.root().parameters.size());
-		std::cout << idx << std::endl;
 		ui_tree.root().parameters[idx] = val;
+	}
+
+	float UI::View::get_parameter(size_t idx) const noexcept {
+		assert(idx < ui_tree.root().parameters.size());
+		return ui_tree.root().parameters[idx];
+	}
+
+
+	void UI::View::dial_btn_press_cb(
+		size_t param_idx,
+		UIElement*,
+		const pugl::ButtonPressEvent& e,
+		float
+	) {
+		mouse_callback_info.x = e.x;
+		mouse_callback_info.y = e.y;
+
+		if (e.state & pugl::Mod::PUGL_MOD_SHIFT) {
+			update_dsp_param(param_idx, parameter_infos[param_idx].dflt);
+			parameter_update(param_idx, parameter_infos[param_idx].dflt);
+			return;
+		}
+	}
+
+	void UI::View::dial_btn_motion_cb(
+		size_t param_idx,
+		UIElement*,
+		const pugl::MotionEvent& e,
+		float sensitivity
+	) {
+		if (e.state & pugl::Mod::PUGL_MOD_SHIFT) {
+			update_dsp_param(param_idx, parameter_infos[param_idx].dflt);
+			parameter_update(param_idx, parameter_infos[param_idx].dflt);
+			return;
+		}
+
+		sensitivity *= 0.002f*(e.state & pugl::Mod::PUGL_MOD_CTRL ? 0.1f : 1.f);
+		float dx = sensitivity*(static_cast<float>(e.x) - mouse_callback_info.x);
+		float dy = sensitivity*(mouse_callback_info.y - static_cast<float>(e.y));
+		float dval = std::lerp(parameter_infos[param_idx].min, parameter_infos[param_idx].max, dx + dy);
+		float new_value = std::clamp(
+			get_parameter(param_idx) + dval,
+			parameter_infos[param_idx].min,
+			parameter_infos[param_idx].max
+		);
+
+		update_dsp_param(param_idx, new_value);
+		parameter_update(param_idx, new_value);
+
+		mouse_callback_info.x = e.x;
+		mouse_callback_info.y = e.y;
+	}
+
+
+	void UI::View::attach_level_meter(
+		Group* g,
+		size_t l_vol_idx,
+		size_t r_vol_idx,
+		size_t mixer_ctrl_idx
+	) {
+		// Background
+		g->add_child<RoundedRect>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.style = {
+				{"x", "5sp"}, {"y", "0"}, {"r", "2sp"},
+				{"width", "10sp"}, {"height", "100%"},
+				{"fill", "#1b1d23"}
+			}
+		});
+		g->add_child<RoundedRect>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.style = {
+				{"right", "15sp"}, {"y", "0"}, {"r", "2sp"},
+				{"width", "10sp"}, {"height", "100%"},
+				{"fill", "#1b1d23"}
+			}
+		});
+
+		// meters
+		const auto color_interpolate = [](float t, auto) -> std::string {
+			using namespace std::string_literals;
+			if (t > 1.f/1.5f) // turn red if level goes above 1
+				return "#a52f3b"s;
+			return "linear-gradient(0 0 #526db0 0 100% #3055a4)"s;
+		};
+
+		g->add_child<RoundedRect>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.connections = {
+				{
+					.param_idx = l_vol_idx,
+					.style ="fill",
+					.in_range = {0.f, 1.5f},
+					.out_range = {"", ""}, // unused
+					.interpolate = color_interpolate
+				}, {
+					.param_idx = l_vol_idx,
+					.style ="height",
+					.in_range = {0.f, 1.5f},
+					.out_range = {"0%", "100%"}
+				}
+			},
+			.style = {
+				{"x", "5sp"}, {"bottom", "0"}, {"r", "2sp"}, {"width", "10sp"}
+			}
+		});
+		g->add_child<RoundedRect>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.connections = {
+				{
+					.param_idx = r_vol_idx,
+					.style ="fill",
+					.in_range = {0.f, 1.5f},
+					.out_range = {"", ""}, // unused
+					.interpolate = color_interpolate
+				}, {
+					.param_idx = r_vol_idx,
+					.style ="height",
+					.in_range = {0.f, 1.5f},
+					.out_range = {"0%", "100%"}
+				}
+			},
+			.style = {
+				{"right", "15sp"}, {"bottom", "0"}, {"r", "2sp"}, {"width", "10sp"}
+			}
+		});
+
+		g->add_child<Path>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.connections = {{
+				.param_idx = mixer_ctrl_idx,
+				.style ="y",
+				.in_range = {0.f, 100.f},
+				.out_range = {"100%", "0%"}
+			}},
+			.style = {
+				{"x", "100%"},
+				{"fill", "#b3b3b3"},
+				{"path", "M 0 5 L -8.66025404 0 L 0 -5 L 0 5 Z"}
+			}
+		});
+
+		// control surface
+		g->add_child<Rect>(UIElement::CreateInfo{
+			.visible = false, .inert = false,
+			.btn_press_callback = [mixer_ctrl_idx, this](UIElement*, const pugl::ButtonPressEvent& e) {
+				mouse_callback_info.x = e.x;
+				mouse_callback_info.y = e.y;
+
+				if (e.state & pugl::Mod::PUGL_MOD_SHIFT) {
+					update_dsp_param(mixer_ctrl_idx, parameter_infos[mixer_ctrl_idx].dflt);
+					parameter_update(mixer_ctrl_idx, parameter_infos[mixer_ctrl_idx].dflt);
+					return;
+				}
+			},
+			.motion_callback = [mixer_ctrl_idx, this](UIElement* elem, const pugl::MotionEvent& e) {
+				if (e.state & pugl::Mod::PUGL_MOD_SHIFT) {
+					update_dsp_param(mixer_ctrl_idx, parameter_infos[mixer_ctrl_idx].dflt);
+					parameter_update(mixer_ctrl_idx, parameter_infos[mixer_ctrl_idx].dflt);
+					return;
+				}
+
+				float sensitivity = (e.state & pugl::Mod::PUGL_MOD_CTRL) ? 0.2f : 1.f;
+				auto bounds = dynamic_cast<Rect*>(elem)->bounds();
+				float dy = sensitivity*(mouse_callback_info.y - static_cast<float>(e.y))/bounds[3];
+				float new_value = std::clamp(get_parameter(mixer_ctrl_idx) + 100*dy, 0.f, 100.f);
+
+				update_dsp_param(mixer_ctrl_idx, new_value);
+				parameter_update(mixer_ctrl_idx, new_value);
+
+				mouse_callback_info.x = e.x;
+				mouse_callback_info.y = e.y;
+			},
+			.style = {
+				{"x", "0"}, {"y", "0"}, {"width", "100%"}, {"height", "100%"}
+			}
+		});
 	}
 
 	/*
@@ -1011,7 +1143,20 @@ namespace Aether {
 		auto world = std::make_unique<pugl::World>(pugl::WorldType::module);
 		world->setClassName("Pulsar");
 
-		auto view = std::make_unique<View>(*world, create_info.bundle_path);
+		auto view = std::make_unique<View>(
+			*world,
+			create_info.bundle_path,
+			[create_info](uint32_t idx, float data){
+				create_info.write_function(
+					create_info.controller,
+					idx,
+					sizeof(float),
+					0,
+					&data
+				);
+			}
+		);
+
 		if (create_info.parent)
 			view->setParentWindow(pugl::NativeView(create_info.parent));
 		if (auto status = view->show(); status != pugl::Status::success)
