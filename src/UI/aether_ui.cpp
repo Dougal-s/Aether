@@ -1327,7 +1327,7 @@ namespace Aether {
 
 	UI::View* UI::create_view(const CreateInfo& create_info) {
 		auto world = std::make_unique<pugl::World>(pugl::WorldType::module);
-		world->setClassName("Pulsar");
+		world->setClassName("Aether");
 
 		auto view = std::make_unique<View>(
 			*world,
