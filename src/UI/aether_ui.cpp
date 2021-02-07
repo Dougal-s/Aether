@@ -785,6 +785,11 @@ namespace Aether {
 
 			attach_level_meter(level, 0, 0, 10);
 
+			// Delaylines/Crossmix
+
+			attach_dial(late, 28, "DELAYLINES", 24, 373, 65, "#33343b");
+			attach_dial(late, 46, "CROSSMIX", 24, 373, 148, "#33343b");
+
 			{
 				auto delay = late->add_child<Group>(UIElement::CreateInfo{
 					.visible = true, .inert = false,

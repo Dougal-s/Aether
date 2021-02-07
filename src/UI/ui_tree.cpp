@@ -97,7 +97,7 @@ void UIElement::draw() const {
 		for (const auto& con : param_connections) {
 			if (con.last_value != m_root->parameters[con.param_idx]) {
 				float value = m_root->parameters[con.param_idx];
-				value = (value - con.in_range.first) / con.in_range.second;
+				value = (value - con.in_range.first) / (con.in_range.second-con.in_range.first);
 				value = std::clamp(value, 0.f, 1.f);
 
 				style.insert_or_assign(con.style, con.interpolate(value, con.out_range));
