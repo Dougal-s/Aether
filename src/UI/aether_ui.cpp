@@ -1129,7 +1129,7 @@ namespace Aether {
 			.style = {
 				{"x", "100%"},
 				{"fill", "#b3b3b3"},
-				{"path", "M 0 5 L -8.66025404 0 L 0 -5 L 0 5 Z"}
+				{"path", "M 0 5 L -8.66025404 0 L 0 -5 Z"}
 			}
 		});
 
