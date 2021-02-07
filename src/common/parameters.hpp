@@ -24,7 +24,7 @@ static constexpr ParameterInfo parameter_infos[] = {
 	{0,100,80, false},
 	{0,100,20, false},
 	{0,100,10, false},
-	{0,100,10, false}, // 10
+	{0,100,20, false}, // 10
 
 	{0,1,1, true}, // Predelay/Interpolation
 	{0,100,0, false},
