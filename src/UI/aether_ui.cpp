@@ -974,7 +974,7 @@ namespace Aether {
 			return;
 		}
 
-		sensitivity *= 0.002f*(e.state & pugl::Mod::PUGL_MOD_CTRL ? 0.1f : 1.f);
+		sensitivity *= 0.003f*(e.state & pugl::Mod::PUGL_MOD_CTRL ? 0.1f : 1.f);
 		float dx = sensitivity*(static_cast<float>(e.x) - mouse_callback_info.x);
 		float dy = sensitivity*(mouse_callback_info.y - static_cast<float>(e.y));
 		float dval = (parameter_infos[param_idx].max-parameter_infos[param_idx].min)*(dx + dy);
