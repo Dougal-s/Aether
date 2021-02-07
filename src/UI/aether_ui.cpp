@@ -726,6 +726,54 @@ namespace Aether {
 				}
 			});
 
+			late->add_child<Text>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.btn_release_callback = [this](UIElement* elem, auto e){
+					if (elem->element_at(e.x, e.y)) {
+						update_dsp_param(27, 0.f);
+						parameter_update(27, 0.f);
+					}
+				},
+				.connections = {{
+					.param_idx = 27,
+					.style ="fill",
+					.in_range = {0.f, 1.f},
+					.out_range = {"", ""}, // unused
+					.interpolate = [](float t, auto) -> std::string {
+						return (t == 0.f) ? "#b6bfcc" : "#1b1d23";
+					}
+				}},
+				.style = {
+					{"x", "410sp"}, {"y", "17sp"},
+					{"font-family", "Roboto-Regular"}, {"font-size", "17.333333sp"},
+					{"text", "PRE"}
+				}
+			});
+
+			late->add_child<Text>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.btn_release_callback = [this](UIElement* elem, auto e){
+					if (elem->element_at(e.x, e.y)) {
+						update_dsp_param(27, 1.f);
+						parameter_update(27, 1.f);
+					}
+				},
+				.connections = {{
+					.param_idx = 27,
+					.style ="fill",
+					.in_range = {0.f, 1.f},
+					.out_range = {"", ""}, // unused
+					.interpolate = [](float t, auto) -> std::string {
+						return (t == 1.f) ? "#b6bfcc" : "#1b1d23";
+					}
+				}},
+				.style = {
+					{"x", "452sp"}, {"y", "17sp"},
+					{"font-family", "Roboto-Regular"}, {"font-size", "17.333333sp"},
+					{"text", "POST"}
+				}
+			});
+
 			// level meter
 			auto level = late->add_child<Group>(UIElement::CreateInfo{
 				.visible = true, .inert = false,
