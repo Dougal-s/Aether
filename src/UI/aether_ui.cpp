@@ -178,8 +178,8 @@ namespace Aether {
 			auto global_volume = ui_tree.root().add_child<Group>(UIElement::CreateInfo{
 				.visible = true, .inert = false,
 				.style = {
-					{"right","5sp"}, {"top","10sp"},
-					{"width","40sp"}, {"height","330sp"}
+					{"right","0sp"}, {"top","10sp"},
+					{"width","55sp"}, {"height","330sp"}
 				}
 			});
 
@@ -187,7 +187,7 @@ namespace Aether {
 			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
 				.style = {
-					{"x", "5sp"}, {"y", "0"}, {"r", "1sp"},
+					{"x", "15sp"}, {"y", "0"}, {"r", "1sp"},
 					{"width", "5sp"}, {"height", "280sp"},
 					{"fill", "#33343b"}
 				}
@@ -195,7 +195,7 @@ namespace Aether {
 			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
 				.style = {
-					{"x", "12sp"}, {"y", "0"}, {"r", "1sp"},
+					{"x", "22sp"}, {"y", "0"}, {"r", "1sp"},
 					{"width", "5sp"}, {"height", "280sp"},
 					{"fill", "#33343b"}
 				}
@@ -203,7 +203,7 @@ namespace Aether {
 			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
 				.style = {
-					{"x", "23sp"}, {"y", "0"}, {"r", "1sp"},
+					{"x", "33sp"}, {"y", "0"}, {"r", "1sp"},
 					{"width", "5sp"}, {"height", "280sp"},
 					{"fill", "#33343b"}
 				}
@@ -211,7 +211,7 @@ namespace Aether {
 			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
 				.style = {
-					{"x", "30sp"}, {"y", "0"}, {"r", "1sp"},
+					{"x", "40sp"}, {"y", "0"}, {"r", "1sp"},
 					{"width", "5sp"}, {"height", "280sp"},
 					{"fill", "#33343b"}
 				}
@@ -242,7 +242,7 @@ namespace Aether {
 					}
 				},
 				.style = {
-					{"x", "5sp"}, {"bottom", "50sp"}, {"r", "1sp"},
+					{"x", "15sp"}, {"bottom", "50sp"}, {"r", "1sp"},
 					{"width", "5sp"}
 				}
 			});
@@ -263,7 +263,7 @@ namespace Aether {
 					}
 				},
 				.style = {
-					{"x", "12sp"}, {"bottom", "50sp"}, {"r", "1sp"},
+					{"x", "22sp"}, {"bottom", "50sp"}, {"r", "1sp"},
 					{"width", "5sp"}
 				}
 			});
@@ -284,7 +284,7 @@ namespace Aether {
 					}
 				},
 				.style = {
-					{"x", "23sp"}, {"bottom", "50sp"}, {"r", "1sp"},
+					{"x", "33sp"}, {"bottom", "50sp"}, {"r", "1sp"},
 					{"width", "5sp"}
 				}
 			});
@@ -305,12 +305,12 @@ namespace Aether {
 					}
 				},
 				.style = {
-					{"x", "30sp"}, {"bottom", "50sp"}, {"r", "1sp"},
+					{"x", "40sp"}, {"bottom", "50sp"}, {"r", "1sp"},
 					{"width", "5sp"}
 				}
 			});
 
-			attach_dial(global_volume, 6, "", 20, 20, 307, "#1b1d23");
+			attach_dial(global_volume, 6, "", 20, 30, 307, "#1b1d23");
 		}
 
 
@@ -1256,8 +1256,7 @@ namespace Aether {
 			.style = {
 				{"cx", std::to_string(cx) + "sp"},
 				{"cy", std::to_string(cy) + "sp"},
-				{"r", std::to_string(20*dial_size/24.f) + "sp"},
-				{"stroke", "#b6bfcc"}, {"stroke_width", std::to_string(strk_width) + "sp"}
+				{"r", std::to_string(1.4*dial_size) + "sp"}
 			}
 		});
 
