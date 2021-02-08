@@ -198,7 +198,7 @@
 		lv2:symbol "early_low_cut_cutoff";
 		lv2:name "Early Low Cut Cutoff";
 		rdfs:comment "The cutoff frequency of the low cut filter applied before the signal enters the reverberation unit";
-		lv2:default 20.0;
+		lv2:default 15.0;
 		lv2:minimum 15.0;
 		lv2:maximum 22000;
 		units:unit units:hz
@@ -454,7 +454,7 @@
 		lv2:symbol "late_low_shelf_cutoff";
 		lv2:name "Late Low Shelf Cutoff";
 		rdfs:comment "The cutoff frequency of the late reverberations low shelf filter";
-		lv2:default 0.0;
+		lv2:default 15.0;
 		lv2:minimum 15.0;
 		lv2:maximum 22000;
 		units:unit units:hz
@@ -484,7 +484,7 @@
 		lv2:symbol "late_high_shelf_cutoff";
 		lv2:name "Late high Shelf Cutoff";
 		rdfs:comment "The cutoff frequency of the late reverberations high shelf filter";
-		lv2:default 0.0;
+		lv2:default 15.0;
 		lv2:minimum 15.0;
 		lv2:maximum 22000;
 		units:unit units:hz
