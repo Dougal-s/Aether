@@ -151,7 +151,7 @@ private:
 	// used for mod_amt, mod_rate and delay
 	std::array<float, 3*max_stages> m_rand_vals = {};
 
-	float m_delay = 0.f;
+	float m_delay = 10.f;
 	float m_mod_depth = 0.f;
 	float m_mod_rate = 0.f;
 
