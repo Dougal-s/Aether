@@ -176,7 +176,7 @@ namespace Aether {
 		setEventHandler(*this);
 		setWindowTitle("Aether");
 		setDefaultSize(1230, 700);
-		setMinSize(256, 144);
+		setMinSize(615, 350);
 		setAspectRatio(16, 9, 16, 9);
 
 		setBackend(pugl::glBackend());
@@ -506,7 +506,7 @@ namespace Aether {
 			dry->add_child<Text>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
 				.style = {
-					{"x", "13sp"}, {"y", "17sp"},
+					{"x", "14sp"}, {"y", "17sp"},
 					{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
 					{"fill", "#b6bfcc"},
 					{"text", "DRY"}
