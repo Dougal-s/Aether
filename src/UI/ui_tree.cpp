@@ -765,6 +765,31 @@ UIElement* Rect::element_at_impl(float x, float y) {
 	return ((x -= b[0]) >= 0 && x <= b[2] && (y -= b[1]) >= 0 && y <= b[3]) ? this : nullptr;
 }
 
+// ShaderRect
+
+void ShaderRect::draw_impl() const {
+	if (!m_shader)
+		m_shader = Shader(m_vert_shader_code, m_frag_shader_code.c_str());
+
+	auto bounds = this->bounds();
+	bounds[0] = 0.02f*bounds[0]/m_root->vw - 1.f;
+	bounds[1] = 1.f - 0.02f*bounds[1]/m_root->vh;
+	bounds[2] = 0.02f*bounds[2]/m_root->vw;
+	bounds[3] = 0.02f*bounds[3]/m_root->vh;
+	bounds[0] += bounds[2];
+
+	glEnable(GL_BLEND);
+
+	m_shader.use();
+	m_shader.set_vec_float("corner", bounds[0], bounds[1]);
+	m_shader.set_vec_float("dimensions", bounds[2], bounds[3]);
+
+	for (const auto& uniform : m_uniforms) {
+		m_shader.set_float(uniform.name, m_root->parameters[uniform.param_idx]);
+	}
+
+	m_shader.draw();
+}
 
 // RoundedRect
 

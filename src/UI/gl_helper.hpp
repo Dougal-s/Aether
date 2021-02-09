@@ -33,6 +33,7 @@ public:
 	operator bool() const;
 
 	void set_float(const std::string& name, float val);
+	void set_vec_float(const std::string& name, float v0, float v1);
 	void set_int(const std::string& name, int val);
 	void set_texture(const std::string& name, GLenum tex);
 

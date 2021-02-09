@@ -106,6 +106,9 @@ Shader::operator bool() const { return program; }
 void Shader::set_float(const std::string& name, float val) {
 	glUniform1f(glGetUniformLocation(program, name.c_str()), val);
 }
+void Shader::set_vec_float(const std::string& name, float v0, float v1) {
+	glUniform2f(glGetUniformLocation(program, name.c_str()), v0, v1);
+}
 void Shader::set_int(const std::string& name, int val) {
 	glUniform1i(glGetUniformLocation(program, name.c_str()), val);
 }

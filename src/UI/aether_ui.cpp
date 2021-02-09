@@ -156,7 +156,18 @@ namespace Aether {
 			int dial_size,
 			float cx,
 			float cy,
-			const std::string& center_fill
+			const std::string& center_fill,
+			float font_size = 16
+		);
+
+		void attach_delay_mod(
+			Group* g,
+			size_t feedback_idx,
+			size_t delay_idx,
+			size_t rate_idx,
+			size_t depth_idx,
+			float x,
+			float y
 		);
 	};
 
@@ -655,6 +666,15 @@ namespace Aether {
 					}
 				});
 
+				attach_dial(diffusion, 22, "STAGES", 24, 65, 85, "#1b1d23");
+				attach_dial(diffusion, 26, "FEEDBACK", 24, 160, 85, "#1b1d23");
+
+				attach_dial(diffusion, 23, "DELAY", 20, 83, 200, "#1b1d23", 15);
+				attach_dial(diffusion, 25, "RATE", 20, 185, 200, "#1b1d23", 15);
+				attach_dial(diffusion, 24, "DEPTH", 20, 185, 270, "#1b1d23", 15);
+
+				attach_delay_mod(diffusion, 26, 23, 25, 24, 25, 260);
+
 				// Shadows
 
 				//horizontal
@@ -848,6 +868,15 @@ namespace Aether {
 					}
 				});
 
+				// controls
+				attach_dial(delay, 32, "FEEDBACK", 20, 50, 30, "#1b1d23", 15);
+				attach_dial(delay, 29, "DELAY", 20, 119, 30, "#1b1d23", 15);
+				attach_dial(delay, 31, "RATE", 20, 186, 30, "#1b1d23", 15);
+				attach_dial(delay, 30, "DEPTH", 20, 186, 100, "#1b1d23", 15);
+
+				// visual
+				attach_delay_mod(delay, 32, 29, 31, 30, 25, 90);
+
 				// Shadow
 
 				//horizontal
@@ -890,7 +919,6 @@ namespace Aether {
 				});
 
 				// Side text
-
 				diffusion->add_child<Text>(UIElement::CreateInfo{
 					.visible = true, .inert = true,
 					.style = {
@@ -901,6 +929,44 @@ namespace Aether {
 						{"transform", "rotate(-90deg)"}
 					}
 				});
+				diffusion->add_child<Text>(UIElement::CreateInfo{
+					.visible = true, .inert = true,
+					.connections = {{
+						.param_idx = 33,
+						.style = "text",
+						.in_range = {parameter_infos[33].min, parameter_infos[33].max},
+						.out_range = {
+							std::to_string(parameter_infos[33].min),
+							std::to_string(parameter_infos[33].max)
+						},
+						.interpolate = interpolate_style<int>
+					}},
+					.style = {
+						{"x", "225sp"}, {"y", "25sp"},
+						{"width", "50sp"}, {"line-height", "50sp"},
+						{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
+						{"text-align", "center"}, {"vertical-align", "middle"},
+						{"fill", "#b6bfcc"}
+					}
+				});
+				diffusion->add_child<Rect>(UIElement::CreateInfo{
+					.visible = false, .inert = false,
+					.btn_press_callback = [this](UIElement* elem, auto e){dial_btn_press_cb(33, elem, e);},
+					.motion_callback = [this](UIElement* elem, auto e){dial_btn_motion_cb(33, elem, e);},
+					.style = {
+						{"x", "230sp"}, {"y", "5sp"},
+						{"width", "40sp"}, {"height", "40sp"}
+					}
+				});
+
+				// controls
+				attach_dial(diffusion, 37, "FEEDBACK", 20, 50, 30, "#1b1d23", 15);
+				attach_dial(diffusion, 34, "DELAY", 20, 119, 30, "#1b1d23", 15);
+				attach_dial(diffusion, 36, "RATE", 20, 186, 30, "#1b1d23", 15);
+				attach_dial(diffusion, 35, "DEPTH", 20, 186, 100, "#1b1d23", 15);
+
+				// visual
+				attach_delay_mod(diffusion, 37, 34, 36, 35, 25, 90);
 
 				// Shadow
 
@@ -1231,7 +1297,8 @@ namespace Aether {
 		int dial_size,
 		float cx,
 		float cy,
-		const std::string& center_fill
+		const std::string& center_fill,
+		float font_size
 	) {
 		float strk_width = dial_size/24.f;
 
@@ -1324,13 +1391,89 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "-100sp"}, {"width", "200sp"},
-					{"y", std::to_string(1.7f*dial_size) + "sp"},
+					{"y", std::to_string(1.2f*dial_size + 12) + "sp"},
 					{"font-family", "Roboto-Light"},
-					{"font-size", std::to_string(16*dial_size/24) + "sp"},
+					{"font-size", std::to_string(font_size) + "sp"},
 					{"text", param_name}, {"text-align", "center"}, {"fill", "#b6bfcc"}
 				}
 			});
 		}
+	}
+
+	void UI::View::attach_delay_mod(
+		Group* g,
+		size_t feedback_idx,
+		size_t delay_idx,
+		size_t rate_idx,
+		size_t depth_idx,
+		float x,
+		float y
+	) {
+		g->add_child<ShaderRect>(ShaderRect::CreateInfo{
+			.base = {
+				.visible = true, .inert = true,
+				.style = {
+					{"x", std::to_string(x) + "sp"}, {"y", std::to_string(y) + "sp"},
+					{"width", "120sp"}, {"height", "50sp"},
+					{"fill", "#8c2e2e"}
+				},
+			},
+			.frag_shader_code =
+				"#version 330 core\n"
+
+				"in vec2 position;"
+				"out vec4 color;"
+
+				"uniform float delay;"
+				"uniform float feedback;"
+				"uniform float rate;"
+				"uniform float depth;\n"
+
+				"#define DELAY_MIN " +
+					std::to_string(parameter_infos[delay_idx].min) + "\n"
+				"#define DELAY_RANGE " +
+					std::to_string(parameter_infos[delay_idx].range()) + "\n"
+
+				"#define RATE_MIN " +
+					std::to_string(parameter_infos[rate_idx].min) + "\n"
+				"#define RATE_RANGE " +
+					std::to_string(parameter_infos[rate_idx].range()) + "\n"
+
+				"#define DEPTH_MIN " +
+					std::to_string(parameter_infos[depth_idx].min) + "\n"
+				"#define DEPTH_RANGE " +
+					std::to_string(parameter_infos[depth_idx].range()) + "\n"
+
+				"#define BAR_WIDTH 0.04f\n"
+
+				"const float pi = 3.14159265359;"
+
+				"void main() {"
+				"	float section_width = BAR_WIDTH +"
+				"		0.1f+0.3f*(delay-DELAY_MIN)/DELAY_RANGE;"
+				"	float dx = mod(position.x, section_width);"
+				"	int section = int(position.x/section_width);"
+
+				"	float height = pow(feedback, section)+0.01f;"
+				"	if (feedback == 0.f && section == 0.f)"
+				"		height = 1.f;"
+
+				"	float rate_normalised = 2.f*pi*(rate-RATE_MIN)/RATE_RANGE;"
+				"	float depth_normalised = 0.06f*(depth-DEPTH_MIN)/DEPTH_RANGE;"
+				"	float offset = depth_normalised*(0.5f-0.5f*cos(rate_normalised*section));"
+
+				"	color = vec4(0.f, 0.f, 0.f, 0.f);"
+				"	if (offset < dx && dx < BAR_WIDTH+offset)"
+				"		if (position.y < height)"
+				"			color = vec4(0.549f, 0.18f, 0.18f, 1.f);"
+				"}",
+			.uniform_infos = {
+				{"feedback", feedback_idx},
+				{"delay", delay_idx},
+				{"rate", rate_idx},
+				{"depth", depth_idx}
+			}
+		});
 	}
 
 	/*

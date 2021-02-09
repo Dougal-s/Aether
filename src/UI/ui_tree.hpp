@@ -268,6 +268,53 @@ protected:
 	virtual UIElement* element_at_impl(float x, float y) override;
 };
 
+class ShaderRect : public Rect {
+public:
+	struct UniformInfo {
+		std::string name;
+		size_t param_idx;
+	};
+
+	struct CreateInfo {
+		Rect::CreateInfo base;
+		std::string frag_shader_code;
+		std::vector<UniformInfo> uniform_infos;
+	};
+
+	ShaderRect(Root* root, Group* parent, CreateInfo create_info) noexcept :
+		Rect(root, parent, create_info.base),
+		m_frag_shader_code{create_info.frag_shader_code},
+		m_uniforms{create_info.uniform_infos}
+	{}
+
+protected:
+
+	static constexpr const char* m_vert_shader_code = ""
+		"#version 330 core\n"
+
+		"layout(location = 0) in vec2 vertex_pos;"
+		"layout(location = 1) in vec2 vertex_uv;"
+
+		"uniform vec2 corner;"
+		"uniform vec2 dimensions;"
+
+		"out vec2 position;"
+
+		"void main() {"
+		"	position = vertex_uv;"
+		"	vec2 normalized = 0.5f*vertex_pos-0.5f;"
+		"	gl_Position = vec4(normalized*dimensions + corner, 0, 1);"
+		"}";
+	std::string m_frag_shader_code;
+	mutable Shader m_shader;
+	std::vector<UniformInfo> m_uniforms;
+
+	/*
+		Virtual functions
+	*/
+	virtual void draw_impl() const override;
+};
+
 class RoundedRect : public Rect {
 public:
 	RoundedRect(Root* root, Group* parent, CreateInfo create_info) noexcept :
