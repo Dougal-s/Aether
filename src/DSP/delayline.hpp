@@ -61,7 +61,7 @@ public:
 
 		sample += m_last_out*m_feedback;
 
-		assert(info.order == Order::pre || order == Order::post);
+		assert(info.order == Order::pre || info.order == Order::post);
 		switch(info.order) {
 			case Order::pre:
 				sample = delay.push(sample);
