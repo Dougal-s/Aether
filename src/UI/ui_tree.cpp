@@ -128,6 +128,12 @@ void UIElement::draw() const {
 	}
 }
 
+const std::string& UIElement::get_style(const std::string& name, std::string err) const {
+	if (auto it = style.find(name); it != style.end())
+		return it->second;
+	throw std::runtime_error(err);
+}
+
 ParseResult<float> UIElement::to_px(const char* expr) const {
 	char* ptr;
 	float distance = std::strtof(expr, &ptr);
@@ -431,19 +437,16 @@ void UIElement::apply_filter(const std::string& filter) const {
 // Circle
 
 float Circle::cx() const {
-	if (auto it = style.find("cx"); it != style.end())
-		return to_horizontal_px(it->second.c_str()).val + m_parent->x();
-	throw std::runtime_error("circle has undefined center x position");
+	const auto& cx_str = get_style("cx", "circle has undefined center x position");
+	return to_horizontal_px(cx_str.c_str()).val + m_parent->x();
 }
 float Circle::cy() const {
-	if (auto it = style.find("cy"); it != style.end())
-		return to_vertical_px(it->second.c_str()).val + m_parent->y();
-	throw std::runtime_error("circle has undefined center y position");
+	const auto& cy_str = get_style("cy", "circle has undefined center y position");
+	return to_vertical_px(cy_str.c_str()).val + m_parent->y();
 }
 float Circle::r() const {
-	if (auto it = style.find("r"); it != style.end())
-		return to_px(it->second.c_str()).val;
-	throw std::runtime_error("circle has undefined radius");
+	const auto& r_str = get_style("r", "circle has undefined radius");
+	return to_px(r_str.c_str()).val;
 }
 
 void Circle::draw_impl() const {
@@ -472,29 +475,23 @@ UIElement* Circle::element_at_impl(float x, float y) {
 // Arc
 
 float Arc::a0() const {
-	if (auto it = style.find("a0"); it != style.end())
-		return to_rad(it->second.c_str()).val;
-	throw std::runtime_error("arc has undefined start angle");
+	const auto& a0_str = get_style("a0", "arc has undefined start angle");
+	return to_rad(a0_str.c_str()).val;
 }
 float Arc::a1() const {
-	if (auto it = style.find("a1"); it != style.end())
-		return to_rad(it->second.c_str()).val;
-	throw std::runtime_error("arc has undefined start angle");
+	const auto& a1_str = get_style("a1", "arc has undefined end angle");
+	return to_rad(a1_str.c_str()).val;
 }
 
 void Arc::draw_impl() const {
-
 	float cx = this->cx();
 	float cy = this->cy();
-	float r = this->r();
-	float a0 = this->a0();
-	float a1 = this->a1();
 
 	nvgBeginPath(m_root->ctx->nvg_ctx);
 
 	nvgMoveTo(m_root->ctx->nvg_ctx, cx, cy);
 
-	nvgArc(m_root->ctx->nvg_ctx, cx, cy, r, a0, a1, NVG_CW);
+	nvgArc(m_root->ctx->nvg_ctx, cx, cy, r(), a0(), a1(), NVG_CW);
 
 	nvgClosePath(m_root->ctx->nvg_ctx);
 
@@ -509,9 +506,7 @@ UIElement* Arc::element_at_impl(float, float) {
 // Path
 
 const std::string& Path::path() const {
-	if (auto it = style.find("path"); it != style.end())
-		return it->second;
-	throw std::runtime_error("path has undefined path");
+	return get_style("path", "path has undefined path");
 }
 
 void Path::draw_impl() const {
@@ -774,9 +769,8 @@ UIElement* Rect::element_at_impl(float x, float y) {
 // RoundedRect
 
 float RoundedRect::r() const {
-	if (auto it = style.find("r"); it != style.end())
-		return to_px(it->second.c_str()).val;
-	throw std::runtime_error("rectangle corner radius not defined");
+	const auto& r_str = get_style("r", "rectangle corner radius not defined");
+	return to_px(r_str.c_str()).val;
 }
 
 void RoundedRect::draw_impl() const {
@@ -791,15 +785,11 @@ void RoundedRect::draw_impl() const {
 // Text
 
 const std::string& Text::font_face() const {
-	if (auto face = style.find("font-family"); face != style.end())
-		return face->second;
-	throw std::runtime_error("text has undefined font family");
+	return get_style("font-family", "text has undefined font family");
 }
 
 const std::string& Text::text() const {
-	if (auto face = style.find("text"); face != style.end())
-		return face->second;
-	throw std::runtime_error("text has no text property");
+	return get_style("text", "text has no text property");
 }
 
 std::array<float, 4> Text::bounds() const {
@@ -868,9 +858,8 @@ std::array<float, 2> Text::render_corner() const {
 }
 
 float Text::font_size() const {
-	if (auto it = style.find("font-size"); it != style.end())
-		return to_px(it->second.c_str()).val;
-	throw std::runtime_error("text has undefined font size");
+	const auto& size_str = get_style("font-size", "text has undefined font size");
+	return to_px(size_str.c_str()).val;
 }
 
 std::optional<float> Text::defined_width() const {

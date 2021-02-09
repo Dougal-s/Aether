@@ -139,6 +139,12 @@ protected:
 	Root* m_root;
 
 	/*
+		attempt to find the value in style with key name
+		throws a runtime_error with string err if the key does not exist
+	*/
+	const std::string& get_style(const std::string& name, std::string err) const;
+
+	/*
 		unit conversions
 		They are member functions as some units are
 		relative to parent dimensions
