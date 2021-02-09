@@ -371,7 +371,8 @@ struct Root final : public Group {
 
 	std::filesystem::path bundle_path;
 
-	std::array<float, 51> parameters = {};
+	// 51 parameters + 12 audio peaks
+	std::array<float, 63> parameters = {};
 
 	mutable DrawingContext* ctx;
 

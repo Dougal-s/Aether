@@ -1,7 +1,11 @@
 #include <algorithm>
 #include <cmath>
 
+// Lv2
+#include <lv2/lv2plug.in/ns/ext/atom/util.h>
+
 #include "aether_dsp.hpp"
+#include "../common/utils.hpp"
 
 namespace {
 	float dBtoGain(float db) noexcept {
@@ -24,9 +28,31 @@ namespace Aether {
 		m_rate{rate}
 	{}
 
-	void DSP::map_uris(LV2_URID_Map*) noexcept {}
+	void DSP::map_uris(LV2_URID_Map* map) noexcept {
+		lv2_atom_forge_init(&atom_forge, map);
+		uris.atom_Object = map->map(map->handle, LV2_ATOM__Object);
+		uris.atom_Float = map->map(map->handle, LV2_ATOM__Float);
+
+		uris.ui_open = map->map(map->handle, join_v<URI, ui_open_URI>);
+		uris.ui_close = map->map(map->handle, join_v<URI, ui_close_URI>);
+
+		uris.peak_data = map->map(map->handle, join_v<URI, peak_data_URI>);
+		uris.sample_count = map->map(map->handle, join_v<URI, sample_count_URI>);
+		uris.peaks = map->map(map->handle, join_v<URI, peaks_URI>);
+	}
 
 	void DSP::process(uint32_t n_samples) noexcept {
+		if (ports.control) {
+			LV2_ATOM_SEQUENCE_FOREACH(ports.control, event) {
+				if (event->body.type == uris.atom_Object) {
+					const auto obj = reinterpret_cast<LV2_Atom_Object*>(&event->body);
+					if (obj->body.otype == uris.ui_open)
+						ui_open = true;
+					else if (obj->body.otype == uris.ui_close)
+						ui_open = false;
+				}
+			}
+		}
 
 		// Early Reflections
 		{ // Filters
@@ -144,18 +170,26 @@ namespace Aether {
 			m_r_late_rev.set_high_cut_cutoff(cutoff);
 		}
 
+		std::pair<float, float> peak_dry = {0,0},
+			peak_dry_stage = {0,0},
+			peak_predelay_stage = {0,0},
+			peak_early_stage = {0,0},
+			peak_late_stage = {0,0},
+			peak_out = {0,0};
+
 		for (uint32_t sample = 0; sample < n_samples; ++sample) {
 			// Dry
+			float dry_level = *ports.dry_level/100.f;
 			float dry_left = ports.audio_in_left[sample];
 			float dry_right = ports.audio_in_right[sample];
 
 			{
-				float dry_level = *ports.dry_level/100.f;
 				ports.audio_out_left[sample] = dry_level*dry_left;
 				ports.audio_out_right[sample] = dry_level*dry_right;
 			}
 
 			// Predelay
+			float predelay_level = *ports.predelay_level/100.f;
 			float predelay_left = dry_left;
 			float predelay_right = dry_right;
 			{
@@ -168,12 +202,12 @@ namespace Aether {
 				predelay_left = m_l_predelay.push(predelay_left, delay);
 				predelay_right = m_r_predelay.push(predelay_right, delay);
 
-				float predelay_level = *ports.predelay_level/100.f;
 				ports.audio_out_left[sample] += predelay_level*predelay_left;
 				ports.audio_out_right[sample] += predelay_level*predelay_right;
 			}
 
 			// Early Reflections
+			float early_level = *ports.early_level/100.f;
 			float early_left = predelay_left;
 			float early_right = predelay_right;
 			{
@@ -211,12 +245,12 @@ namespace Aether {
 					early_right = m_r_early_diffuser.push(early_right, info);
 				}
 
-				float early_level = *ports.early_level/100.f;
 				ports.audio_out_left[sample] += early_level*early_left;
 				ports.audio_out_right[sample] += early_level*early_right;
 			}
 
 			// Late Reverberations
+			float late_level = *ports.late_level/100.f;
 			float late_left = early_left;
 			float late_right = early_right;
 			{
@@ -238,8 +272,6 @@ namespace Aether {
 
 				late_left = m_l_late_rev.push(late_left, lines, push_info);
 				late_right = m_l_late_rev.push(late_right, lines, push_info);
-
-				float late_level = *ports.late_level/100.f;
 				ports.audio_out_left[sample] += late_level*late_left;
 				ports.audio_out_right[sample] += late_level*late_right;
 			}
@@ -249,6 +281,50 @@ namespace Aether {
 				ports.audio_out_left[sample] = std::lerp(dry_left, ports.audio_out_left[sample], mix);
 				ports.audio_out_right[sample] = std::lerp(dry_right, ports.audio_out_right[sample], mix);
 			}
+
+			if (ui_open) {
+				peak_dry.first = std::max(peak_dry.first, std::abs(dry_left));
+				peak_dry.second = std::max(peak_dry.second, std::abs(dry_right));
+				peak_dry_stage.first = std::max(peak_dry_stage.first, std::abs(dry_left*dry_level));
+				peak_dry_stage.second = std::max(peak_dry_stage.second, std::abs(dry_right*dry_level));
+				peak_predelay_stage.first = std::max(peak_predelay_stage.first, std::abs(predelay_left*predelay_level));
+				peak_predelay_stage.second = std::max(peak_predelay_stage.second, std::abs(predelay_right*predelay_level));
+				peak_early_stage.first = std::max(peak_early_stage.first, std::abs(early_left*early_level));
+				peak_early_stage.second = std::max(peak_early_stage.second, std::abs(early_right*early_level));
+				peak_late_stage.first = std::max(peak_late_stage.first, std::abs(late_left*late_level));
+				peak_late_stage.second = std::max(peak_late_stage.second, std::abs(late_right*late_level));
+				peak_out.first = std::max(peak_out.first, std::abs(ports.audio_out_left[sample]));
+				peak_out.second = std::max(peak_out.second, std::abs(ports.audio_out_right[sample]));
+			}
+		}
+		if (ui_open) {
+			LV2_Atom_Forge_Frame frame;
+			const size_t capacity = ports.notify->atom.size;
+			lv2_atom_forge_set_buffer(&atom_forge, reinterpret_cast<uint8_t*>(ports.notify), capacity);
+			lv2_atom_forge_sequence_head(&atom_forge, &frame, 0);
+			lv2_atom_forge_frame_time(&atom_forge, 0);
+			{
+				LV2_Atom_Forge_Frame obj_frame;
+				lv2_atom_forge_object(&atom_forge, &obj_frame, 0, uris.peak_data);
+
+				lv2_atom_forge_key(&atom_forge, uris.sample_count);
+				lv2_atom_forge_long(&atom_forge, n_samples);
+
+				const std::array<float, 12> peaks = {
+					peak_dry.first				, peak_dry.second,
+					peak_dry_stage.first		, peak_dry_stage.second,
+					peak_predelay_stage.first	, peak_predelay_stage.second,
+					peak_early_stage.first		, peak_early_stage.second,
+					peak_late_stage.first		, peak_late_stage.second,
+					peak_out.first				, peak_out.second
+				};
+
+				lv2_atom_forge_key(&atom_forge, uris.peaks);
+				lv2_atom_forge_vector(&atom_forge, sizeof(float), uris.atom_Float, peaks.size(), peaks.data());
+
+				lv2_atom_forge_pop(&atom_forge, &obj_frame);
+			}
+			lv2_atom_forge_pop(&atom_forge, &frame);
 		}
 	}
 }

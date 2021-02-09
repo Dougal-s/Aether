@@ -1,11 +1,13 @@
 #include <cassert>
+#include <chrono>
 #include <iostream>
+#include <span>
 #include <string>
 #include <stdexcept>
 #include <filesystem>
 #include <functional>
-#include <unordered_map>
 #include <memory>
+#include <unordered_map>
 
 // Glad
 #include <glad/glad.h>
@@ -18,9 +20,17 @@
 // NanoVG
 #include <nanovg.h>
 
+// LV2
+#include <lv2/lv2plug.in/ns/ext/atom/atom.h>
+#include <lv2/lv2plug.in/ns/ext/atom/util.h>
+#include <lv2/lv2plug.in/ns/ext/atom/forge.h>
+
 #include "../common/parameters.hpp"
+#include "../common/utils.hpp"
 #include "aether_ui.hpp"
 #include "ui_tree.hpp"
+
+#include "../DSP/aether_dsp.hpp"
 
 namespace {
 	void GLAPIENTRY opengl_err_callback(
@@ -94,7 +104,7 @@ namespace Aether {
 			return pugl::Status::success;
 		}
 
-		void draw() const;
+		void draw();
 
 		int width() const noexcept;
 		int height() const noexcept;
@@ -104,21 +114,35 @@ namespace Aether {
 		void parameter_update(size_t index, float new_value) noexcept;
 		float get_parameter(size_t index) const noexcept;
 
+		void add_peaks(int64_t n_samples, const float* peaks);
+
 	private:
 		mutable NVGcontext* m_nvg_context = nullptr;
 		UIElement* m_active = nullptr;
 
-		//
 		struct MouseCallbackInfo {
 			float x;
 			float y;
 		} mouse_callback_info;
+
+		struct PeakInfo {
+			std::vector<int64_t> sample_counts = {1};
+			std::array<float, 12> peaks = {
+				0.f, 0.f, 0.f, 0.f,
+				0.f, 0.f, 0.f, 0.f,
+				0.f, 0.f, 0.f, 0.f
+			};
+		} peak_infos;
 
 		std::function<void (size_t, float)> update_dsp_param;
 
 		bool m_should_close = false;
 
 		UITree ui_tree;
+
+		std::chrono::steady_clock::time_point last_frame = std::chrono::steady_clock::now();
+
+		void update_peaks();
 
 		void dial_btn_press_cb(size_t param_idx, UIElement* elem, const pugl::ButtonPressEvent& e, float sensitivity = 1.f);
 		void dial_btn_motion_cb(size_t param_idx, UIElement* elem, const pugl::MotionEvent& e, float sensitivity = 1.f);
@@ -229,13 +253,13 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.connections = {
 					{
-						.param_idx = 1,
+						.param_idx = 51,
 						.style ="fill",
 						.in_range = {0.f, 1.5f},
 						.out_range = {"", ""}, // unused
 						.interpolate = color_interpolate
 					}, {
-						.param_idx = 1,
+						.param_idx = 51,
 						.style ="height",
 						.in_range = {0.f, 1.5f},
 						.out_range = {"0sp", "280sp"}
@@ -250,13 +274,13 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.connections = {
 					{
-						.param_idx = 1,
+						.param_idx = 52,
 						.style ="fill",
 						.in_range = {0.f, 1.5f},
 						.out_range = {"", ""}, // unused
 						.interpolate = color_interpolate
 					}, {
-						.param_idx = 1,
+						.param_idx = 52,
 						.style ="height",
 						.in_range = {0.f, 1.5f},
 						.out_range = {"0sp", "280sp"}
@@ -271,13 +295,13 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.connections = {
 					{
-						.param_idx = 2,
+						.param_idx = 61,
 						.style ="fill",
 						.in_range = {0.f, 1.5f},
 						.out_range = {"", ""}, // unused
 						.interpolate = color_interpolate
 					}, {
-						.param_idx = 2,
+						.param_idx = 61,
 						.style ="height",
 						.in_range = {0.f, 1.5f},
 						.out_range = {"0sp", "280sp"}
@@ -292,13 +316,13 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.connections = {
 					{
-						.param_idx = 2,
+						.param_idx = 62,
 						.style ="fill",
 						.in_range = {0.f, 1.5f},
 						.out_range = {"", ""}, // unused
 						.interpolate = color_interpolate
 					}, {
-						.param_idx = 2,
+						.param_idx = 62,
 						.style ="height",
 						.in_range = {0.f, 1.5f},
 						.out_range = {"0sp", "280sp"}
@@ -495,7 +519,7 @@ namespace Aether {
 				}
 			});
 
-			attach_level_meter(level, 0, 0, 7);
+			attach_level_meter(level, 53, 54, 7);
 
 			// Shadow
 			dry->add_child<Rect>(UIElement::CreateInfo{
@@ -540,7 +564,7 @@ namespace Aether {
 				}
 			});
 
-			attach_level_meter(level, 0, 0, 8);
+			attach_level_meter(level, 55, 56, 8);
 
 			// Crossover/Predelay
 
@@ -590,7 +614,7 @@ namespace Aether {
 				}
 			});
 
-			attach_level_meter(level, 0, 0, 9);
+			attach_level_meter(level, 57, 58, 9);
 
 			// Multitap diffuser
 			attach_dial(early, 18, "TAPS", 24, 47, 60, "#33343b");
@@ -783,7 +807,7 @@ namespace Aether {
 				}
 			});
 
-			attach_level_meter(level, 0, 0, 10);
+			attach_level_meter(level, 59, 60, 10);
 
 			// Delaylines/Crossmix
 
@@ -977,10 +1001,13 @@ namespace Aether {
 	}
 
 	// draw frame
-	void UI::View::draw() const {
+	void UI::View::draw() {
+		update_peaks();
 		glClearColor(16/255.f, 16/255.f, 20/255.f, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		ui_tree.draw();
+
+		last_frame = std::chrono::steady_clock::now();
 	}
 
 	int UI::View::width() const noexcept { return this->frame().width; }
@@ -998,6 +1025,23 @@ namespace Aether {
 		return ui_tree.root().parameters[idx];
 	}
 
+	void UI::View::add_peaks(int64_t, const float* peaks) {
+		for (size_t i = 0; i < peak_infos.peaks.size(); ++i)
+			peak_infos.peaks[i] = peaks[i];
+	}
+
+	void UI::View::update_peaks() {
+		for (size_t i = 0; i < peak_infos.peaks.size(); ++i) {
+			// time since last frame in seconds
+			const float dt = 0.000001f*std::chrono::duration_cast<std::chrono::microseconds>(
+				std::chrono::steady_clock::now()-last_frame
+			).count();
+
+			float new_value = std::lerp(get_parameter(51+i), peak_infos.peaks[i], 4.f*dt);
+
+			parameter_update(51+i, new_value);
+		}
+	}
 
 	void UI::View::dial_btn_press_cb(
 		size_t param_idx,
@@ -1283,12 +1327,15 @@ namespace Aether {
 		UI member functions
 	*/
 
-	UI::UI(const CreateInfo& create_info) :
+	UI::UI(const CreateInfo& create_info, LV2_URID_Map* map) :
 		m_bundle_path{create_info.bundle_path},
 		m_write_function{create_info.write_function},
 		m_controller{create_info.controller},
-		m_view{create_view(create_info)}
-	{}
+		m_view{}
+	{
+		map_uris(map);
+		m_view = create_view(create_info);
+	}
 
 	UI::~UI() {
 		if (m_view) close();
@@ -1303,12 +1350,30 @@ namespace Aether {
 	}
 
 	void UI::close() {
+		// destroy ui
 		auto world = &m_view->world();
 
 		delete m_view;
 		m_view = nullptr;
 
 		delete world;
+
+		// inform dsp part that a ui has been destroyed
+		std::array<uint8_t, 64> obj_buf;
+		lv2_atom_forge_set_buffer(&atom_forge, obj_buf.data(), sizeof(obj_buf));
+
+		LV2_Atom_Forge_Frame frame;
+		auto msg = reinterpret_cast<LV2_Atom*>(
+			lv2_atom_forge_object(&atom_forge, &frame, 0, uris.ui_close)
+		);
+
+		lv2_atom_forge_pop(&atom_forge, &frame);
+		m_write_function(m_controller,
+			0,
+			lv2_atom_total_size(msg),
+			uris.atom_eventTransfer,
+			msg
+		);
 	}
 
 	int UI::update_display() noexcept {
@@ -1321,11 +1386,45 @@ namespace Aether {
 	pugl::NativeView UI::widget() noexcept { return m_view->nativeWindow(); }
 
 	void UI::port_event(uint32_t port_index, uint32_t, uint32_t format, const void* buffer) noexcept {
-		if (format == 0)
+		if (format == 0) {
 			m_view->parameter_update(port_index, *reinterpret_cast<const float*>(buffer));
+		} else if (format == uris.atom_eventTransfer) {
+			auto object = reinterpret_cast<const LV2_Atom_Object*>(buffer);
+			if (object->body.otype == uris.peak_data) {
+				const LV2_Atom_Long* atom_n_samples = nullptr;
+				const LV2_Atom_Vector* atom_peaks = nullptr;
+				lv2_atom_object_get_typed(object,
+					uris.sample_count, &atom_n_samples, uris.atom_Long,
+					uris.peaks, &atom_peaks, uris.atom_Vector,
+					0
+				);
+
+				const float* peaks = reinterpret_cast<const float*>(
+					reinterpret_cast<const char*>(&atom_peaks->body) + sizeof(LV2_Atom_Vector_Body)
+				);
+
+				m_view->add_peaks(atom_n_samples->body, peaks);
+			}
+		}
+	}
+
+	void UI::map_uris(LV2_URID_Map* map) noexcept {
+		lv2_atom_forge_init(&atom_forge, map);
+
+		uris.atom_eventTransfer = map->map(map->handle, LV2_ATOM__eventTransfer);
+		uris.atom_Long = map->map(map->handle, LV2_ATOM__Long);
+		uris.atom_Vector = map->map(map->handle, LV2_ATOM__Vector);
+
+		uris.ui_open = map->map(map->handle, join_v<DSP::URI, DSP::ui_open_URI>);
+		uris.ui_close = map->map(map->handle, join_v<DSP::URI, DSP::ui_close_URI>);
+
+		uris.peak_data = map->map(map->handle, join_v<DSP::URI, DSP::peak_data_URI>);
+		uris.sample_count = map->map(map->handle, join_v<DSP::URI, DSP::sample_count_URI>);
+		uris.peaks = map->map(map->handle, join_v<DSP::URI, DSP::peaks_URI>);
 	}
 
 	UI::View* UI::create_view(const CreateInfo& create_info) {
+		// create view
 		auto world = std::make_unique<pugl::World>(pugl::WorldType::module);
 		world->setClassName("Aether");
 
@@ -1349,6 +1448,23 @@ namespace Aether {
 			throw std::runtime_error("failed to create window!");
 
 		world.release();
+
+		// inform dsp part that a ui has been created
+
+		std::array<uint8_t, 64> obj_buf;
+		lv2_atom_forge_set_buffer(&atom_forge, obj_buf.data(), sizeof(obj_buf));
+
+		LV2_Atom_Forge_Frame frame;
+		auto msg = reinterpret_cast<LV2_Atom*>(lv2_atom_forge_object(&atom_forge, &frame, 0, uris.ui_open));
+
+		lv2_atom_forge_pop(&atom_forge, &frame);
+		create_info.write_function(create_info.controller,
+			0,
+			lv2_atom_total_size(msg),
+			uris.atom_eventTransfer,
+			msg
+		);
+
 		return view.release();
 	}
 }

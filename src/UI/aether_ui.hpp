@@ -5,8 +5,11 @@
 
 // Pugl
 #include <pugl/pugl.hpp>
+
 // LV2
 #include <lv2/lv2plug.in/ns/extensions/ui/ui.h>
+#include <lv2/lv2plug.in/ns/ext/urid/urid.h>
+#include <lv2/lv2plug.in/ns/ext/atom/forge.h>
 
 namespace Aether {
 
@@ -28,7 +31,7 @@ namespace Aether {
 		/*
 			Creates and destroys the plugin ui
 		*/
-		explicit UI(const CreateInfo& create_info);
+		explicit UI(const CreateInfo& create_info, LV2_URID_Map* map);
 		UI(const UI&) = delete;
 		~UI();
 
@@ -68,6 +71,22 @@ namespace Aether {
 		) noexcept;
 
 	private:
+		struct URIs {
+			LV2_URID atom_eventTransfer;
+			LV2_URID atom_Long;
+			LV2_URID atom_Vector;
+			// custom uris
+			LV2_URID ui_open;
+			LV2_URID ui_close;
+
+			LV2_URID peak_data;
+			LV2_URID sample_count;
+			LV2_URID peaks;
+		};
+
+		URIs uris;
+		LV2_Atom_Forge atom_forge;
+
 		std::filesystem::path m_bundle_path;
 		LV2UI_Write_Function m_write_function;
 		LV2UI_Controller m_controller;
@@ -76,5 +95,10 @@ namespace Aether {
 		View* m_view;
 
 		View* create_view(const CreateInfo& createInfo);
+
+		/*
+			map uris to use for plugin <-> UI communication
+		*/
+		void map_uris(LV2_URID_Map* map) noexcept;
 	};
 }

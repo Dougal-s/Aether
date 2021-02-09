@@ -582,4 +582,9 @@
 	lv2:binary <aether_ui.so>;
 	lv2:requiredFeature ui:idleInterface;
 	lv2:extensionData ui:idleInterface, ui:showInterface;
-    lv2:optionalFeature ui:parent, ui:resize.
+	lv2:optionalFeature ui:parent, ui:resize;
+	ui:portNotification [
+		ui:plugin <http://github.com/Dougal-s/Aether>;
+		lv2:symbol "notify";
+		ui:notifyType atom:Blank
+	].

@@ -46,21 +46,25 @@ static LV2UI_Handle instantiate_ui(
 ) {
 	void* parent = nullptr;
 	LV2UI_Resize* resize = nullptr;
+	LV2_URID_Map* map = nullptr;
 
 	for (std::size_t i = 0; features[i]; ++i) {
 		if (std::string(features[i]->URI) == std::string(LV2_UI__parent))
 			parent = features[i]->data;
 		else if (std::string(features[i]->URI) == std::string(LV2_UI__resize))
 			resize = static_cast<LV2UI_Resize*>(features[i]->data);
+		else if (std::string(features[i]->URI) == std::string(LV2_URID__map))
+			map = static_cast<LV2_URID_Map*>(features[i]->data);
 	}
 
 	try {
-		Aether::UI::CreateInfo create_info = {};
-		create_info.parent = parent;
-		create_info.bundle_path = bundle_path;
-		create_info.controller = controller;
-		create_info.write_function = write_function;
-		auto ui = std::make_unique<Aether::UI>(create_info);
+		Aether::UI::CreateInfo create_info = {
+			.parent = parent,
+			.bundle_path = bundle_path,
+			.controller = controller,
+			.write_function = write_function
+		};
+		auto ui = std::make_unique<Aether::UI>(create_info, map);
 
 		*widget = reinterpret_cast<LV2UI_Widget>(ui->widget());
 		if (resize)

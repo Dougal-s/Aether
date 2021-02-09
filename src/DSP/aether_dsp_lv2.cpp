@@ -28,7 +28,7 @@ static LV2_Handle instantiate(
 	for (size_t i = 0; features[i]; ++i) {
 		if (std::string(features[i]->URI) == std::string(LV2_URID__map))
 			map = static_cast<LV2_URID_Map*>(features[i]->data);
-		if (std::string(features[i]->URI) == std::string(LV2_LOG__log))
+		else if (std::string(features[i]->URI) == std::string(LV2_LOG__log))
 			logger.log = static_cast<LV2_Log_Log*>(features[i]->data);
 	}
 
@@ -82,7 +82,7 @@ static void cleanup(LV2_Handle instance) {
 static const void* extension_data(const char*) { return nullptr; }
 
 static const LV2_Descriptor descriptor = {
-	Aether::DSP::URI,
+	Aether::DSP::URI.data(),
 	instantiate,
 	connect_port,
 	activate,

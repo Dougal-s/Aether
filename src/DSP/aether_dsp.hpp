@@ -2,11 +2,13 @@
 
 #include <cstddef>
 #include <random>
+#include <string_view>
 
 // LV2
 #include <lv2/lv2plug.in/ns/ext/atom/atom.h>
 #include <lv2/lv2plug.in/ns/ext/urid/urid.h>
 #include <lv2/lv2plug.in/ns/lv2core/lv2.h>
+#include <lv2/lv2plug.in/ns/ext/atom/forge.h>
 
 #include "utils/random.hpp"
 
@@ -19,7 +21,14 @@ namespace Aether {
 
 	class DSP {
 	public:
-		static constexpr const char* URI = "http://github.com/Dougal-s/Aether";
+		static constexpr std::string_view URI = "http://github.com/Dougal-s/Aether";
+
+		static constexpr std::string_view ui_open_URI = "#uiOpen";
+		static constexpr std::string_view ui_close_URI = "#uiClose";
+
+		static constexpr std::string_view peak_data_URI = "#peakData";
+		static constexpr std::string_view sample_count_URI = "#sampleCount";
+		static constexpr std::string_view peaks_URI = "#peaks";
 
 		struct Ports {
 			const LV2_Atom_Sequence* control;
@@ -109,8 +118,20 @@ namespace Aether {
 	private:
 		Random::Xorshift64s rng{std::random_device{}()};
 
-		struct URIs {};
+		struct URIs {
+			LV2_URID atom_Object;
+			LV2_URID atom_Float;
+			// custom uris
+			LV2_URID ui_open;
+			LV2_URID ui_close;
+
+			LV2_URID peak_data;
+			LV2_URID sample_count;
+			LV2_URID peaks;
+		};
+
 		URIs uris = {};
+		LV2_Atom_Forge atom_forge = {};
 
 		// Predelay
 		Delay m_l_predelay;
@@ -138,5 +159,8 @@ namespace Aether {
 		LateRev m_r_late_rev;
 
 		float m_rate;
+
+		// send audio data if ui is open
+		bool ui_open = false;
 	};
 }
