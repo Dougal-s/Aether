@@ -1037,9 +1037,12 @@ namespace Aether {
 				std::chrono::steady_clock::now()-last_frame
 			).count();
 
-			float new_value = std::lerp(get_parameter(51+i), peak_infos.peaks[i], 4.f*dt);
+			float old_value = get_parameter(51+i);
+			if (old_value < peak_infos.peaks[i])
+				parameter_update(51+i, std::lerp(old_value, peak_infos.peaks[i], std::min(8.f*dt, 1.f)));
+			else
+				parameter_update(51+i, std::lerp(old_value, peak_infos.peaks[i], std::min(2.f*dt, 1.f)));
 
-			parameter_update(51+i, new_value);
 		}
 	}
 
