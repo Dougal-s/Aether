@@ -241,11 +241,14 @@ namespace Aether {
 				}
 			});
 
-			const auto color_interpolate = [](float t, auto) -> std::string {
-				using namespace std::string_literals;
-				if (t > 1.f/1.5f) // turn red if level goes above 1
-					return "#a52f3b"s;
-				return "linear-gradient(0 0 #526db0 0 280sp #3055a4)"s;
+			const auto color_interpolate = [this, peak = 0.f](float t, auto) mutable -> std::string {
+				const float dt = 0.000001f*std::chrono::duration_cast<std::chrono::microseconds>(
+					std::chrono::steady_clock::now()-last_frame
+				).count();
+				peak = std::lerp(std::max(peak, t), t, std::min(1.f*dt, 1.f));
+				if (peak > 1.f/1.5f) // turn red if level goes above 1
+					return "#a52f3b";
+				return "linear-gradient(0 0 #526db0 0 100% #3055a4)";
 			};
 
 			// levels
@@ -1117,11 +1120,15 @@ namespace Aether {
 		});
 
 		// meters
-		const auto color_interpolate = [](float t, auto) -> std::string {
-			using namespace std::string_literals;
-			if (t > 1.f/1.5f) // turn red if level goes above 1
-				return "#a52f3b"s;
-			return "linear-gradient(0 0 #526db0 0 100% #3055a4)"s;
+
+		const auto color_interpolate = [this, peak = 0.f](float t, auto) mutable -> std::string {
+			const float dt = 0.000001f*std::chrono::duration_cast<std::chrono::microseconds>(
+				std::chrono::steady_clock::now()-last_frame
+			).count();
+			peak = std::lerp(std::max(peak, t), t, std::min(1.f*dt, 1.f));
+			if (peak > 1.f/1.5f) // turn red if level goes above 1
+				return "#a52f3b";
+			return "linear-gradient(0 0 #526db0 0 100% #3055a4)";
 		};
 
 		g->add_child<RoundedRect>(UIElement::CreateInfo{
