@@ -246,7 +246,7 @@ namespace Aether {
 					std::chrono::steady_clock::now()-last_frame
 				).count();
 				peak = std::lerp(std::max(peak, t), t, std::min(1.f*dt, 1.f));
-				if (peak > 1.f/1.5f) // turn red if level goes above 1
+				if (peak > 1.f/1.3f) // turn red if level goes above 1
 					return "#a52f3b";
 				return "linear-gradient(0 0 #526db0 0 100% #3055a4)";
 			};
@@ -258,13 +258,13 @@ namespace Aether {
 					{
 						.param_idx = 51,
 						.style ="fill",
-						.in_range = {0.f, 1.5f},
+						.in_range = {0.f, 1.3f},
 						.out_range = {"", ""}, // unused
 						.interpolate = color_interpolate
 					}, {
 						.param_idx = 51,
 						.style ="height",
-						.in_range = {0.f, 1.5f},
+						.in_range = {0.f, 1.3f},
 						.out_range = {"0sp", "280sp"}
 					}
 				},
@@ -279,13 +279,13 @@ namespace Aether {
 					{
 						.param_idx = 52,
 						.style ="fill",
-						.in_range = {0.f, 1.5f},
+						.in_range = {0.f, 1.3f},
 						.out_range = {"", ""}, // unused
 						.interpolate = color_interpolate
 					}, {
 						.param_idx = 52,
 						.style ="height",
-						.in_range = {0.f, 1.5f},
+						.in_range = {0.f, 1.3f},
 						.out_range = {"0sp", "280sp"}
 					}
 				},
@@ -300,13 +300,13 @@ namespace Aether {
 					{
 						.param_idx = 61,
 						.style ="fill",
-						.in_range = {0.f, 1.5f},
+						.in_range = {0.f, 1.3f},
 						.out_range = {"", ""}, // unused
 						.interpolate = color_interpolate
 					}, {
 						.param_idx = 61,
 						.style ="height",
-						.in_range = {0.f, 1.5f},
+						.in_range = {0.f, 1.3f},
 						.out_range = {"0sp", "280sp"}
 					}
 				},
@@ -321,13 +321,13 @@ namespace Aether {
 					{
 						.param_idx = 62,
 						.style ="fill",
-						.in_range = {0.f, 1.5f},
+						.in_range = {0.f, 1.3f},
 						.out_range = {"", ""}, // unused
 						.interpolate = color_interpolate
 					}, {
 						.param_idx = 62,
 						.style ="height",
-						.in_range = {0.f, 1.5f},
+						.in_range = {0.f, 1.3f},
 						.out_range = {"0sp", "280sp"}
 					}
 				},
@@ -1126,7 +1126,7 @@ namespace Aether {
 				std::chrono::steady_clock::now()-last_frame
 			).count();
 			peak = std::lerp(std::max(peak, t), t, std::min(1.f*dt, 1.f));
-			if (peak > 1.f/1.5f) // turn red if level goes above 1
+			if (peak > 1.f/1.3f) // turn red if level goes above 1
 				return "#a52f3b";
 			return "linear-gradient(0 0 #526db0 0 100% #3055a4)";
 		};
@@ -1137,13 +1137,13 @@ namespace Aether {
 				{
 					.param_idx = l_vol_idx,
 					.style ="fill",
-					.in_range = {0.f, 1.5f},
+					.in_range = {0.f, 1.3f},
 					.out_range = {"", ""}, // unused
 					.interpolate = color_interpolate
 				}, {
 					.param_idx = l_vol_idx,
 					.style ="height",
-					.in_range = {0.f, 1.5f},
+					.in_range = {0.f, 1.3f},
 					.out_range = {"0%", "100%"}
 				}
 			},
@@ -1157,13 +1157,13 @@ namespace Aether {
 				{
 					.param_idx = r_vol_idx,
 					.style ="fill",
-					.in_range = {0.f, 1.5f},
+					.in_range = {0.f, 1.3f},
 					.out_range = {"", ""}, // unused
 					.interpolate = color_interpolate
 				}, {
 					.param_idx = r_vol_idx,
 					.style ="height",
-					.in_range = {0.f, 1.5f},
+					.in_range = {0.f, 1.3f},
 					.out_range = {"0%", "100%"}
 				}
 			},
