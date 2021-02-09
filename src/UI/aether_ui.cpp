@@ -193,7 +193,7 @@ namespace Aether {
 		setBackend(pugl::glBackend());
 
 		setHint(pugl::ViewHint::resizable, true);
-		setHint(pugl::ViewHint::samples, 4);
+		setHint(pugl::ViewHint::samples, 16);
 		setHint(pugl::ViewHint::stencilBits, 8);
 		setHint(pugl::ViewHint::doubleBuffer, true);
 		setHint(pugl::ViewHint::contextVersionMajor, 4);
@@ -1315,7 +1315,7 @@ namespace Aether {
 			.style = {
 				{"cx", "0"},
 				{"cy", "0"},
-				{"r", std::to_string(dial_size-strk_width/2) + "sp"},
+				{"r", std::to_string(dial_size) + "sp"},
 				{"a0", "-135deg"}, {"a1", "135deg"},
 				{"fill", "#1b1d23"},
 				{"transform", "rotate(-90deg)"}
@@ -1338,10 +1338,10 @@ namespace Aether {
 			.style = {
 				{"cx", "0"},
 				{"cy", "0"},
-				{"r", std::to_string(dial_size-strk_width/2) + "sp"},
+				{"r", std::to_string(dial_size) + "sp"},
 				{"a0", "-135deg"},
 				{"fill", "#43444b"},
-				{"stroke", "#b6bfcc"}, {"stroke_width", std::to_string(strk_width) + "sp"},
+				{"stroke", "#b6bfcc"}, {"stroke-width", std::to_string(strk_width) + "sp"},
 				{"transform", "rotate(-90deg)"}
 			}
 		});
@@ -1352,7 +1352,7 @@ namespace Aether {
 				{"cy", "0"},
 				{"r", std::to_string(20*dial_size/24.f) + "sp"},
 				{"fill", center_fill},
-				{"stroke", "#b6bfcc"}, {"stroke_width", std::to_string(strk_width) + "sp"}
+				{"stroke", "#b6bfcc"}, {"stroke-width", std::to_string(strk_width) + "sp"}
 			}
 		});
 		center_group->add_child<Rect>(UIElement::CreateInfo{
