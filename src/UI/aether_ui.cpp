@@ -1355,7 +1355,7 @@ namespace Aether {
 				{"stroke", "#b6bfcc"}, {"stroke-width", std::to_string(strk_width) + "sp"}
 			}
 		});
-		center_group->add_child<Rect>(UIElement::CreateInfo{
+		center_group->add_child<RoundedRect>(UIElement::CreateInfo{
 			.visible = true, .inert = true,
 			.connections = {{
 				.param_idx = param_idx,
@@ -1372,6 +1372,7 @@ namespace Aether {
 			.style = {
 				{"x", std::to_string(-dial_size/24.f) + "sp"}, {"width", std::to_string(dial_size/12.f) + "sp"},
 				{"y", std::to_string(-dial_size) + "sp"}, {"height", std::to_string(dial_size-strk_width/2.f) + "sp"},
+				{"r", "1sp"},
 				{"fill", "#b6bfcc"}
 			}
 		});
