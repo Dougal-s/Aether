@@ -1370,10 +1370,11 @@ namespace Aether {
 				}
 			}},
 			.style = {
-				{"x", std::to_string(-dial_size/24.f) + "sp"}, {"width", std::to_string(dial_size/12.f) + "sp"},
+				{"x", std::to_string(-dial_size/16.f) + "sp"}, {"width", std::to_string(dial_size/8.f) + "sp"},
 				{"y", std::to_string(-dial_size) + "sp"}, {"height", std::to_string(dial_size-strk_width/2.f) + "sp"},
 				{"r", "1sp"},
-				{"fill", "#b6bfcc"}
+				{"fill", "#b6bfcc"},
+				{"stroke", center_fill}, {"stroke-width", "2sp"}
 			}
 		});
 		g->add_child<Circle>(UIElement::CreateInfo{
