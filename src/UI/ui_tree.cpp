@@ -92,20 +92,26 @@ UIElement::UIElement(Root* root, Group* parent, CreateInfo create_info) noexcept
 {}
 
 void UIElement::draw() const {
-	if (m_visible) {
-		// Update connections if parameters have changed since last draw
-		for (const auto& con : param_connections) {
-			if (con.last_value != m_root->parameters[con.param_idx]) {
-				float value = m_root->parameters[con.param_idx];
-				value = (value - con.in_range.first) / (con.in_range.second-con.in_range.first);
-				value = std::clamp(value, 0.f, 1.f);
+	// Update connections if parameters have changed since last draw
+	for (const auto& con : param_connections) {
+		if (con.last_value != m_root->parameters[con.param_idx]) {
+			float value = m_root->parameters[con.param_idx];
+			value = (value - con.in_range.first) / (con.in_range.second-con.in_range.first);
+			value = std::clamp(value, 0.f, 1.f);
 
-				style.insert_or_assign(con.style, con.interpolate(value, con.out_range));
+			const auto interpolated_val = con.interpolate(value, con.out_range);
+			if (con.style == "inert") {
+				m_inert = (interpolated_val == "true" ? true : false);
+			} else if (con.style == "visible")
+				m_visible = (interpolated_val == "true" ? true : false);
+			else
+				style.insert_or_assign(con.style, interpolated_val);
 
-				con.last_value = m_root->parameters[con.param_idx];
-			}
+			con.last_value = m_root->parameters[con.param_idx];
 		}
+	}
 
+	if (m_visible) {
 		auto filter = style.find("filter");
 		if (filter != style.end()) {
 			nvgEndFrame(m_root->ctx->nvg_ctx);
@@ -779,6 +785,7 @@ void ShaderRect::draw_impl() const {
 	bounds[0] += bounds[2];
 
 	glEnable(GL_BLEND);
+	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 
 	m_shader.use();
 	m_shader.set_vec_float("corner", bounds[0], bounds[1]);

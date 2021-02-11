@@ -130,6 +130,8 @@ public:
 	virtual void motion(const pugl::MotionEvent& e) {
 		if (m_motion_cb) m_motion_cb(this, e);
 	}
+
+	const Root* root() const { return m_root; }
 protected:
 
 	// Variables
@@ -176,8 +178,8 @@ protected:
 private:
 	std::vector<Connection> param_connections;
 
-	bool m_visible;
-	bool m_inert;
+	mutable bool m_visible;
+	mutable bool m_inert;
 
 	ButtonPressCallback m_btn_prs_cb;
 	ButtonReleaseCallback m_btn_rls_cb;

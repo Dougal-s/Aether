@@ -169,6 +169,16 @@ namespace Aether {
 			float x,
 			float y
 		);
+
+		struct EqInfo {
+			enum class Type {lowpass6dB, highpass6dB};
+
+			std::string name;
+			Type type;
+			std::vector<size_t> idxs;
+		};
+
+		void attach_eq(Group* g, float x, float y, std::vector<EqInfo> infos);
 	};
 
 	/*
@@ -636,6 +646,18 @@ namespace Aether {
 			attach_dial(early, 20, "MIX", 24, 47, 147, "#33343b");
 			attach_dial(early, 21, "DECAY", 24, 123, 147, "#33343b");
 
+			attach_eq(early, 10, 200, {
+				EqInfo{
+					.name = "LOW",
+					.type = EqInfo::Type::highpass6dB,
+					.idxs = {14, 15}
+				}, EqInfo{
+					.name = "HIGH",
+					.type = EqInfo::Type::lowpass6dB,
+					.idxs = {16, 17}
+				}
+			});
+
 			{
 				auto diffusion = early->add_child<Group>(UIElement::CreateInfo{
 					.visible = true, .inert = false,
@@ -836,6 +858,14 @@ namespace Aether {
 
 			attach_dial(late, 28, "DELAYLINES", 24, 373, 65, "#33343b");
 			attach_dial(late, 46, "CROSSMIX", 24, 373, 148, "#33343b");
+
+			attach_eq(late, 295, 200, {
+				EqInfo{
+					.name = "HC",
+					.type = EqInfo::Type::lowpass6dB,
+					.idxs = {44, 45}
+				}
+			});
 
 			{
 				auto delay = late->add_child<Group>(UIElement::CreateInfo{
@@ -1476,6 +1506,310 @@ namespace Aether {
 				{"depth", depth_idx}
 			}
 		});
+	}
+
+	void UI::View::attach_eq(
+		Group* g,
+		float x,
+		float y,
+		const std::vector<EqInfo> infos
+	) {
+
+		auto eq = g->add_child<Group>(UIElement::CreateInfo{
+			.visible = true, .inert = false,
+			.style = {
+				{"x", std::to_string(x) + "sp"}, {"width", "150sp"},
+				{"y", std::to_string(y) + "sp"}, {"height", "130sp"}
+			}
+		});
+
+		eq->add_child<RoundedRect>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.style = {
+				{"x", "0sp"}, {"y", "0sp"},
+				{"width", "150sp"}, {"height", "105sp"},
+				{"r", "5sp"}, {"fill", "#1b1d23"}
+			}
+		});
+
+		eq->add_child<Rect>(UIElement::CreateInfo{
+			.visible = true, .inert = true,
+			.style = {
+				{"x", "0sp"}, {"y", "24.25sp"},
+				{"width", "150sp"}, {"height", "1sp"},
+				{"fill", "#c1c1c160"}
+			}
+		});
+
+		{
+			std::string frag_shader_code = R"(
+				#version 330 core
+
+				in vec2 position;
+				out vec4 color;
+
+				const float pi = 3.14159265359;
+
+				#define CUTOFF_MIN 15
+				#define CUTOFF_MAX 22000
+			)";
+
+			for (const auto& info : infos) {
+				frag_shader_code += ""
+					"uniform float " + info.name + "_enabled;"
+					"uniform float " + info.name + "_cutoff;";
+				if (info.idxs.size() >= 3)
+					frag_shader_code += "uniform float " + info.name + "_gain;";
+			}
+
+			frag_shader_code += ""
+				R"(
+					float lp6(float f, float cutoff) {
+						float a = cutoff/(cutoff+1);
+						float tmp = (a-1)*f;
+						return inversesqrt(1+tmp*tmp);
+					}
+
+					float hp6(float f, float cutoff) {
+						return 1-lp6(f, cutoff);
+					}
+				)"
+
+				"float gain(float frequency) {"
+				"	float f = 2*pi*frequency/CUTOFF_MAX;"
+				"	float g = 1;";
+			for (const auto& info : infos) {
+				frag_shader_code += ""
+					"if (" + info.name + "_enabled > 0.f) {"
+					"	float w = 2*" + info.name+"_cutoff /CUTOFF_MAX-1.f;"
+					"	g *= ";
+				switch (info.type) {
+					case EqInfo::Type::lowpass6dB: frag_shader_code += "lp6(f, w);"; break;
+					case EqInfo::Type::highpass6dB: frag_shader_code += "hp6(f, w);"; break;
+				}
+				frag_shader_code += "}";
+			}
+			frag_shader_code += R"(
+					return g;
+				}
+
+				void main() {
+					const float r = 0.02;
+					const float delta = 0.0005;
+					vec2 pos = vec2(
+						position.x*1.106666667-0.053333333,
+						position.y
+					);
+
+					float nearest_sq = 1;
+					for (float i = -r; i < r; i += 0.005f) {
+						float freq = CUTOFF_MIN*pow(CUTOFF_MAX/CUTOFF_MIN, pos.x+i);
+						float dB = 1+20.f/24.f*log(gain(freq))/log(10.f);
+						float dy = 0.766667*dB-pos.y;
+						nearest_sq = min(nearest_sq, i*i + dy*dy);
+					}
+
+					float alpha = 1-smoothstep(r*r-delta, r*r, nearest_sq);
+					color = vec4(0.757, 0.757, 0.757, alpha);
+				}
+			)";
+
+			std::vector<ShaderRect::UniformInfo> uniform_infos;
+			for (const auto& info : infos) {
+				uniform_infos.push_back({
+					.name = info.name + "_enabled",
+					.param_idx = info.idxs[0]
+				});
+				uniform_infos.push_back({
+					.name = info.name + "_cutoff",
+					.param_idx = info.idxs[1]
+				});
+				if (info.idxs.size() >= 3) {
+					uniform_infos.push_back({
+						.name = info.name + "_gain",
+						.param_idx = info.idxs[2]
+					});
+				}
+			}
+
+
+			eq->add_child<ShaderRect>(ShaderRect::CreateInfo{
+				.base = {
+					.visible = true, .inert = true,
+					.style = {
+						{"x", "0sp"}, {"y", "0sp"},
+						{"width", "150sp"}, {"height", "105sp"}
+					}
+				},
+				.frag_shader_code = frag_shader_code,
+				.uniform_infos = uniform_infos
+			});
+		}
+
+		constexpr float margin = 10.f;
+
+		const float box_size = ( 150 - margin*(infos.size()-1) ) / infos.size();
+
+		for (size_t i = 0; i < infos.size(); ++i) {
+			eq->add_child<RoundedRect>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.btn_release_callback = [idx = infos[i].idxs[0], this](UIElement* elem, auto e){
+					if (elem->element_at(e.x, e.y)) {
+						float new_val = get_parameter(idx) > 0.f ? 0.f : 1.f;
+						parameter_update(idx, new_val);
+						update_dsp_param(idx, new_val);
+					}
+				},
+				.connections = {{
+					.param_idx = infos[i].idxs[0],
+					.style ="fill",
+					.in_range = {0.f, 0.f},
+					.out_range = {},
+					.interpolate = [](float t, auto) -> std::string {
+						return (t > 0.f) ? "#c1c1c1" : "#1b1d23";
+					}
+				}},
+				.style = {
+					{"x", std::to_string(i*(margin+box_size)) + "sp"},
+					{"width", std::to_string(box_size) + "sp"},
+					{"bottom", "0sp"}, {"height", "20sp"}, {"r", "5sp"}
+				}
+			});
+			eq->add_child<Text>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.connections = {{
+					.param_idx = infos[i].idxs[0],
+					.style ="fill",
+					.in_range = {0.f, 1.f},
+					.out_range = {},
+					.interpolate = [](float t, auto) -> std::string {
+						return (t > 0.f) ? "#1b1d23" : "#c1c1c1";
+					}
+				}},
+				.style = {
+					{"x", std::to_string(i*(margin+box_size)) + "sp"},
+					{"width", std::to_string(box_size) + "sp"},
+					{"bottom", "0sp"}, {"line-height", "20sp"},
+					{"text-align", "center"}, {"vertical-align", "middle"},
+					{"font-family", "Roboto-Regular"}, {"font-size", "17.33333sp"},
+					{"text", infos[i].name}
+				}
+			});
+
+			std::vector<UIElement::Connection> node_connections = {
+				{
+					.param_idx = infos[i].idxs[0],
+					.style ="visible",
+					.in_range = {0.f, 1.f},
+					.out_range = {},
+					.interpolate = [](float t, auto) -> std::string {
+						return (t > 0.f) ? "true" : "false";
+					}
+				}, {
+					.param_idx = infos[i].idxs[0],
+					.style ="inert",
+					.in_range = {0.f, 1.f},
+					.out_range = {},
+					.interpolate = [](float t, auto) -> std::string {
+						return (t > 0.f) ? "false" : "true";
+					}
+				}, {
+					.param_idx = infos[i].idxs[1],
+					.style ="cx",
+					.in_range = {
+						parameter_infos[infos[i].idxs[1]].min,
+						parameter_infos[infos[i].idxs[1]].max
+					},
+					.out_range = {"8sp", "142sp"},
+					.interpolate = [
+						min = parameter_infos[infos[i].idxs[1]].min,
+						max = parameter_infos[infos[i].idxs[1]].max
+					](float t, auto out) {
+						t = t*(max-min)+min;
+						t = std::log(min/t)/std::log(min/max);
+						return interpolate_style<float>(t, out);
+					}
+				}
+			};
+			if (infos[i].idxs.size() >= 3) {
+				node_connections.push_back({
+					.param_idx = infos[i].idxs[2],
+					.style ="cy",
+					.in_range = {
+						parameter_infos[infos[i].idxs[2]].min,
+						parameter_infos[infos[i].idxs[2]].max
+					},
+					.out_range = {"97sp", "32sp"}
+				});
+			}
+
+			eq->add_child<Circle>(UIElement::CreateInfo{
+				.visible = false, .inert = false,
+				.btn_press_callback = [idxs = infos[i].idxs, this](UIElement*, const auto& e) {
+					mouse_callback_info.x = e.x;
+					mouse_callback_info.y = e.y;
+
+					if (e.state & pugl::Mod::PUGL_MOD_SHIFT) {
+						update_dsp_param(idxs[1], parameter_infos[idxs[1]].dflt);
+						parameter_update(idxs[1], parameter_infos[idxs[1]].dflt);
+						if (idxs.size() >= 3) {
+							update_dsp_param(idxs[2], parameter_infos[idxs[2]].dflt);
+							parameter_update(idxs[2], parameter_infos[idxs[2]].dflt);
+						}
+						return;
+					}
+				},
+				.motion_callback = [idxs = infos[i].idxs, this](UIElement* elem, const auto& e) {
+
+					if (e.state & pugl::Mod::PUGL_MOD_SHIFT) {
+						update_dsp_param(idxs[1], parameter_infos[idxs[1]].dflt);
+						parameter_update(idxs[1], parameter_infos[idxs[1]].dflt);
+						if (idxs.size() >= 3) {
+							update_dsp_param(idxs[2], parameter_infos[idxs[2]].dflt);
+							parameter_update(idxs[2], parameter_infos[idxs[2]].dflt);
+						}
+						return;
+					}
+					float sensitivity = (e.state & pugl::Mod::PUGL_MOD_CTRL) ? 0.1f : 1.f;
+					float area[2] = {134*100*elem->root()->vw/1230, 65*100*elem->root()->vw/1230};
+					{
+						float dx = sensitivity*(static_cast<float>(e.x) - mouse_callback_info.x)/area[0];
+
+						float new_value = get_parameter(idxs[1]) *
+							std::pow(parameter_infos[idxs[1]].max/parameter_infos[idxs[1]].min, dx);
+
+						new_value = std::clamp(
+							new_value,
+							parameter_infos[idxs[1]].min,
+							parameter_infos[idxs[1]].max
+						);
+
+						update_dsp_param(idxs[1], new_value);
+						parameter_update(idxs[1], new_value);
+					}
+					if (idxs.size() >= 3) {
+						float dy = sensitivity*(mouse_callback_info.y - static_cast<float>(e.y))/area[1];
+						float new_value = std::clamp(
+							get_parameter(idxs[2]) + parameter_infos[idxs[2]].range()*dy,
+							parameter_infos[idxs[2]].min,
+							parameter_infos[idxs[2]].max
+						);
+
+						update_dsp_param(idxs[2], new_value);
+						parameter_update(idxs[2], new_value);
+					}
+
+					mouse_callback_info.x = e.x;
+					mouse_callback_info.y = e.y;
+				},
+				.connections = node_connections,
+				.style = {
+					{"cy", "45sp"}, {"r", "6sp"},
+					{"fill", "#1b1d23"},
+					{"stroke", "#c1c1c1"}, {"stroke-width", "1.5sp"}
+				}
+			});
+		}
 	}
 
 	/*
