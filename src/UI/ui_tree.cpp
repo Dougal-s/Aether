@@ -100,9 +100,9 @@ void UIElement::draw() const {
 			value = std::clamp(value, 0.f, 1.f);
 
 			const auto interpolated_val = con.interpolate(value, con.out_range);
-			if (con.style == "inert") {
+			if (con.style == "inert")
 				m_inert = (interpolated_val == "true" ? true : false);
-			} else if (con.style == "visible")
+			else if (con.style == "visible")
 				m_visible = (interpolated_val == "true" ? true : false);
 			else
 				style.insert_or_assign(con.style, interpolated_val);
