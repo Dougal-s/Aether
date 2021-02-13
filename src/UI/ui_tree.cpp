@@ -113,7 +113,7 @@ void UIElement::draw() const {
 
 	if (m_visible) {
 		auto filter = style.find("filter");
-		if (filter != style.end()) {
+		if (filter) {
 			nvgEndFrame(m_root->ctx->nvg_ctx);
 			set_new_render_target();
 			nvgBeginFrame(m_root->ctx->nvg_ctx, 100*m_root->vw, 100*m_root->vh, 1);
@@ -126,7 +126,7 @@ void UIElement::draw() const {
 
 		draw_impl();
 
-		if (filter != style.end()) {
+		if (filter) {
 			nvgEndFrame(m_root->ctx->nvg_ctx);
 			apply_filter(filter->second);
 			nvgBeginFrame(m_root->ctx->nvg_ctx, 100*m_root->vw, 100*m_root->vh, 1);
@@ -134,8 +134,8 @@ void UIElement::draw() const {
 	}
 }
 
-const std::string& UIElement::get_style(const std::string& name, std::string err) const {
-	if (auto it = style.find(name); it != style.end())
+std::string_view UIElement::get_style(const std::string& name, std::string err) const {
+	if (auto it = style.find(name); it)
 		return it->second;
 	throw std::runtime_error(err);
 }
@@ -222,7 +222,7 @@ ParseResult<float> UIElement::to_rad(const char* expr) const {
 
 
 bool UIElement::set_fill() const {
-	if (auto it = style.find("fill"); it != style.end()) {
+	if (auto it = style.find("fill"); it) {
 		std::string_view fill = it->second;
 		if (fill == "none") return false;
 
@@ -283,13 +283,13 @@ bool UIElement::set_stroke() const {
 	bool has_stroke = false;
 	if (m_parent) has_stroke = m_parent->set_stroke();
 
-	if (auto width = style.find("stroke-width"); width != style.end())
-		nvgStrokeWidth(m_root->ctx->nvg_ctx, to_px(width->second.c_str()).val);
+	if (auto width = style.find("stroke-width"); width)
+		nvgStrokeWidth(m_root->ctx->nvg_ctx, to_px(width->second.data()).val);
 
-	if (auto miter = style.find("stroke-miter"); miter != style.end())
-		nvgMiterLimit(m_root->ctx->nvg_ctx, to_px(miter->second.c_str()).val);
+	if (auto miter = style.find("stroke-miter"); miter)
+		nvgMiterLimit(m_root->ctx->nvg_ctx, to_px(miter->second.data()).val);
 
-	if (auto linecap = style.find("stroke-linecap"); linecap != style.end()) {
+	if (auto linecap = style.find("stroke-linecap"); linecap) {
 		if (linecap->second == "butt")
 			nvgLineCap(m_root->ctx->nvg_ctx, NVG_BUTT);
 		else if (linecap->second == "round")
@@ -298,7 +298,7 @@ bool UIElement::set_stroke() const {
 			nvgLineCap(m_root->ctx->nvg_ctx, NVG_SQUARE);
 	}
 
-	if (auto linejoin = style.find("stroke-linejoin"); linejoin != style.end()) {
+	if (auto linejoin = style.find("stroke-linejoin"); linejoin) {
 		if (linejoin->second == "miter")
 			nvgLineJoin(m_root->ctx->nvg_ctx, NVG_MITER);
 		else if (linejoin->second == "round")
@@ -307,7 +307,7 @@ bool UIElement::set_stroke() const {
 			nvgLineJoin(m_root->ctx->nvg_ctx, NVG_BEVEL);
 	}
 
-	if (auto it = style.find("stroke"); it != style.end()) {
+	if (auto it = style.find("stroke"); it) {
 		std::string_view stroke = it->second;
 		if (stroke == "none") return false;
 
@@ -368,7 +368,7 @@ void UIElement::apply_transforms() const {
 	if (m_parent != m_root)
 		m_parent->apply_transforms();
 
-	if (auto it = style.find("transform"); it != style.end()) {
+	if (auto it = style.find("transform"); it) {
 		std::string_view transform = style.find("transform")->second;
 
 		auto p_bounds = m_parent->bounds();
@@ -400,13 +400,13 @@ void UIElement::set_new_render_target() const {
 	++(m_root->ctx->active_framebuffers);
 }
 
-void UIElement::apply_filter(const std::string& filter) const {
+void UIElement::apply_filter(std::string_view filter) const {
 	--(m_root->ctx->active_framebuffers);
 
 	float blur = 0.3f;
-	std::string_view filter_name{filter.c_str(), filter.find('(')};
+	std::string_view filter_name{filter.data(), filter.find('(')};
 	if (filter_name == "blur")
-		blur = std::max(to_px(filter.c_str()+filter_name.size()+1).val, 0.3f);
+		blur = std::max(to_px(filter.data()+filter_name.size()+1).val, 0.3f);
 	else
 		throw std::invalid_argument("unrecognized filter type");
 
@@ -443,16 +443,16 @@ void UIElement::apply_filter(const std::string& filter) const {
 // Circle
 
 float Circle::cx() const {
-	const auto& cx_str = get_style("cx", "circle has undefined center x position");
-	return to_horizontal_px(cx_str.c_str()).val + m_parent->x();
+	const auto cx_str = get_style("cx", "circle has undefined center x position");
+	return to_horizontal_px(cx_str.data()).val + m_parent->x();
 }
 float Circle::cy() const {
-	const auto& cy_str = get_style("cy", "circle has undefined center y position");
-	return to_vertical_px(cy_str.c_str()).val + m_parent->y();
+	const auto cy_str = get_style("cy", "circle has undefined center y position");
+	return to_vertical_px(cy_str.data()).val + m_parent->y();
 }
 float Circle::r() const {
-	const auto& r_str = get_style("r", "circle has undefined radius");
-	return to_px(r_str.c_str()).val;
+	const auto r_str = get_style("r", "circle has undefined radius");
+	return to_px(r_str.data()).val;
 }
 
 void Circle::draw_impl() const {
@@ -472,8 +472,8 @@ UIElement* Circle::element_at_impl(float x, float y) {
 	float r = this->r();
 
 	if (set_stroke())
-		if (auto it = style.find("stroke-width"); it != style.end())
-			r += 0.5f*to_px(it->second.c_str()).val;
+		if (auto it = style.find("stroke-width"); it)
+			r += 0.5f*to_px(it->second.data()).val;
 
 	return (dx*dx + dy*dy < r*r) ? this : nullptr;
 }
@@ -481,12 +481,12 @@ UIElement* Circle::element_at_impl(float x, float y) {
 // Arc
 
 float Arc::a0() const {
-	const auto& a0_str = get_style("a0", "arc has undefined start angle");
-	return to_rad(a0_str.c_str()).val;
+	const auto a0_str = get_style("a0", "arc has undefined start angle");
+	return to_rad(a0_str.data()).val;
 }
 float Arc::a1() const {
-	const auto& a1_str = get_style("a1", "arc has undefined end angle");
-	return to_rad(a1_str.c_str()).val;
+	const auto a1_str = get_style("a1", "arc has undefined end angle");
+	return to_rad(a1_str.data()).val;
 }
 
 void Arc::draw_impl() const {
@@ -511,7 +511,7 @@ UIElement* Arc::element_at_impl(float, float) {
 
 // Path
 
-const std::string& Path::path() const {
+std::string_view Path::path() const {
 	return get_style("path", "path has undefined path");
 }
 
@@ -519,22 +519,22 @@ void Path::draw_impl() const {
 	nvgBeginPath(m_root->ctx->nvg_ctx);
 
 	{
-		float x = [&](){
+		const float x = [&](){
 			auto it = style.find("x");
-			if (it == style.end())
+			if (!it)
 				it = style.find("left");
-			if (it == style.end())
+			if (!it)
 				throw std::runtime_error("path has undefined x position");
-			return to_horizontal_px(it->second.c_str()).val + m_parent->x();
+			return to_horizontal_px(it->second.data()).val + m_parent->x();
 		}();
 
-		float y = [&](){
+		const float y = [&](){
 			auto it = style.find("y");
-			if (it == style.end())
+			if (!it)
 				it = style.find("top");
-			if (it == style.end())
+			if (!it)
 				throw std::runtime_error("path has undefined y position");
-			return to_vertical_px(it->second.c_str()).val + m_parent->y();
+			return to_vertical_px(it->second.data()).val + m_parent->y();
 		}();
 
 		nvgTranslate(m_root->ctx->nvg_ctx, x, y);
@@ -598,17 +598,17 @@ float Rect::x() const {
 	float x = 0.f;
 
 	auto it = style.find("x");
-	if (it == style.end())
+	if (!it)
 		it = style.find("left");
 
-	if (it != style.end()) {
-		x = to_horizontal_px(it->second.c_str()).val;
+	if (it) {
+		x = to_horizontal_px(it->second.data()).val;
 	} else if (
 		auto right_it = style.find("right"), width_it = style.find("width");
-		right_it != style.end() && width_it != style.end()
+		right_it && width_it
 	) {
-		float right = to_horizontal_px(right_it->second.c_str()).val;
-		float width = to_horizontal_px(width_it->second.c_str()).val;
+		float right = to_horizontal_px(right_it->second.data()).val;
+		float width = to_horizontal_px(width_it->second.data()).val;
 		x = m_parent->width() - width - right;
 	} else {
 		throw std::runtime_error("rectangle has undefined x position");
@@ -624,17 +624,17 @@ float Rect::y() const {
 	float y = 0.f;
 
 	auto it = style.find("y");
-	if (it == style.end())
+	if (!it)
 		it = style.find("top");
 
-	if (it != style.end()) {
-		y = to_vertical_px(it->second.c_str()).val;
+	if (it) {
+		y = to_vertical_px(it->second.data()).val;
 	} else if (
 		auto bottom_it = style.find("bottom"), height_it = style.find("height");
-		bottom_it != style.end() && height_it != style.end()
+		bottom_it && height_it
 	) {
-		float bottom = to_vertical_px(bottom_it->second.c_str()).val;
-		float height = to_vertical_px(height_it->second.c_str()).val;
+		float bottom = to_vertical_px(bottom_it->second.data()).val;
+		float height = to_vertical_px(height_it->second.data()).val;
 		y = m_parent->height() - height - bottom;
 	} else {
 		throw std::runtime_error("rectangle has undefined y position");
@@ -647,37 +647,37 @@ float Rect::y() const {
 }
 
 float Rect::width() const {
-	if (auto width = style.find("width"); width != style.end()) {
-		return to_horizontal_px(width->second.c_str()).val;
+	if (auto width = style.find("width"); width) {
+		return to_horizontal_px(width->second.data()).val;
 	} else {
 		auto left_it = style.find("x");
-		if (left_it == style.end()) left_it = style.find("left");
-		if (left_it == style.end()) throw std::runtime_error("Undefined width!");
+		if (!left_it) left_it = style.find("left");
+		if (!left_it) throw std::runtime_error("Undefined width!");
 
-		float left = to_horizontal_px(left_it->second.c_str()).val;
+		float left = to_horizontal_px(left_it->second.data()).val;
 
 		auto right_it = style.find("right");
-		if (right_it == style.end()) throw std::runtime_error("Undefined width!");
+		if (!right_it) throw std::runtime_error("Undefined width!");
 
-		float right = m_parent->width() - to_horizontal_px(right_it->second.c_str()).val;
+		float right = m_parent->width() - to_horizontal_px(right_it->second.data()).val;
 		return right-left;
 	}
 }
 
 float Rect::height() const {
-	if (auto height = style.find("height"); height != style.end()) {
-		return to_vertical_px(height->second.c_str()).val;
+	if (auto height = style.find("height"); height) {
+		return to_vertical_px(height->second.data()).val;
 	} else {
 		auto top_it = style.find("y");
-		if (top_it == style.end()) top_it = style.find("top");
-		if (top_it == style.end()) throw std::runtime_error("Undefined height!");
+		if (!top_it) top_it = style.find("top");
+		if (!top_it) throw std::runtime_error("Undefined height!");
 
-		float top = to_vertical_px(top_it->second.c_str()).val;
+		float top = to_vertical_px(top_it->second.data()).val;
 
 		auto bottom_it = style.find("bottom");
-		if (bottom_it == style.end()) throw std::runtime_error("Undefined height!");
+		if (!bottom_it) throw std::runtime_error("Undefined height!");
 
-		float bottom = m_parent->height() - to_vertical_px(bottom_it->second.c_str()).val;
+		float bottom = m_parent->height() - to_vertical_px(bottom_it->second.data()).val;
 		return bottom-top;
 	}
 }
@@ -688,29 +688,28 @@ std::array<float, 4> Rect::bounds() const {
 
 	{
 		auto it = style.find("x");
-		if (it == style.end())
-			it = style.find("left");
-		if (it != style.end())
-			left = to_horizontal_px(it->second.c_str()).val;
+		if (!it) it = style.find("left");
+		if (it)
+			left = to_horizontal_px(it->second.data()).val;
 	}
 
-	if (auto it = style.find("right"); it != style.end())
-		right = to_horizontal_px(it->second.c_str()).val;
-	if (auto it = style.find("width"); it != style.end())
-		width = to_horizontal_px(it->second.c_str()).val;
+	if (auto it = style.find("right"); it)
+		right = to_horizontal_px(it->second.data()).val;
+	if (auto it = style.find("width"); it)
+		width = to_horizontal_px(it->second.data()).val;
 
 	{
 		auto it = style.find("y");
-		if (it == style.end())
+		if (!it)
 			it = style.find("top");
-		if (it != style.end())
-			top = to_vertical_px(it->second.c_str()).val;
+		if (it)
+			top = to_vertical_px(it->second.data()).val;
 	}
 
-	if (auto it = style.find("bottom"); it != style.end())
-		bottom = to_vertical_px(it->second.c_str()).val;
-	if (auto it = style.find("height"); it != style.end())
-		height = to_vertical_px(it->second.c_str()).val;
+	if (auto it = style.find("bottom"); it)
+		bottom = to_vertical_px(it->second.data()).val;
+	if (auto it = style.find("height"); it)
+		height = to_vertical_px(it->second.data()).val;
 
 
 	if (m_parent) {
@@ -761,8 +760,8 @@ void Rect::draw_impl() const {
 
 UIElement* Rect::element_at_impl(float x, float y) {
 	auto b = this->bounds();
-	if (auto width = style.find("stroke-width"); width != style.end()) {
-		const float stroke_width = to_px(width->second.c_str()).val;
+	if (auto width = style.find("stroke-width"); width) {
+		const float stroke_width = to_px(width->second.data()).val;
 		b[0] -= stroke_width/2;
 		b[1] -= stroke_width/2;
 		b[2] += stroke_width;
@@ -775,7 +774,7 @@ UIElement* Rect::element_at_impl(float x, float y) {
 
 void ShaderRect::draw_impl() const {
 	if (!m_shader)
-		m_shader = Shader(m_vert_shader_code, m_frag_shader_code.c_str());
+		m_shader = Shader(m_vert_shader_code, m_frag_shader_code.data());
 
 	auto bounds = this->bounds();
 	bounds[0] = 0.02f*bounds[0]/m_root->vw - 1.f;
@@ -801,8 +800,8 @@ void ShaderRect::draw_impl() const {
 // RoundedRect
 
 float RoundedRect::r() const {
-	const auto& r_str = get_style("r", "rectangle corner radius not defined");
-	return to_px(r_str.c_str()).val;
+	const auto r_str = get_style("r", "rectangle corner radius not defined");
+	return to_px(r_str.data()).val;
 }
 
 void RoundedRect::draw_impl() const {
@@ -816,21 +815,22 @@ void RoundedRect::draw_impl() const {
 
 // Text
 
-const std::string& Text::font_face() const {
+std::string_view Text::font_face() const {
 	return get_style("font-family", "text has undefined font family");
 }
 
-const std::string& Text::text() const {
+std::string_view Text::text() const {
 	return get_style("text", "text has no text property");
 }
 
 std::array<float, 4> Text::bounds() const {
 	auto corner = render_corner();
 	std::array<float, 4> bounds;
+	const std::string_view text = this->text();
 	if (auto width = defined_width(); width)
-		nvgTextBoxBounds(m_root->ctx->nvg_ctx, corner[0], corner[1], *width, text().c_str(), nullptr, bounds.data());
+		nvgTextBoxBounds(m_root->ctx->nvg_ctx, corner[0], corner[1], *width, text.begin(), text.end(), bounds.data());
 	else
-		nvgTextBounds(m_root->ctx->nvg_ctx, corner[0], corner[1], text().c_str(), nullptr, bounds.data());
+		nvgTextBounds(m_root->ctx->nvg_ctx, corner[0], corner[1], text.begin(), text.end(), bounds.data());
 	bounds[2] -= bounds[0];
 	bounds[3] -= bounds[1];
 	return bounds;
@@ -841,16 +841,16 @@ std::array<float, 2> Text::render_corner() const {
 
 	{
 		auto it = style.find("x");
-		if (it == style.end())
+		if (!it)
 			it = style.find("left");
-		if (it != style.end())
-			left = to_horizontal_px(it->second.c_str()).val;
+		if (it)
+			left = to_horizontal_px(it->second.data()).val;
 	} {
 		auto it = style.find("y");
-		if (it == style.end())
+		if (!it)
 			it = style.find("top");
-		if (it != style.end())
-			top = to_vertical_px(it->second.c_str()).val;
+		if (it)
+			top = to_vertical_px(it->second.data()).val;
 	}
 
 	auto p_bounds = m_parent->bounds();
@@ -860,15 +860,16 @@ std::array<float, 2> Text::render_corner() const {
 
 	float text_bounds[4];
 	// styling has already been set outside this function
+	const std::string_view text = this->text();
 	if (auto width = defined_width(); width)
-		nvgTextBoxBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, *width, text().c_str(), nullptr, text_bounds);
+		nvgTextBoxBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, *width, text.begin(), text.end(), text_bounds);
 	else
-		nvgTextBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, text().c_str(), nullptr, text_bounds);
+		nvgTextBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, text.begin(), text.end(), text_bounds);
 
 	if (!left) {
 		float right;
-		if (auto it = style.find("right"); it != style.end())
-			right = to_horizontal_px(it->second.c_str()).val;
+		if (auto it = style.find("right"); it)
+			right = to_horizontal_px(it->second.data()).val;
 		else
 			throw std::runtime_error("text x position undefined");
 
@@ -877,8 +878,8 @@ std::array<float, 2> Text::render_corner() const {
 
 	if (!top) {
 		float bottom;
-		if (auto it = style.find("bottom"); it != style.end())
-			bottom = to_vertical_px(it->second.c_str()).val;
+		if (auto it = style.find("bottom"); it)
+			bottom = to_vertical_px(it->second.data()).val;
 		else
 			throw std::runtime_error("text x position undefined");
 
@@ -890,34 +891,34 @@ std::array<float, 2> Text::render_corner() const {
 }
 
 float Text::font_size() const {
-	const auto& size_str = get_style("font-size", "text has undefined font size");
-	return to_px(size_str.c_str()).val;
+	const auto size_str = get_style("font-size", "text has undefined font size");
+	return to_px(size_str.data()).val;
 }
 
 std::optional<float> Text::defined_width() const {
-	if (auto it = style.find("width"); it != style.end())
-		return to_horizontal_px(it->second.c_str()).val;
+	if (auto it = style.find("width"); it)
+		return to_horizontal_px(it->second.data()).val;
 
 	auto left = style.find("x");
-	if (left == style.end())
+	if (!left)
 		left = style.find("left");
-	if (left == style.end())
+	if (!left)
 		return {};
 
 	auto right = style.find("right");
-	if (right == style.end())
+	if (!right)
 		return {};
 
 	auto p_width = m_parent->width();
 
 	return p_width -
-		to_horizontal_px(left->second.c_str()).val -
-		to_horizontal_px(left->second.c_str()).val;
+		to_horizontal_px(left->second.data()).val -
+		to_horizontal_px(left->second.data()).val;
 }
 
 void Text::set_alignment() const {
 	int alignment = 0;
-	if (auto it = style.find("text-align"); it != style.end()) {
+	if (auto it = style.find("text-align"); it) {
 		if (it->second == "left")
 			alignment |= NVG_ALIGN_LEFT;
 		else if (it->second == "center")
@@ -928,7 +929,7 @@ void Text::set_alignment() const {
 			throw std::runtime_error("unrecognized alignment specified");
 	}
 
-	if (auto it = style.find("vertical-align"); it != style.end()) {
+	if (auto it = style.find("vertical-align"); it) {
 		if (it->second == "top")
 			alignment |= NVG_ALIGN_TOP;
 		else if (it->second == "middle")
@@ -946,11 +947,11 @@ void Text::set_alignment() const {
 }
 
 void Text::set_text_styling() const {
-	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(font_face()));
+	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(std::string(font_face())));
 	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
 	set_alignment();
-	if (auto line_height = style.find("line_height"); line_height != style.end())
-		nvgTextLineHeight(m_root->ctx->nvg_ctx, std::stof(line_height->second));
+	if (auto line_height = style.find("line_height"); line_height)
+		nvgTextLineHeight(m_root->ctx->nvg_ctx, std::strtof(line_height->second.data(), nullptr));
 	set_fill();
 }
 
@@ -958,10 +959,11 @@ void Text::draw_impl() const {
 	nvgBeginPath(m_root->ctx->nvg_ctx);
 	set_text_styling();
 	auto corner = render_corner();
+	const std::string_view text = this->text();
 	if (auto width = defined_width(); width)
-		nvgTextBox(m_root->ctx->nvg_ctx, corner[0], corner[1], *width, text().c_str(), nullptr);
+		nvgTextBox(m_root->ctx->nvg_ctx, corner[0], corner[1], *width, text.begin(), text.end());
 	else
-		nvgText(m_root->ctx->nvg_ctx, corner[0], corner[1], text().c_str(), nullptr);
+		nvgText(m_root->ctx->nvg_ctx, corner[0], corner[1], text.begin(), text.end());
 }
 
 UIElement* Text::element_at_impl(float x, float y) {
@@ -991,11 +993,11 @@ Root::Root(
 	ctx{context}
 {}
 
-int Root::get_font(const std::string& font_face) {
-	int font_id = nvgFindFont(ctx->nvg_ctx, font_face.c_str());
+int Root::get_font(std::string font_face) {
+	int font_id = nvgFindFont(ctx->nvg_ctx, font_face.data());
 	if (font_id == -1) {
 		const auto path = bundle_path / "fonts" / (font_face + ".ttf");
-		font_id = nvgCreateFont(ctx->nvg_ctx, font_face.c_str(), path.c_str());
+		font_id = nvgCreateFont(ctx->nvg_ctx, font_face.data(), path.c_str());
 	}
 	return font_id;
 }

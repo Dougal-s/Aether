@@ -12,6 +12,8 @@
 
 #include "gl_helper.hpp"
 
+#include "style.hpp"
+
 struct Root;
 struct DrawingContext;
 class Group;
@@ -135,7 +137,7 @@ public:
 protected:
 
 	// Variables
-	mutable std::unordered_map<std::string, std::string> style;
+	mutable Style style;
 
 	Group* m_parent;
 	Root* m_root;
@@ -144,7 +146,7 @@ protected:
 		attempt to find the value in style with key name
 		throws a runtime_error with string err if the key does not exist
 	*/
-	const std::string& get_style(const std::string& name, std::string err) const;
+	std::string_view get_style(const std::string& name, std::string err) const;
 
 	/*
 		unit conversions
@@ -191,7 +193,7 @@ private:
 	void apply_transforms() const;
 
 	void set_new_render_target() const;
-	void apply_filter(const std::string& filter) const;
+	void apply_filter(std::string_view filter) const;
 };
 
 /*
@@ -237,7 +239,7 @@ public:
 	Path(Root* root, Group* parent, CreateInfo create_info) noexcept :
 		UIElement(root, parent, create_info) {}
 
-	[[nodiscard]] const std::string& path() const;
+	[[nodiscard]] std::string_view path() const;
 protected:
 	/*
 		Virtual functions
@@ -340,8 +342,8 @@ public:
 		Rect(root, parent, create_info) {}
 protected:
 
-	[[nodiscard]] const std::string& font_face() const;
-	[[nodiscard]] const std::string& text() const;
+	[[nodiscard]] std::string_view font_face() const;
+	[[nodiscard]] std::string_view text() const;
 
 	[[nodiscard]] std::array<float, 4> bounds() const;
 	[[nodiscard]] float font_size() const;
@@ -431,7 +433,7 @@ struct Root final : public Group {
 
 	mutable DrawingContext* ctx;
 
-	int get_font(const std::string& font_face);
+	int get_font(std::string font_face);
 };
 
 struct DrawingContext {

@@ -7,7 +7,6 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
-#include <unordered_map>
 
 // Glad
 #include <glad/glad.h>
@@ -467,8 +466,7 @@ namespace Aether {
 					.style = {
 						{"x", "285sp"}, {"y", "100%"}, {"width", "75sp"},
 						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
-						{"text-align", "right"}, {"fill", "#c1c1c1"},
-						{"text", "1000000"}
+						{"text-align", "right"}, {"fill", "#c1c1c1"}
 					}
 				});
 			}
@@ -1335,8 +1333,8 @@ namespace Aether {
 		auto center_group = g->add_child<Group>(UIElement::CreateInfo{
 			.visible = true, .inert = true,
 			.style = {
-				{"x", std::to_string(cx) + "sp"}, {"width", "0"},
-				{"y", std::to_string(cy) + "sp"}, {"height", "0"}
+				{"x", std::to_string(cx).substr(0,3) + "sp"}, {"width", "0"},
+				{"y", std::to_string(cy).substr(0,3) + "sp"}, {"height", "0"}
 			}
 		});
 
@@ -1400,8 +1398,10 @@ namespace Aether {
 				}
 			}},
 			.style = {
-				{"x", std::to_string(-dial_size/16.f) + "sp"}, {"width", std::to_string(dial_size/8.f) + "sp"},
-				{"y", std::to_string(-dial_size) + "sp"}, {"height", std::to_string(dial_size-strk_width/2.f) + "sp"},
+				{"x", std::to_string(-dial_size/16.f) + "sp"},
+				{"width", std::to_string(dial_size/8.f) + "sp"},
+				{"y", std::to_string(-dial_size) + "sp"},
+				{"height", std::to_string(dial_size-strk_width/2.f) + "sp"},
 				{"r", "1sp"},
 				{"fill", "#b6bfcc"},
 				{"stroke", center_fill}, {"stroke-width", "2sp"}
@@ -1412,9 +1412,9 @@ namespace Aether {
 			.btn_press_callback = [param_idx, this](UIElement* elem, auto e){dial_btn_press_cb(param_idx, elem, e);},
 			.motion_callback = [param_idx, this](UIElement* elem, auto e){dial_btn_motion_cb(param_idx, elem, e);},
 			.style = {
-				{"cx", std::to_string(cx) + "sp"},
-				{"cy", std::to_string(cy) + "sp"},
-				{"r", std::to_string(1.4*dial_size) + "sp"}
+				{"cx", std::to_string(cx).substr(0,3) + "sp"},
+				{"cy", std::to_string(cy).substr(0,3) + "sp"},
+				{"r", std::to_string(1.4*dial_size).substr(0,2) + "sp"}
 			}
 		});
 
@@ -1445,9 +1445,9 @@ namespace Aether {
 			.base = {
 				.visible = true, .inert = true,
 				.style = {
-					{"x", std::to_string(x) + "sp"}, {"y", std::to_string(y) + "sp"},
-					{"width", "120sp"}, {"height", "50sp"},
-					{"fill", "#8c2e2e"}
+					{"x", std::to_string(x).substr(0,3) + "sp"},
+					{"y", std::to_string(y).substr(0,3) + "sp"},
+					{"width", "120sp"}, {"height", "50sp"}
 				},
 			},
 			.frag_shader_code =
@@ -1518,15 +1518,15 @@ namespace Aether {
 		auto eq = g->add_child<Group>(UIElement::CreateInfo{
 			.visible = true, .inert = false,
 			.style = {
-				{"x", std::to_string(x) + "sp"}, {"width", "150sp"},
-				{"y", std::to_string(y) + "sp"}, {"height", "130sp"}
+				{"x", std::to_string(x).substr(0,3) + "sp"}, {"width", "150sp"},
+				{"y", std::to_string(y).substr(0,3) + "sp"}, {"height", "130sp"}
 			}
 		});
 
 		eq->add_child<RoundedRect>(UIElement::CreateInfo{
 			.visible = true, .inert = true,
 			.style = {
-				{"x", "0sp"}, {"y", "0sp"},
+				{"x", "0"}, {"y", "0"},
 				{"width", "150sp"}, {"height", "105sp"},
 				{"r", "5sp"}, {"fill", "#1b1d23"}
 			}
@@ -1535,7 +1535,7 @@ namespace Aether {
 		eq->add_child<Rect>(UIElement::CreateInfo{
 			.visible = true, .inert = true,
 			.style = {
-				{"x", "0sp"}, {"y", "24.25sp"},
+				{"x", "0"}, {"y", "24.25sp"},
 				{"width", "150sp"}, {"height", "1sp"},
 				{"fill", "#c1c1c160"}
 			}
@@ -1637,7 +1637,7 @@ namespace Aether {
 				.base = {
 					.visible = true, .inert = true,
 					.style = {
-						{"x", "0sp"}, {"y", "0sp"},
+						{"x", "0"}, {"y", "0"},
 						{"width", "150sp"}, {"height", "105sp"}
 					}
 				},
@@ -1670,8 +1670,8 @@ namespace Aether {
 					}
 				}},
 				.style = {
-					{"x", std::to_string(i*(margin+box_size)) + "sp"},
-					{"width", std::to_string(box_size) + "sp"},
+					{"x", std::to_string(i*(margin+box_size)).substr(0,3) + "sp"},
+					{"width", std::to_string(box_size).substr(0,4) + "sp"},
 					{"bottom", "0sp"}, {"height", "20sp"}, {"r", "5sp"}
 				}
 			});
