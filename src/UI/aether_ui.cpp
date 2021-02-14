@@ -170,7 +170,7 @@ namespace Aether {
 		);
 
 		struct EqInfo {
-			enum class Type {lowpass6dB, highpass6dB};
+			enum class Type {lowpass6dB, highpass6dB, lowshelf, highshelf};
 
 			std::string name;
 			Type type;
@@ -859,6 +859,14 @@ namespace Aether {
 
 			attach_eq(late, 295, 200, {
 				EqInfo{
+					.name = "LS",
+					.type = EqInfo::Type::lowshelf,
+					.idxs = {38, 39, 40}
+				}, EqInfo{
+					.name = "HS",
+					.type = EqInfo::Type::highshelf,
+					.idxs = {41, 42, 43}
+				}, EqInfo{
 					.name = "HC",
 					.type = EqInfo::Type::lowpass6dB,
 					.idxs = {44, 45}
@@ -1565,27 +1573,67 @@ namespace Aether {
 			frag_shader_code += ""
 				R"(
 					float lp6(float f, float cutoff) {
+						cutoff = 2*cutoff-1.f;
 						float a = cutoff/(cutoff+1);
-						float tmp = (a-1)*f;
+						float tmp = (a-1)*(pi*f);
 						return inversesqrt(1+tmp*tmp);
 					}
 
 					float hp6(float f, float cutoff) {
-						return 1-lp6(f, cutoff);
+						return lp6(cutoff, f);
+					}
+
+					float sqr(float a) { return a*a; }
+
+					float lowshelf(float f, float cutoff, float gain) {
+						if (cutoff >= 1.f) return gain;
+
+						const float sqrt2 = sqrt(2);
+
+						float w = pi*f;
+						float K = tan(pi*cutoff/2);
+
+						float a0 = 1 + sqrt2*K + K*K;
+						float a1 = ( -2 + 2*K*K ) / a0;
+						float a2 = ( 1 - sqrt2*K + K*K ) / a0;
+
+						float sqrt2G = sqrt(2*gain);
+						float b0 = ( 1 + sqrt2G*K + gain*K*K) / a0;
+						float b1 = (-2 + 2*gain*K*K )  / a0;
+						float b2 = ( 1 - sqrt2G*K + gain*K*K) / a0;
+
+						float cosw = cos(w);
+						float sinwSqr = sqr(sin(w));
+
+						float num =
+							sqr( b0*( sqr(cosw) - sinwSqr ) + b1*cosw + b2 ) +
+							sinwSqr * sqr( 2*b0*cosw + b1 );
+
+						float den =
+							sqr( 2*sqr(cosw) - 1 + a1*cosw + a2 ) +
+							sinwSqr * sqr( 2*cosw + a1 );
+
+						return sqrt(num/den);
+					}
+
+					float highshelf(float f, float cutoff, float gain) {
+						return lowshelf(cutoff, f, gain);
 					}
 				)"
 
 				"float gain(float frequency) {"
-				"	float f = 2*pi*frequency/CUTOFF_MAX;"
+				"	float f = frequency/CUTOFF_MAX;"
 				"	float g = 1;";
 			for (const auto& info : infos) {
 				frag_shader_code += ""
 					"if (" + info.name + "_enabled > 0.f) {"
-					"	float w = 2*" + info.name+"_cutoff /CUTOFF_MAX-1.f;"
+					"	float w = " + info.name+"_cutoff / CUTOFF_MAX;"
 					"	g *= ";
 				switch (info.type) {
 					case EqInfo::Type::lowpass6dB: frag_shader_code += "lp6(f, w);"; break;
 					case EqInfo::Type::highpass6dB: frag_shader_code += "hp6(f, w);"; break;
+					case EqInfo::Type::lowshelf: frag_shader_code += "lowshelf(f, w, pow(10, "+ info.name + "_gain/20));"; break;
+					case EqInfo::Type::highshelf: frag_shader_code += "highshelf(f, w, pow(10, "+ info.name + "_gain/20));"; break;
 				}
 				frag_shader_code += "}";
 			}
@@ -1602,7 +1650,9 @@ namespace Aether {
 					);
 
 					float nearest_sq = 1;
-					for (float i = -r; i < r; i += 0.005f) {
+					float begin = max(pos.x-r, 0)-pos.x;
+					float end = min(pos.x+r, 1)-pos.x;
+					for (float i = begin; i < end; i += 0.005f) {
 						float freq = CUTOFF_MIN*pow(CUTOFF_MAX/CUTOFF_MIN, pos.x+i);
 						float dB = 1+20.f/24.f*log(gain(freq))/log(10.f);
 						float dy = 0.766667*dB-pos.y;
