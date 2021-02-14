@@ -1748,22 +1748,6 @@ namespace Aether {
 
 			std::vector<UIElement::Connection> node_connections = {
 				{
-					.param_idx = infos[i].idxs[0],
-					.style ="visible",
-					.in_range = {0.f, 1.f},
-					.out_range = {},
-					.interpolate = [](float t, auto) -> std::string {
-						return (t > 0.f) ? "true" : "false";
-					}
-				}, {
-					.param_idx = infos[i].idxs[0],
-					.style ="inert",
-					.in_range = {0.f, 1.f},
-					.out_range = {},
-					.interpolate = [](float t, auto) -> std::string {
-						return (t > 0.f) ? "false" : "true";
-					}
-				}, {
 					.param_idx = infos[i].idxs[1],
 					.style ="cx",
 					.in_range = {
@@ -1792,6 +1776,19 @@ namespace Aether {
 					.out_range = {"97sp", "32sp"}
 				});
 			}
+
+			std::vector<UIElement::Connection> contact_node = {
+				{
+					.param_idx = infos[i].idxs[0],
+					.style ="inert",
+					.in_range = {0.f, 1.f},
+					.out_range = {},
+					.interpolate = [](float t, auto) -> std::string {
+						return (t > 0.f) ? "false" : "true";
+					}
+				}
+			};
+			contact_node.insert(contact_node.end(), node_connections.begin(), node_connections.end());
 
 			eq->add_child<Circle>(UIElement::CreateInfo{
 				.visible = false, .inert = false,
@@ -1852,7 +1849,28 @@ namespace Aether {
 					mouse_callback_info.x = e.x;
 					mouse_callback_info.y = e.y;
 				},
-				.connections = node_connections,
+				.connections = contact_node,
+				.style = {
+					{"cy", "45sp"}, {"r", "9sp"}
+				}
+			});
+
+			std::vector<UIElement::Connection> visual_node = {
+				{
+					.param_idx = infos[i].idxs[0],
+					.style ="visible",
+					.in_range = {0.f, 1.f},
+					.out_range = {},
+					.interpolate = [](float t, auto) -> std::string {
+						return (t > 0.f) ? "true" : "false";
+					}
+				}
+			};
+			visual_node.insert(visual_node.end(), node_connections.begin(), node_connections.end());
+
+			eq->add_child<Circle>(UIElement::CreateInfo{
+				.visible = true, .inert = true,
+				.connections = visual_node,
 				.style = {
 					{"cy", "45sp"}, {"r", "6sp"},
 					{"fill", "#1b1d23"},

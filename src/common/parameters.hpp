@@ -57,10 +57,10 @@ static constexpr ParameterInfo parameter_infos[] = {
 	{0,1,0.7, false},
 	{0,1,1, true},
 	{15,22000,20000, false},
-	{0,-24,0, false},
+	{-24,0,0, false},
 	{0,1,1, true},
 	{15,22000,20000, false},
-	{0,-24,0, false},
+	{-24,0,0, false},
 	{0,1,1, true},
 	{15,22000,20000, false}, // 45
 
