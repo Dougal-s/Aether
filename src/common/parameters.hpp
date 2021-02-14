@@ -30,9 +30,9 @@ static constexpr ParameterInfo parameter_infos[] = {
 	{0,100,0, false},
 	{0,400,20, false}, // 13
 
-	{0,1,1, true}, // Early
+	{0,1,0, true}, // Early
 	{15,22000,20, false},
-	{0,1,1, true},
+	{0,1,0, true},
 	{15,22000,20000, false},
 	{1,50,12, true},
 	{0,500,200, false},
@@ -55,13 +55,13 @@ static constexpr ParameterInfo parameter_infos[] = {
 	{0,3,0.2, false},
 	{0,5,0.5, false},
 	{0,1,0.7, false},
-	{0,1,1, true},
-	{15,22000,20000, false},
-	{-24,0,0, false},
-	{0,1,1, true},
-	{15,22000,20000, false},
-	{-24,0,0, false},
-	{0,1,1, true},
+	{0,1,0, true},
+	{15,22000,100, false},
+	{-24,0,-2, false},
+	{0,1,0, true},
+	{15,22000,1500, false},
+	{-24,0,-3, false},
+	{0,1,0, true},
 	{15,22000,20000, false}, // 45
 
 	{0,100,80, false}, // seeds
