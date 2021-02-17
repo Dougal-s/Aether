@@ -552,27 +552,27 @@ void Path::draw_impl() const {
 	for (auto c = path.begin(); c != path.end(); ++c) {
 		switch (*c++) {
 			case 'M': {
-				auto [x, y] = extract_nums.template operator()<2>(c);
+				auto [x, y] = extract_nums.operator()<2>(c);
 				nvgMoveTo(m_root->ctx->nvg_ctx, x, y);
 			} break;
 
 			case 'L': {
-				auto [x, y] = extract_nums.template operator()<2>(c);
+				auto [x, y] = extract_nums.operator()<2>(c);
 				nvgLineTo(m_root->ctx->nvg_ctx, x, y);
 			} break;
 
 			case 'C': {
-				auto [x1, y1, x2, y2, x, y] = extract_nums.template operator()<6>(c);
+				auto [x1, y1, x2, y2, x, y] = extract_nums.operator()<6>(c);
 				nvgBezierTo(m_root->ctx->nvg_ctx, x1, y1, x2, y2, x, y);
 			} break;
 
 			case 'Q': {
-				auto [cx, cy, x, y] = extract_nums.template operator()<4>(c);
+				auto [cx, cy, x, y] = extract_nums.operator()<4>(c);
 				nvgQuadTo(m_root->ctx->nvg_ctx, cx, cy, x, y);
 			} break;
 
 			case 'A': {
-				auto [x1, y1, x2, y2, r] = extract_nums.template operator()<5>(c);
+				auto [x1, y1, x2, y2, r] = extract_nums.operator()<5>(c);
 				nvgArcTo(m_root->ctx->nvg_ctx, x1, y1, x2, y2, r);
 			} break;
 
