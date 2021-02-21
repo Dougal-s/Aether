@@ -116,6 +116,9 @@ namespace Aether {
 		void add_peaks(int64_t n_samples, const float* peaks);
 
 	private:
+
+		// member variables
+
 		mutable NVGcontext* m_nvg_context = nullptr;
 		UIElement* m_active = nullptr;
 
@@ -140,6 +143,9 @@ namespace Aether {
 		UITree ui_tree;
 
 		std::chrono::steady_clock::time_point last_frame = std::chrono::steady_clock::now();
+
+
+		// member functions
 
 		void update_peaks();
 
@@ -197,7 +203,7 @@ namespace Aether {
 		setWindowTitle("Aether");
 		setDefaultSize(1230, 700);
 		setMinSize(615, 350);
-		setAspectRatio(16, 9, 16, 9);
+		setAspectRatio(1, 1, 2, 1);
 
 		setBackend(pugl::glBackend());
 
@@ -220,10 +226,10 @@ namespace Aether {
 
 		{
 			auto global_volume = ui_tree.root().add_child<Group>(UIElement::CreateInfo{
-				.visible = true, .inert = false,
+				.visible = true, .inert = true,
 				.style = {
-					{"right","0sp"}, {"top","10sp"},
-					{"width","55sp"}, {"height","330sp"}
+					{"right","10sp"}, {"top","10sp"},
+					{"width","30sp"}, {"bottom"," 405sp"}
 				}
 			});
 
@@ -231,32 +237,32 @@ namespace Aether {
 			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
 				.style = {
-					{"x", "15sp"}, {"y", "0"}, {"r", "1sp"},
-					{"width", "5sp"}, {"height", "280sp"},
+					{"x", "0"}, {"y", "0"}, {"r", "1sp"},
+					{"width", "5sp"}, {"bottom", "0"},
 					{"fill", "#33343b"}
 				}
 			});
 			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
 				.style = {
-					{"x", "22sp"}, {"y", "0"}, {"r", "1sp"},
-					{"width", "5sp"}, {"height", "280sp"},
+					{"x", "7sp"}, {"y", "0"}, {"r", "1sp"},
+					{"width", "5sp"}, {"bottom", "0"},
 					{"fill", "#33343b"}
 				}
 			});
 			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
 				.style = {
-					{"x", "33sp"}, {"y", "0"}, {"r", "1sp"},
-					{"width", "5sp"}, {"height", "280sp"},
+					{"x", "18sp"}, {"y", "0"}, {"r", "1sp"},
+					{"width", "5sp"}, {"bottom", "0"},
 					{"fill", "#33343b"}
 				}
 			});
 			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
 				.style = {
-					{"x", "40sp"}, {"y", "0"}, {"r", "1sp"},
-					{"width", "5sp"}, {"height", "280sp"},
+					{"x", "25sp"}, {"y", "0"}, {"r", "1sp"},
+					{"width", "5sp"}, {"bottom", "0"},
 					{"fill", "#33343b"}
 				}
 			});
@@ -289,7 +295,7 @@ namespace Aether {
 					}
 				},
 				.style = {
-					{"x", "15sp"}, {"bottom", "50sp"}, {"r", "1sp"},
+					{"x", "0"}, {"bottom", "0"}, {"r", "1sp"},
 					{"width", "5sp"}
 				}
 			});
@@ -310,7 +316,7 @@ namespace Aether {
 					}
 				},
 				.style = {
-					{"x", "22sp"}, {"bottom", "50sp"}, {"r", "1sp"},
+					{"x", "7sp"}, {"bottom", "0"}, {"r", "1sp"},
 					{"width", "5sp"}
 				}
 			});
@@ -331,7 +337,7 @@ namespace Aether {
 					}
 				},
 				.style = {
-					{"x", "33sp"}, {"bottom", "50sp"}, {"r", "1sp"},
+					{"x", "18sp"}, {"bottom", "0"}, {"r", "1sp"},
 					{"width", "5sp"}
 				}
 			});
@@ -352,12 +358,21 @@ namespace Aether {
 					}
 				},
 				.style = {
-					{"x", "40sp"}, {"bottom", "50sp"}, {"r", "1sp"},
+					{"x", "25sp"}, {"bottom", "0"}, {"r", "1sp"},
 					{"width", "5sp"}
 				}
 			});
+		}
 
-			attach_dial(global_volume, 6, "", 20, 30, 307, "#1b1d23");
+		{
+			auto mix_group = ui_tree.root().add_child<Group>(UIElement::CreateInfo{
+				.visible = true, .inert = false,
+				.style = {
+					{"right","0"}, {"height","55sp"},
+					{"width","55sp"}, {"bottom","349sp"}
+				}
+			});
+			attach_dial(mix_group, 6, "", 20, 30, 27.5, "#1b1d23");
 		}
 
 
