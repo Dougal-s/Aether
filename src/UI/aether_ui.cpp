@@ -291,7 +291,7 @@ namespace Aether {
 						.param_idx = 51,
 						.style ="height",
 						.in_range = {0.f, 1.3f},
-						.out_range = {"0sp", "280sp"}
+						.out_range = {"0%", "100%"}
 					}
 				},
 				.style = {
@@ -312,7 +312,7 @@ namespace Aether {
 						.param_idx = 52,
 						.style ="height",
 						.in_range = {0.f, 1.3f},
-						.out_range = {"0sp", "280sp"}
+						.out_range = {"0%", "100%"}
 					}
 				},
 				.style = {
@@ -333,7 +333,7 @@ namespace Aether {
 						.param_idx = 61,
 						.style ="height",
 						.in_range = {0.f, 1.3f},
-						.out_range = {"0sp", "280sp"}
+						.out_range = {"0%", "100%"}
 					}
 				},
 				.style = {
@@ -354,7 +354,7 @@ namespace Aether {
 						.param_idx = 62,
 						.style ="height",
 						.in_range = {0.f, 1.3f},
-						.out_range = {"0sp", "280sp"}
+						.out_range = {"0%", "100%"}
 					}
 				},
 				.style = {
