@@ -1,5 +1,7 @@
 # Aether
 
+![screenshot of the Aether UI](screenshot.png)
+
 Aether is an algorithmic reverb linux LV2 plugin based off of [Cloudseed](https://github.com/ValdemarOrn/CloudSeed).
 
 **Aether is early on in development and may be subject to backwards incompatible changes**
