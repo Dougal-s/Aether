@@ -52,7 +52,7 @@ cd Aether
 Then create the build directory and compile the plugin using:
 ```bash
 mkdir build && cd build
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE="Release"
 make -j4
 ```
 
