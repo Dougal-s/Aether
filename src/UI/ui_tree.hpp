@@ -77,10 +77,10 @@ public:
 	};
 
 	UIElement(Root* root, Group* parent, CreateInfo create_info) noexcept;
-	UIElement(const UIElement& other) = default;
+	UIElement(const UIElement& other) = delete;
 	virtual ~UIElement() = default;
 
-	UIElement& operator=(const UIElement& other) noexcept = default;
+	UIElement& operator=(const UIElement& other) noexcept = delete;
 
 	/*
 		Draws the UI element
