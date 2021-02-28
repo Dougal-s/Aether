@@ -49,7 +49,7 @@ namespace Aether {
 			const float* interpolate;
 
 			// predelay
-			const float* crossover;
+			const float* width;
 			const float* predelay;
 
 			// early

@@ -603,9 +603,9 @@ namespace Aether {
 
 			attach_level_meter(level, 55, 56, 8);
 
-			// Crossover/Predelay
+			// Width/Predelay
 
-			attach_dial(predelay, 12, "CROSSOVER", 24, 60, 100, "#33343b");
+			attach_dial(predelay, 12, "WIDTH", 24, 60, 100, "#33343b");
 			attach_dial(predelay, 13, "PREDELAY", 24, 60, 215, "#33343b");
 
 			// Shadow

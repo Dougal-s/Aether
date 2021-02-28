@@ -193,9 +193,9 @@ namespace Aether {
 			float predelay_left = dry_left;
 			float predelay_right = dry_right;
 			{
-				float crossover = *ports.crossover/200.f;
-				predelay_left = std::lerp(dry_left, dry_right, crossover);
-				predelay_right = std::lerp(dry_right, dry_left, crossover);
+				float width = 0.5f-*ports.width/200.f;
+				predelay_left = std::lerp(dry_left, dry_right, width);
+				predelay_right = std::lerp(dry_right, dry_left, width);
 
 				// predelay in samples
 				uint32_t delay = static_cast<uint32_t>(*ports.predelay/1000.f*m_rate);
