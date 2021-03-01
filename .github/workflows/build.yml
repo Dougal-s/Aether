@@ -1,4 +1,4 @@
-name: Automated Builds
+name: Automated builds
 
 on: [push]
 
