@@ -1,5 +1,7 @@
 # Aether
 
+![Automated builds](https://github.com/Dougal-s/Aether/workflows/Automated%20builds/badge.svg?branch=master&event=push)
+
 ![screenshot of the Aether UI](screenshot.png)
 
 Aether is an algorithmic reverb linux LV2 plugin based on [Cloudseed](https://github.com/ValdemarOrn/CloudSeed).
