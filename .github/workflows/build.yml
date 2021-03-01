@@ -1,11 +1,11 @@
-name: Compile and test plugin
+name: Automated Builds
 
 on: [push]
 
 defaults:
   run:
     shell: bash
-    
+
 env:
   BUILD_TYPE: Release
 
