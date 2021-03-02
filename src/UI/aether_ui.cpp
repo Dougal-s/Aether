@@ -115,6 +115,8 @@ namespace Aether {
 
 		void add_peaks(int64_t n_samples, const float* peaks);
 
+		void audio_update(int32_t channel, int32_t rate, const float* samples, size_t n_samples);
+
 	private:
 
 		// member variables
@@ -134,6 +136,12 @@ namespace Aether {
 				0.f, 0.f, 0.f, 0.f
 			};
 		} peak_infos;
+
+		struct SampleInfo {
+			int32_t sample_rate;
+			std::vector<float> samples;
+			std::vector<float> spectrum;
+		} sample_infos;
 
 		std::function<void (size_t, float)> update_dsp_param;
 
@@ -1134,6 +1142,15 @@ namespace Aether {
 
 	bool UI::View::should_close() const noexcept { return m_should_close; }
 
+	void UI::View::audio_update(int32_t channel, int32_t rate, const float* samples, size_t n_samples) {
+		(void) channel;
+		(void) samples;
+		(void) n_samples;
+
+		sample_infos.sample_rate = rate;
+		sample_infos.samples.resize(rate / 20);
+	}
+
 	void UI::View::parameter_update(size_t idx, float val) noexcept {
 		assert(idx < ui_tree.root().parameters.size());
 		ui_tree.root().parameters[idx] = val;
@@ -1975,6 +1992,24 @@ namespace Aether {
 				);
 
 				m_view->add_peaks(atom_n_samples->body, peaks);
+			} else if (object->body.otype == uris.sample_data) {
+				const LV2_Atom_Int* atom_rate = nullptr;
+				const LV2_Atom_Int* atom_channel = nullptr;
+				const LV2_Atom_Vector* atom_samples = nullptr;
+				lv2_atom_object_get_typed(object,
+					uris.channel, &atom_channel, uris.atom_Int,
+					uris.samples, &atom_samples, uris.atom_Vector,
+					0
+				);
+
+				const size_t n_samples =
+					(atom_samples->atom.size-sizeof(LV2_Atom_Vector_Body))/sizeof(float);
+
+				const float* samples = reinterpret_cast<const float*>(
+					reinterpret_cast<const char*>(&atom_samples->body) + sizeof(LV2_Atom_Vector_Body)
+				);
+
+				m_view->audio_update(atom_channel->body, atom_rate->body, samples, n_samples);
 			}
 		}
 	}
@@ -1984,6 +2019,7 @@ namespace Aether {
 
 		uris.atom_eventTransfer = map->map(map->handle, LV2_ATOM__eventTransfer);
 		uris.atom_Long = map->map(map->handle, LV2_ATOM__Long);
+		uris.atom_Int = map->map(map->handle, LV2_ATOM__Int);
 		uris.atom_Vector = map->map(map->handle, LV2_ATOM__Vector);
 
 		uris.ui_open = map->map(map->handle, join_v<DSP::URI, DSP::ui_open_URI>);
@@ -1992,6 +2028,11 @@ namespace Aether {
 		uris.peak_data = map->map(map->handle, join_v<DSP::URI, DSP::peak_data_URI>);
 		uris.sample_count = map->map(map->handle, join_v<DSP::URI, DSP::sample_count_URI>);
 		uris.peaks = map->map(map->handle, join_v<DSP::URI, DSP::peaks_URI>);
+
+		uris.sample_data = map->map(map->handle, join_v<DSP::URI, DSP::sample_data_URI>);
+		uris.rate = map->map(map->handle, join_v<DSP::URI, DSP::rate_URI>);
+		uris.channel = map->map(map->handle, join_v<DSP::URI, DSP::channel_URI>);
+		uris.samples = map->map(map->handle, join_v<DSP::URI, DSP::samples_URI>);
 	}
 
 	UI::View* UI::create_view(const CreateInfo& create_info) {

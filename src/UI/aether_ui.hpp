@@ -74,6 +74,7 @@ namespace Aether {
 		struct URIs {
 			LV2_URID atom_eventTransfer;
 			LV2_URID atom_Long;
+			LV2_URID atom_Int;
 			LV2_URID atom_Vector;
 			// custom uris
 			LV2_URID ui_open;
@@ -82,6 +83,11 @@ namespace Aether {
 			LV2_URID peak_data;
 			LV2_URID sample_count;
 			LV2_URID peaks;
+
+			LV2_URID sample_data;
+			LV2_URID rate;
+			LV2_URID channel;
+			LV2_URID samples;
 		};
 
 		URIs uris;

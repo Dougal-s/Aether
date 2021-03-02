@@ -5,6 +5,7 @@
 @prefix props: <http://lv2plug.in/ns/ext/port-props#>.
 @prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rsz:   <http://lv2plug.in/ns/ext/resize-port#>.
 @prefix ui:    <http://lv2plug.in/ns/extensions/ui#>.
 @prefix units: <http://lv2plug.in/ns/extensions/units#>.
 @prefix urid:  <http://lv2plug.in/ns/ext/urid#>.
@@ -61,6 +62,7 @@
 		lv2:index 1;
 		lv2:symbol "notify";
 		lv2:name "Notify";
+		rsz:minimumSize 33088;
 		rdfs:comment "DSP -> UI communication"
 	], [
 		a lv2:InputPort, lv2:AudioPort;

@@ -39,6 +39,11 @@ namespace Aether {
 		uris.peak_data = map->map(map->handle, join_v<URI, peak_data_URI>);
 		uris.sample_count = map->map(map->handle, join_v<URI, sample_count_URI>);
 		uris.peaks = map->map(map->handle, join_v<URI, peaks_URI>);
+
+		uris.sample_data = map->map(map->handle, join_v<URI, sample_data_URI>);
+		uris.rate = map->map(map->handle, join_v<URI, rate_URI>);
+		uris.channel = map->map(map->handle, join_v<URI, channel_URI>);
+		uris.samples = map->map(map->handle, join_v<URI, samples_URI>);
 	}
 
 	void DSP::process(uint32_t n_samples) noexcept {
@@ -182,7 +187,6 @@ namespace Aether {
 			float dry_level = *ports.dry_level/100.f;
 			float dry_left = ports.audio_in_left[sample];
 			float dry_right = ports.audio_in_right[sample];
-
 			{
 				ports.audio_out_left[sample] = dry_level*dry_left;
 				ports.audio_out_right[sample] = dry_level*dry_right;
@@ -297,11 +301,15 @@ namespace Aether {
 				peak_out.second = std::max(peak_out.second, std::abs(ports.audio_out_right[sample]));
 			}
 		}
+
 		if (ui_open) {
 			LV2_Atom_Forge_Frame frame;
 			const size_t capacity = ports.notify->atom.size;
 			lv2_atom_forge_set_buffer(&atom_forge, reinterpret_cast<uint8_t*>(ports.notify), capacity);
 			lv2_atom_forge_sequence_head(&atom_forge, &frame, 0);
+
+			// Send peak info (size 104 bytes)
+			if (capacity < 104) goto end_atom_write;
 			lv2_atom_forge_frame_time(&atom_forge, 0);
 			{
 				LV2_Atom_Forge_Frame obj_frame;
@@ -324,7 +332,35 @@ namespace Aether {
 
 				lv2_atom_forge_pop(&atom_forge, &obj_frame);
 			}
+
+			// Send sample data
+			if (capacity < 104 + (80 + sizeof(float)*n_samples)) goto end_atom_write;
+			write_sample_data_atom(0, static_cast<int>(m_rate), ports.audio_out_left, n_samples);
+			if (capacity < 104 + 2*(80 + sizeof(float)*n_samples)) goto end_atom_write;
+			write_sample_data_atom(1, static_cast<int>(m_rate), ports.audio_out_right, n_samples);
+
+			end_atom_write:
+
 			lv2_atom_forge_pop(&atom_forge, &frame);
+		}
+	}
+
+	void DSP::write_sample_data_atom(int channel, int rate, float* data, uint32_t n_samples) {
+		lv2_atom_forge_frame_time(&atom_forge, 0);
+		{
+			LV2_Atom_Forge_Frame obj_frame;
+			lv2_atom_forge_object(&atom_forge, &obj_frame, 0, uris.sample_data);
+
+			lv2_atom_forge_key(&atom_forge, uris.rate);
+			lv2_atom_forge_int(&atom_forge, rate);
+
+			lv2_atom_forge_key(&atom_forge, uris.channel);
+			lv2_atom_forge_int(&atom_forge, channel);
+
+			lv2_atom_forge_key(&atom_forge, uris.samples);
+			lv2_atom_forge_vector(&atom_forge, sizeof(float), uris.atom_Float, n_samples, data);
+
+			lv2_atom_forge_pop(&atom_forge, &obj_frame);
 		}
 	}
 }

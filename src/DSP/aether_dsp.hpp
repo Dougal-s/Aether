@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <random>
 #include <string_view>
@@ -29,6 +30,11 @@ namespace Aether {
 		static constexpr std::string_view peak_data_URI = "#peakData";
 		static constexpr std::string_view sample_count_URI = "#sampleCount";
 		static constexpr std::string_view peaks_URI = "#peaks";
+
+		static constexpr std::string_view sample_data_URI = "#sampleData";
+		static constexpr std::string_view rate_URI = "#rate";
+		static constexpr std::string_view channel_URI = "#channel";
+		static constexpr std::string_view samples_URI = "#samples";
 
 		struct Ports {
 			const LV2_Atom_Sequence* control;
@@ -128,6 +134,11 @@ namespace Aether {
 			LV2_URID peak_data;
 			LV2_URID sample_count;
 			LV2_URID peaks;
+
+			LV2_URID sample_data;
+			LV2_URID rate;
+			LV2_URID channel;
+			LV2_URID samples;
 		};
 
 		URIs uris = {};
@@ -162,5 +173,7 @@ namespace Aether {
 
 		// send audio data if ui is open
 		bool ui_open = false;
+
+		void write_sample_data_atom(int channel, int rate, float* data, uint32_t n_samples);
 	};
 }
