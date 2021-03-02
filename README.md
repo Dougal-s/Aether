@@ -37,11 +37,12 @@ Aether is an algorithmic reverb linux LV2 plugin based on [Cloudseed](https://gi
 | ------- | ------------ |
 | Lv2     | `lv2-dev`    |
 | X11     | `libx11-dev` |
+| OpenGL  | `libgl1-mesa-dev` `libglu1-mesa-dev` |
 
 **Ubuntu/Debian**
 The prerequisites can be installed using apt via the command:
 ```bash
-sudo apt install cmake g++-10 lv2-dev libx11-dev
+sudo apt install cmake g++-10 lv2-dev libx11-dev libgl1-mesa-dev libglu1-mesa-dev
 ```
 
 ### Compiling
