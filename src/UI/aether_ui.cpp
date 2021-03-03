@@ -120,7 +120,6 @@ namespace Aether {
 	private:
 
 		// member variables
-
 		UIElement* m_active = nullptr;
 
 		struct MouseCallbackInfo {
