@@ -43,6 +43,6 @@ TEST(lfo, value_check_randomized) {
 	ASSERT_NEAR(
 		lfo.depth(),
 		std::sin(2*pi*(phase + std::fmod(rate*steps, 1.f))),
-		0.0001f
+		0.001f
 	);
 }

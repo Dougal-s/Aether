@@ -25,8 +25,8 @@ static void bm_aether(benchmark::State& state) {
 	dsp.ports.late_level = &late_level;
 	float interpolate = 0.f;
 	dsp.ports.interpolate = &interpolate;
-	float crossover = 0.f;
-	dsp.ports.crossover = &crossover;
+	float width = 100.f;
+	dsp.ports.width = &width;
 	float predelay = 0.f;
 	dsp.ports.predelay = &predelay;
 	float early_low_cut_enabled = 0.f;

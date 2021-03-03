@@ -67,15 +67,21 @@ add_custom_command(TARGET aether_ui POST_BUILD COMMAND cp aether_ui.so ../aether
 option(BUILD_TESTS "Build tests" OFF)
 
 if (BUILD_TESTS)
-	set(CMAKE_BUILD_TYPE Release)
 	set(BUILD_GMOCK OFF CACHE BOOL "Builds the googlemock subproject")
 	set(INSTALL_GTEST OFF CACHE BOOL "Enable installation of googletest. (Projects embedding googletest may want to turn this OFF.)")
 	add_subdirectory("${CMAKE_SOURCE_DIR}/extern/googletest")
 
+	enable_testing()
+	add_subdirectory(tests/tests)
+endif()
+
+option(BUILD_BENCHMARKS "Build benchmarks" OFF)
+
+if (BUILD_BENCHMARKS)
 	set(BENCHMARK_ENABLE_LTO OFF CACHE BOOL "Enable link time optimisation of the benchmark library.")
 	set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Enable testing of the benchmark library.")
 	add_subdirectory("${CMAKE_SOURCE_DIR}/extern/benchmark")
 
 	enable_testing()
-	add_subdirectory(tests)
+	add_subdirectory(tests/benchmarks)
 endif()
