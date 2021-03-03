@@ -118,8 +118,6 @@ namespace Aether {
 	private:
 
 		// member variables
-
-		mutable NVGcontext* m_nvg_context = nullptr;
 		UIElement* m_active = nullptr;
 
 		struct MouseCallbackInfo {
