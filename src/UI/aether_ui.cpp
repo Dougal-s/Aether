@@ -1166,12 +1166,10 @@ namespace Aether {
 	}
 
 	void UI::View::update_peaks() {
+		using namespace std::chrono;
+		// time since last frame in seconds
+		const float dt = 0.000001f*duration_cast<microseconds>(steady_clock::now()-last_frame).count();
 		for (size_t i = 0; i < peak_infos.peaks.size(); ++i) {
-			// time since last frame in seconds
-			const float dt = 0.000001f*std::chrono::duration_cast<std::chrono::microseconds>(
-				std::chrono::steady_clock::now()-last_frame
-			).count();
-
 			float old_value = get_parameter(51+i);
 			if (old_value < peak_infos.peaks[i])
 				parameter_update(51+i, std::lerp(old_value, peak_infos.peaks[i], std::min(8.f*dt, 1.f)));
