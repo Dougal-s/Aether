@@ -319,6 +319,19 @@ protected:
 	virtual void draw_impl() const override;
 };
 
+class Spectrum : public Rect {
+public:
+	Spectrum(Root* root, Group* parent, CreateInfo create_info) noexcept :
+		Rect(root, parent, create_info)
+	{}
+protected:
+
+	/*
+		Virtual functions
+	*/
+	virtual void draw_impl() const override;
+};
+
 class RoundedRect : public Rect {
 public:
 	RoundedRect(Root* root, Group* parent, CreateInfo create_info) noexcept :
@@ -428,6 +441,8 @@ struct Root final : public Group {
 
 	std::filesystem::path bundle_path;
 
+	// frequency magnitudes
+	std::array<std::array<float, 1000>, 2> audio = {};
 	// 51 parameters + 12 audio peaks
 	std::array<float, 63> parameters = {};
 

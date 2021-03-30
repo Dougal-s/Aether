@@ -587,7 +587,6 @@ void Path::draw_impl() const {
 		}
 	}
 
-
 	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
 	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
 }
@@ -795,6 +794,39 @@ void ShaderRect::draw_impl() const {
 	}
 
 	m_shader.draw();
+}
+
+// Spectrum View
+
+void Spectrum::draw_impl() const {
+	nvgBeginPath(m_root->ctx->nvg_ctx);
+
+	const auto bounds = this->bounds();
+	nvgTranslate(m_root->ctx->nvg_ctx, bounds[0], bounds[1]);
+
+	const auto& channel = m_root->audio[std::strtoul(style.find("channel")->second.data(), nullptr, 10)];
+
+	const auto gain_to_y = [](float gain) {
+		const float db = 20.f*std::log10(gain);
+		return 1.f-std::clamp(db+60, 0.f, 63.f)/63.f;
+	};
+
+	nvgMoveTo(m_root->ctx->nvg_ctx, 0, bounds[3]*gain_to_y(channel[0]));
+
+	size_t i = 1;
+	while(i < channel.size()) {
+		const float x = std::log(i+1)/std::log(channel.size());
+		size_t ip2 = std::ceil((i+1)*std::pow(static_cast<float>(channel.size()), 2.f/bounds[2]) - 1 );
+		ip2 = std::min(ip2, channel.size());
+		const float band_level = std::reduce(channel.begin() + i, channel.begin() + ip2) / (ip2-i);
+		const float y = gain_to_y(band_level);
+
+		nvgLineTo(m_root->ctx->nvg_ctx, bounds[2]*x, bounds[3]*y);
+
+		i = ip2;
+	}
+
+	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
 }
 
 // RoundedRect
