@@ -442,7 +442,7 @@ struct Root final : public Group {
 	std::filesystem::path bundle_path;
 
 	// frequency magnitudes
-	std::array<std::array<float, 1000>, 2> audio = {};
+	std::array<std::array<float, 2000>, 2> audio = {};
 	// 51 parameters + 12 audio peaks
 	std::array<float, 63> parameters = {};
 

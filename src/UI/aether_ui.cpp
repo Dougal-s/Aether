@@ -1192,7 +1192,7 @@ namespace Aether {
 		auto& buf = sample_infos.samples[channel];
 		sample_infos.sample_rate = rate;
 
-		buf.resize(std::bit_ceil(rate / 20));
+		buf.resize(std::bit_ceil(rate / 10));
 
 		if (n_samples < buf.size()) {
 			std::copy(buf.begin()+n_samples, buf.end(), buf.begin());
