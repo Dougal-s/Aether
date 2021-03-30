@@ -49,7 +49,7 @@
 	# Control Ports
 	lv2:port [
 		a lv2:InputPort, atom:AtomPort;
-		atom:BufferType atom:Sequence;
+		atom:bufferType atom:Sequence;
 		lv2:designation lv2:control ;
 		lv2:index 0;
 		lv2:symbol "control";
@@ -57,7 +57,7 @@
 		rdfs:comment "UI -> DSP communication"
 	], [
 		a lv2:OutputPort, atom:AtomPort;
-		atom:BufferType atom:Sequence;
+		atom:bufferType atom:Sequence;
 		lv2:designation lv2:control ;
 		lv2:index 1;
 		lv2:symbol "notify";
