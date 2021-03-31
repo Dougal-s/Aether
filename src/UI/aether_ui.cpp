@@ -240,8 +240,7 @@ namespace Aether {
 				.style = {
 					{"left","0"}, {"width","1175sp"},
 					{"top","10sp"}, {"bottom","391sp"},
-					{"fill", "#fff"},
-					{"channel", "0"}
+					{"fill", "#fff"}
 				}
 			});
 			
