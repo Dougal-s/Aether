@@ -388,10 +388,10 @@ public:
 	/*
 		modifiers
 	*/
-	template<class Subclass, class... Args> requires std::is_base_of_v<UIElement, Subclass>
-	Subclass* add_child(Args&&... args) {
+	template<class Subclass> requires std::is_base_of_v<UIElement, Subclass>
+	Subclass* add_child(typename Subclass::CreateInfo&& create_info) {
 		auto& added = m_children.emplace_back(
-			std::make_unique<Subclass>(m_root, this, std::forward<Args>(args)...)
+			std::make_unique<Subclass>(m_root, this, std::forward<typename Subclass::CreateInfo>(create_info))
 		);
 		return dynamic_cast<Subclass*>(added.get());
 	}

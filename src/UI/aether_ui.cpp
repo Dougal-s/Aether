@@ -55,7 +55,7 @@ namespace {
 
 	void attach_panel_background(Group* g) {
 		// Background
-		g->add_child<RoundedRect>(UIElement::CreateInfo{
+		g->add_child<RoundedRect>({
 			.visible = true, .inert = true,
 			.style = {
 				{"x", "0"}, {"y", "0"}, {"r", "5sp"},
@@ -65,7 +65,7 @@ namespace {
 		});
 
 		// Top bar
-		g->add_child<RoundedRect>(UIElement::CreateInfo{
+		g->add_child<RoundedRect>({
 			.visible = true, .inert = true,
 			.style = {
 				{"x", "0"}, {"y", "0"}, {"r", "5sp"},
@@ -74,7 +74,7 @@ namespace {
 			}
 		});
 
-		g->add_child<Rect>(UIElement::CreateInfo{
+		g->add_child<Rect>({
 			.visible = true, .inert = true,
 			.style = {
 				{"x", "0"}, {"y", "5sp"},
@@ -228,7 +228,7 @@ namespace Aether {
 		setHint(pugl::ViewHint::contextVersionMinor, 6);
 
 		// Border
-		ui_tree.root().add_child<RoundedRect>(UIElement::CreateInfo{
+		ui_tree.root().add_child<RoundedRect>({
 			.visible = true, .inert = true,
 			.style = {
 				{"left","0"}, {"width","1175sp"}, {"r", "1sp"},
@@ -238,7 +238,7 @@ namespace Aether {
 		});
 
 		{
-			auto spec = ui_tree.root().add_child<Group>(UIElement::CreateInfo{
+			auto spec = ui_tree.root().add_child<Group>({
 				.visible = true, .inert = true,
 				.style = {
 					{"left","0"}, {"width","1175sp"},
@@ -247,7 +247,7 @@ namespace Aether {
 				}
 			});
 
-			spec->add_child<Spectrum>(UIElement::CreateInfo{
+			spec->add_child<Spectrum>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x","0"}, {"width","100%"},
@@ -257,7 +257,7 @@ namespace Aether {
 				}
 			});
 
-			spec->add_child<Spectrum>(UIElement::CreateInfo{
+			spec->add_child<Spectrum>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x","0"}, {"width","100%"},
@@ -269,7 +269,7 @@ namespace Aether {
 		}
 
 		{
-			auto global_volume = ui_tree.root().add_child<Group>(UIElement::CreateInfo{
+			auto global_volume = ui_tree.root().add_child<Group>({
 				.visible = true, .inert = true,
 				.style = {
 					{"right","10sp"}, {"top","10sp"},
@@ -278,7 +278,7 @@ namespace Aether {
 			});
 
 			// Background
-			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+			global_volume->add_child<RoundedRect>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "0"}, {"y", "0"}, {"r", "1sp"},
@@ -286,7 +286,7 @@ namespace Aether {
 					{"fill", "#33343b"}
 				}
 			});
-			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+			global_volume->add_child<RoundedRect>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "7sp"}, {"y", "0"}, {"r", "1sp"},
@@ -294,7 +294,7 @@ namespace Aether {
 					{"fill", "#33343b"}
 				}
 			});
-			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+			global_volume->add_child<RoundedRect>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "18sp"}, {"y", "0"}, {"r", "1sp"},
@@ -302,7 +302,7 @@ namespace Aether {
 					{"fill", "#33343b"}
 				}
 			});
-			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+			global_volume->add_child<RoundedRect>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "25sp"}, {"y", "0"}, {"r", "1sp"},
@@ -322,7 +322,7 @@ namespace Aether {
 			};
 
 			// levels
-			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+			global_volume->add_child<RoundedRect>({
 				.visible = true, .inert = true,
 				.connections = {
 					{
@@ -343,7 +343,7 @@ namespace Aether {
 					{"width", "5sp"}
 				}
 			});
-			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+			global_volume->add_child<RoundedRect>({
 				.visible = true, .inert = true,
 				.connections = {
 					{
@@ -364,7 +364,7 @@ namespace Aether {
 					{"width", "5sp"}
 				}
 			});
-			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+			global_volume->add_child<RoundedRect>({
 				.visible = true, .inert = true,
 				.connections = {
 					{
@@ -385,7 +385,7 @@ namespace Aether {
 					{"width", "5sp"}
 				}
 			});
-			global_volume->add_child<RoundedRect>(UIElement::CreateInfo{
+			global_volume->add_child<RoundedRect>({
 				.visible = true, .inert = true,
 				.connections = {
 					{
@@ -409,7 +409,7 @@ namespace Aether {
 		}
 
 		{
-			auto mix_group = ui_tree.root().add_child<Group>(UIElement::CreateInfo{
+			auto mix_group = ui_tree.root().add_child<Group>({
 				.visible = true, .inert = false,
 				.style = {
 					{"right","0"}, {"height","55sp"},
@@ -422,7 +422,7 @@ namespace Aether {
 
 		// global settings (seeds, interpolation, etc)
 		{
-			auto global_settings = ui_tree.root().add_child<Group>(UIElement::CreateInfo{
+			auto global_settings = ui_tree.root().add_child<Group>({
 				.visible = true, .inert = false,
 				.style = {
 					{"left","10sp"}, {"width","1175sp"},
@@ -431,7 +431,7 @@ namespace Aether {
 			});
 
 			{
-				auto seeds = global_settings->add_child<Group>(UIElement::CreateInfo{
+				auto seeds = global_settings->add_child<Group>({
 					.visible = true, .inert = false,
 					.style = {
 						{"left","615sp"}, {"right","200sp"},
@@ -439,7 +439,7 @@ namespace Aether {
 					}
 				});
 
-				seeds->add_child<Text>(UIElement::CreateInfo{
+				seeds->add_child<Text>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "0"}, {"y", "100%"},
@@ -449,7 +449,7 @@ namespace Aether {
 					}
 				});
 
-				seeds->add_child<Text>(UIElement::CreateInfo{
+				seeds->add_child<Text>({
 					.visible = true, .inert = false,
 					.btn_press_callback = [&](UIElement* elem, auto e){dial_btn_press_cb(47, elem, e, 0.1f);},
 					.motion_callback = [&](UIElement* elem, auto e){dial_btn_motion_cb(47, elem, e, 0.1f);},
@@ -469,7 +469,7 @@ namespace Aether {
 					}
 				});
 
-				seeds->add_child<Text>(UIElement::CreateInfo{
+				seeds->add_child<Text>({
 					.visible = true, .inert = false,
 					.btn_press_callback = [&](UIElement* elem, auto e){dial_btn_press_cb(48, elem, e, 0.1f);},
 					.motion_callback = [&](UIElement* elem, auto e){dial_btn_motion_cb(48, elem, e, 0.1f);},
@@ -489,7 +489,7 @@ namespace Aether {
 					}
 				});
 
-				seeds->add_child<Text>(UIElement::CreateInfo{
+				seeds->add_child<Text>({
 					.visible = true, .inert = false,
 					.btn_press_callback = [&](UIElement* elem, auto e){dial_btn_press_cb(49, elem, e, 0.1f);},
 					.motion_callback = [&](UIElement* elem, auto e){dial_btn_motion_cb(49, elem, e, 0.1f);},
@@ -509,7 +509,7 @@ namespace Aether {
 					}
 				});
 
-				seeds->add_child<Text>(UIElement::CreateInfo{
+				seeds->add_child<Text>({
 					.visible = true, .inert = false,
 					.btn_press_callback = [&](UIElement* elem, auto e){dial_btn_press_cb(50, elem, e, 0.1f);},
 					.motion_callback = [&](UIElement* elem, auto e){dial_btn_motion_cb(50, elem, e, 0.1f);},
@@ -530,7 +530,7 @@ namespace Aether {
 				});
 			}
 
-			global_settings->add_child<Text>(UIElement::CreateInfo{
+			global_settings->add_child<Text>({
 				.visible = true, .inert = false,
 				.btn_release_callback = [this](UIElement* elem, const pugl::ButtonReleaseEvent& e){
 					if (!elem->element_at(e.x, e.y))
@@ -560,7 +560,7 @@ namespace Aether {
 			});
 		}
 
-		auto panels = ui_tree.root().add_child<Group>(UIElement::CreateInfo{
+		auto panels = ui_tree.root().add_child<Group>({
 			.visible = true, .inert = false,
 			.style = {
 				{"left","10sp"}, {"right","10sp"},
@@ -570,7 +570,7 @@ namespace Aether {
 
 		// dry
 		{
-			auto dry = panels->add_child<Group>(UIElement::CreateInfo{
+			auto dry = panels->add_child<Group>({
 				.visible = true, .inert = false,
 				.style = {
 					{"x", "0"}, {"y", "0"},
@@ -581,7 +581,7 @@ namespace Aether {
 			attach_panel_background(dry);
 
 			// Title
-			dry->add_child<Text>(UIElement::CreateInfo{
+			dry->add_child<Text>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "14sp"}, {"y", "17sp"},
@@ -592,7 +592,7 @@ namespace Aether {
 			});
 
 			// level meter
-			auto level = dry->add_child<Group>(UIElement::CreateInfo{
+			auto level = dry->add_child<Group>({
 				.visible = true, .inert = false,
 				.style = {
 					{"right", "5sp"}, {"y", "30sp"},
@@ -603,7 +603,7 @@ namespace Aether {
 			attach_level_meter(level, 53, 54, 7);
 
 			// Shadow
-			dry->add_child<Rect>(UIElement::CreateInfo{
+			dry->add_child<Rect>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "0"}, {"y", "20sp"},
@@ -615,7 +615,7 @@ namespace Aether {
 
 		// predelay
 		{
-			auto predelay = panels->add_child<Group>(UIElement::CreateInfo{
+			auto predelay = panels->add_child<Group>({
 				.visible = true, .inert = false,
 				.style = {
 					{"x", "70sp"}, {"y", "0"},
@@ -626,7 +626,7 @@ namespace Aether {
 			attach_panel_background(predelay);
 
 			// Title
-			predelay->add_child<Text>(UIElement::CreateInfo{
+			predelay->add_child<Text>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "39sp"}, {"y", "17sp"},
@@ -637,7 +637,7 @@ namespace Aether {
 			});
 
 			// level meter
-			auto level = predelay->add_child<Group>(UIElement::CreateInfo{
+			auto level = predelay->add_child<Group>({
 				.visible = true, .inert = false,
 				.style = {
 					{"right", "5sp"}, {"y", "30sp"},
@@ -653,7 +653,7 @@ namespace Aether {
 			attach_dial(predelay, 13, "PREDELAY", 24, 60, 215, "#33343b");
 
 			// Shadow
-			predelay->add_child<Rect>(UIElement::CreateInfo{
+			predelay->add_child<Rect>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "0"}, {"y", "20sp"},
@@ -665,7 +665,7 @@ namespace Aether {
 
 		// early
 		{
-			auto early = panels->add_child<Group>(UIElement::CreateInfo{
+			auto early = panels->add_child<Group>({
 				.visible = true, .inert = false,
 				.style = {
 					{"x", "240sp"}, {"y", "0"},
@@ -676,7 +676,7 @@ namespace Aether {
 			attach_panel_background(early);
 
 			// Title
-			early->add_child<Text>(UIElement::CreateInfo{
+			early->add_child<Text>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "50sp"}, {"y", "17sp"},
@@ -687,7 +687,7 @@ namespace Aether {
 			});
 
 			// level meter
-			auto level = early->add_child<Group>(UIElement::CreateInfo{
+			auto level = early->add_child<Group>({
 				.visible = true, .inert = false,
 				.style = {
 					{"right", "5sp"}, {"y", "30sp"},
@@ -716,7 +716,7 @@ namespace Aether {
 			});
 
 			{
-				auto diffusion = early->add_child<Group>(UIElement::CreateInfo{
+				auto diffusion = early->add_child<Group>({
 					.visible = true, .inert = false,
 					.style = {
 						{"x", "170sp"}, {"width", "225sp"},
@@ -725,7 +725,7 @@ namespace Aether {
 				});
 
 				// Background
-				diffusion->add_child<Rect>(UIElement::CreateInfo{
+				diffusion->add_child<Rect>({
 					.visible = true, .inert = false,
 					.style = {
 						{"x", "0"}, {"y", "0"},
@@ -735,7 +735,7 @@ namespace Aether {
 				});
 
 				// section name
-				diffusion->add_child<Text>(UIElement::CreateInfo{
+				diffusion->add_child<Text>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "18sp"}, {"y", "27sp"},
@@ -757,7 +757,7 @@ namespace Aether {
 				// Shadows
 
 				//horizontal
-				diffusion->add_child<Rect>(UIElement::CreateInfo{
+				diffusion->add_child<Rect>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "0"}, {"y", "0"},
@@ -765,7 +765,7 @@ namespace Aether {
 						{"fill", "linear-gradient(0 0sp #00000020 0 8sp #0000)"}
 					}
 				});
-				diffusion->add_child<Rect>(UIElement::CreateInfo{
+				diffusion->add_child<Rect>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "0"}, {"y", "160sp"},
@@ -775,7 +775,7 @@ namespace Aether {
 				});
 
 				// vertical
-				diffusion->add_child<Rect>(UIElement::CreateInfo{
+				diffusion->add_child<Rect>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "0"}, {"y", "0"},
@@ -783,7 +783,7 @@ namespace Aether {
 						{"fill", "linear-gradient(0 0 #00000020 6sp 0 #0000)"}
 					}
 				});
-				diffusion->add_child<Rect>(UIElement::CreateInfo{
+				diffusion->add_child<Rect>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "0"}, {"y", "50%"},
@@ -792,7 +792,7 @@ namespace Aether {
 					}
 				});
 
-				diffusion->add_child<Rect>(UIElement::CreateInfo{
+				diffusion->add_child<Rect>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "215sp"}, {"y", "0"},
@@ -800,7 +800,7 @@ namespace Aether {
 						{"fill", "linear-gradient(225sp 0 #00000020 219sp 0 #0000)"}
 					}
 				});
-				diffusion->add_child<Rect>(UIElement::CreateInfo{
+				diffusion->add_child<Rect>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "215sp"}, {"y", "50%"},
@@ -811,7 +811,7 @@ namespace Aether {
 			}
 
 			// Shadows
-			early->add_child<Rect>(UIElement::CreateInfo{
+			early->add_child<Rect>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "0"}, {"y", "20sp"},
@@ -819,7 +819,7 @@ namespace Aether {
 					{"fill", "linear-gradient(0 20sp #00000020 0 26sp #0000)"}
 				}
 			});
-			early->add_child<Rect>(UIElement::CreateInfo{
+			early->add_child<Rect>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "395sp"}, {"y", "20sp"},
@@ -831,7 +831,7 @@ namespace Aether {
 
 		// late
 		{
-			auto late = panels->add_child<Group>(UIElement::CreateInfo{
+			auto late = panels->add_child<Group>({
 				.visible = true, .inert = false,
 				.style = {
 					{"x", "705sp"}, {"y", "0"},
@@ -842,7 +842,7 @@ namespace Aether {
 			attach_panel_background(late);
 
 			// Title
-			late->add_child<Text>(UIElement::CreateInfo{
+			late->add_child<Text>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "50sp"}, {"y", "17sp"},
@@ -852,7 +852,7 @@ namespace Aether {
 				}
 			});
 
-			late->add_child<Text>(UIElement::CreateInfo{
+			late->add_child<Text>({
 				.visible = true, .inert = false,
 				.btn_release_callback = [this](UIElement* elem, auto e){
 					if (elem->element_at(e.x, e.y)) {
@@ -876,7 +876,7 @@ namespace Aether {
 				}
 			});
 
-			late->add_child<Text>(UIElement::CreateInfo{
+			late->add_child<Text>({
 				.visible = true, .inert = false,
 				.btn_release_callback = [this](UIElement* elem, auto e){
 					if (elem->element_at(e.x, e.y)) {
@@ -901,7 +901,7 @@ namespace Aether {
 			});
 
 			// level meter
-			auto level = late->add_child<Group>(UIElement::CreateInfo{
+			auto level = late->add_child<Group>({
 				.visible = true, .inert = false,
 				.style = {
 					{"right", "5sp"}, {"y", "30sp"},
@@ -933,7 +933,7 @@ namespace Aether {
 			});
 
 			{
-				auto delay = late->add_child<Group>(UIElement::CreateInfo{
+				auto delay = late->add_child<Group>({
 					.visible = true, .inert = false,
 					.style = {
 						{"x", "0"}, {"y", "20sp"},
@@ -942,7 +942,7 @@ namespace Aether {
 				});
 
 				// Background
-				delay->add_child<Rect>(UIElement::CreateInfo{
+				delay->add_child<Rect>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "0"}, {"y", "0"},
@@ -952,7 +952,7 @@ namespace Aether {
 				});
 
 				// Side text
-				delay->add_child<Text>(UIElement::CreateInfo{
+				delay->add_child<Text>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "-98sp"}, {"y", "255sp"},
@@ -975,7 +975,7 @@ namespace Aether {
 				// Shadow
 
 				//horizontal
-				delay->add_child<Rect>(UIElement::CreateInfo{
+				delay->add_child<Rect>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "0"}, {"y", "0"},
@@ -984,7 +984,7 @@ namespace Aether {
 					}
 				});
 				// vertical
-				delay->add_child<Rect>(UIElement::CreateInfo{
+				delay->add_child<Rect>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "215sp"}, {"y", "0"},
@@ -995,7 +995,7 @@ namespace Aether {
 			}
 
 			{
-				auto diffusion = late->add_child<Group>(UIElement::CreateInfo{
+				auto diffusion = late->add_child<Group>({
 					.visible = true, .inert = false,
 					.style = {
 						{"x", "0"}, {"y", "190sp"},
@@ -1004,7 +1004,7 @@ namespace Aether {
 				});
 
 				// Background
-				diffusion->add_child<Rect>(UIElement::CreateInfo{
+				diffusion->add_child<Rect>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "0"}, {"y", "0"},
@@ -1014,7 +1014,7 @@ namespace Aether {
 				});
 
 				// Side text
-				diffusion->add_child<Text>(UIElement::CreateInfo{
+				diffusion->add_child<Text>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "-130sp"}, {"y", "255sp"},
@@ -1024,7 +1024,7 @@ namespace Aether {
 						{"transform", "rotate(-90deg)"}
 					}
 				});
-				diffusion->add_child<Text>(UIElement::CreateInfo{
+				diffusion->add_child<Text>({
 					.visible = true, .inert = true,
 					.connections = {{
 						.param_idx = 33,
@@ -1044,7 +1044,7 @@ namespace Aether {
 						{"fill", "#b6bfcc"}
 					}
 				});
-				diffusion->add_child<Rect>(UIElement::CreateInfo{
+				diffusion->add_child<Rect>({
 					.visible = false, .inert = false,
 					.btn_press_callback = [this](UIElement* elem, auto e){dial_btn_press_cb(33, elem, e);},
 					.motion_callback = [this](UIElement* elem, auto e){dial_btn_motion_cb(33, elem, e);},
@@ -1066,7 +1066,7 @@ namespace Aether {
 				// Shadow
 
 				//horizontal
-				diffusion->add_child<Rect>(UIElement::CreateInfo{
+				diffusion->add_child<Rect>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "0"}, {"y", "0"},
@@ -1075,7 +1075,7 @@ namespace Aether {
 					}
 				});
 				// vertical
-				diffusion->add_child<Rect>(UIElement::CreateInfo{
+				diffusion->add_child<Rect>({
 					.visible = true, .inert = true,
 					.style = {
 						{"x", "215sp"}, {"y", "0"},
@@ -1086,7 +1086,7 @@ namespace Aether {
 			}
 
 			// Shadow
-			late->add_child<Rect>(UIElement::CreateInfo{
+			late->add_child<Rect>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "275.5sp"}, {"y", "20sp"},
@@ -1308,7 +1308,7 @@ namespace Aether {
 		size_t mixer_ctrl_idx
 	) {
 		// Background
-		g->add_child<RoundedRect>(UIElement::CreateInfo{
+		g->add_child<RoundedRect>({
 			.visible = true, .inert = true,
 			.style = {
 				{"x", "5sp"}, {"y", "0"}, {"r", "2sp"},
@@ -1316,7 +1316,7 @@ namespace Aether {
 				{"fill", "#1b1d23"}
 			}
 		});
-		g->add_child<RoundedRect>(UIElement::CreateInfo{
+		g->add_child<RoundedRect>({
 			.visible = true, .inert = true,
 			.style = {
 				{"right", "15sp"}, {"y", "0"}, {"r", "2sp"},
@@ -1337,7 +1337,7 @@ namespace Aether {
 			return "linear-gradient(0 0 #526db0 0 100% #3055a4)";
 		};
 
-		g->add_child<RoundedRect>(UIElement::CreateInfo{
+		g->add_child<RoundedRect>({
 			.visible = true, .inert = true,
 			.connections = {
 				{
@@ -1357,7 +1357,7 @@ namespace Aether {
 				{"x", "5sp"}, {"bottom", "0"}, {"r", "2sp"}, {"width", "10sp"}
 			}
 		});
-		g->add_child<RoundedRect>(UIElement::CreateInfo{
+		g->add_child<RoundedRect>({
 			.visible = true, .inert = true,
 			.connections = {
 				{
@@ -1378,7 +1378,7 @@ namespace Aether {
 			}
 		});
 
-		g->add_child<Path>(UIElement::CreateInfo{
+		g->add_child<Path>({
 			.visible = true, .inert = true,
 			.connections = {{
 				.param_idx = mixer_ctrl_idx,
@@ -1394,7 +1394,7 @@ namespace Aether {
 		});
 
 		// control surface
-		g->add_child<Rect>(UIElement::CreateInfo{
+		g->add_child<Rect>({
 			.visible = false, .inert = false,
 			.btn_press_callback = [mixer_ctrl_idx, this](UIElement*, const pugl::ButtonPressEvent& e) {
 				mouse_callback_info.x = e.x;
@@ -1442,7 +1442,7 @@ namespace Aether {
 	) {
 		float strk_width = dial_size/24.f;
 
-		auto center_group = g->add_child<Group>(UIElement::CreateInfo{
+		auto center_group = g->add_child<Group>({
 			.visible = true, .inert = true,
 			.style = {
 				{"x", std::to_string(cx).substr(0,3) + "sp"}, {"width", "0"},
@@ -1450,7 +1450,7 @@ namespace Aether {
 			}
 		});
 
-		center_group->add_child<Arc>(UIElement::CreateInfo{
+		center_group->add_child<Arc>({
 			.visible = true, .inert = true,
 			.style = {
 				{"cx", "0"},
@@ -1461,7 +1461,7 @@ namespace Aether {
 				{"transform", "rotate(-90deg)"}
 			}
 		});
-		center_group->add_child<Arc>(UIElement::CreateInfo{
+		center_group->add_child<Arc>({
 			.visible = true, .inert = true,
 			.connections = {{
 				.param_idx = param_idx,
@@ -1485,7 +1485,7 @@ namespace Aether {
 				{"transform", "rotate(-90deg)"}
 			}
 		});
-		center_group->add_child<Circle>(UIElement::CreateInfo{
+		center_group->add_child<Circle>({
 			.visible = true, .inert = true,
 			.style = {
 				{"cx", "0"},
@@ -1495,7 +1495,7 @@ namespace Aether {
 				{"stroke", "#b6bfcc"}, {"stroke-width", std::to_string(strk_width) + "sp"}
 			}
 		});
-		center_group->add_child<RoundedRect>(UIElement::CreateInfo{
+		center_group->add_child<RoundedRect>({
 			.visible = true, .inert = true,
 			.connections = {{
 				.param_idx = param_idx,
@@ -1519,7 +1519,7 @@ namespace Aether {
 				{"stroke", center_fill}, {"stroke-width", "2sp"}
 			}
 		});
-		g->add_child<Circle>(UIElement::CreateInfo{
+		g->add_child<Circle>({
 			.visible = false, .inert = false,
 			.btn_press_callback = [param_idx, this](UIElement* elem, auto e){dial_btn_press_cb(param_idx, elem, e);},
 			.motion_callback = [param_idx, this](UIElement* elem, auto e){dial_btn_motion_cb(param_idx, elem, e);},
@@ -1531,7 +1531,7 @@ namespace Aether {
 		});
 
 		if (!param_name.empty()) {
-			center_group->add_child<Text>(UIElement::CreateInfo{
+			center_group->add_child<Text>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "-100sp"}, {"width", "200sp"},
@@ -1553,7 +1553,7 @@ namespace Aether {
 		float x,
 		float y
 	) {
-		g->add_child<ShaderRect>(ShaderRect::CreateInfo{
+		g->add_child<ShaderRect>({
 			.base = {
 				.visible = true, .inert = true,
 				.style = {
@@ -1627,7 +1627,7 @@ namespace Aether {
 		const std::vector<EqInfo> infos
 	) {
 
-		auto eq = g->add_child<Group>(UIElement::CreateInfo{
+		auto eq = g->add_child<Group>({
 			.visible = true, .inert = false,
 			.style = {
 				{"x", std::to_string(x).substr(0,3) + "sp"}, {"width", "150sp"},
@@ -1635,7 +1635,7 @@ namespace Aether {
 			}
 		});
 
-		eq->add_child<RoundedRect>(UIElement::CreateInfo{
+		eq->add_child<RoundedRect>({
 			.visible = true, .inert = true,
 			.style = {
 				{"x", "0"}, {"y", "0"},
@@ -1644,7 +1644,7 @@ namespace Aether {
 			}
 		});
 
-		eq->add_child<Rect>(UIElement::CreateInfo{
+		eq->add_child<Rect>({
 			.visible = true, .inert = true,
 			.style = {
 				{"x", "0"}, {"y", "24.25sp"},
@@ -1787,7 +1787,7 @@ namespace Aether {
 			}
 
 
-			eq->add_child<ShaderRect>(ShaderRect::CreateInfo{
+			eq->add_child<ShaderRect>({
 				.base = {
 					.visible = true, .inert = true,
 					.style = {
@@ -1805,7 +1805,7 @@ namespace Aether {
 		const float box_size = ( 150 - margin*(infos.size()-1) ) / infos.size();
 
 		for (size_t i = 0; i < infos.size(); ++i) {
-			eq->add_child<RoundedRect>(UIElement::CreateInfo{
+			eq->add_child<RoundedRect>({
 				.visible = true, .inert = false,
 				.btn_release_callback = [idx = infos[i].idxs[0], this](UIElement* elem, auto e){
 					if (elem->element_at(e.x, e.y)) {
@@ -1829,7 +1829,7 @@ namespace Aether {
 					{"bottom", "0sp"}, {"height", "20sp"}, {"r", "5sp"}
 				}
 			});
-			eq->add_child<Text>(UIElement::CreateInfo{
+			eq->add_child<Text>({
 				.visible = true, .inert = true,
 				.connections = {{
 					.param_idx = infos[i].idxs[0],
@@ -1894,7 +1894,7 @@ namespace Aether {
 			};
 			contact_node.insert(contact_node.end(), node_connections.begin(), node_connections.end());
 
-			eq->add_child<Circle>(UIElement::CreateInfo{
+			eq->add_child<Circle>({
 				.visible = false, .inert = false,
 				.btn_press_callback = [idxs = infos[i].idxs, this](UIElement*, const auto& e) {
 					mouse_callback_info.x = e.x;
@@ -1972,7 +1972,7 @@ namespace Aether {
 			};
 			visual_node.insert(visual_node.end(), node_connections.begin(), node_connections.end());
 
-			eq->add_child<Circle>(UIElement::CreateInfo{
+			eq->add_child<Circle>({
 				.visible = true, .inert = true,
 				.connections = visual_node,
 				.style = {
