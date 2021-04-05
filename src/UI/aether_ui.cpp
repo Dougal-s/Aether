@@ -34,6 +34,8 @@
 #include "../DSP/aether_dsp.hpp"
 
 namespace {
+
+#ifndef NDEBUG
 	void GLAPIENTRY opengl_err_callback(
 		[[maybe_unused]] GLenum source,
 		GLenum type,
@@ -49,6 +51,7 @@ namespace {
 				  << " severity = " << severity
 				  << ": " << message << std::endl;
 	}
+#endif
 
 	void attach_panel_background(Group* g) {
 		// Background
@@ -243,7 +246,7 @@ namespace Aether {
 					{"fill", "#fff"}
 				}
 			});
-			
+
 			spec->add_child<Spectrum>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
 				.style = {
@@ -253,7 +256,7 @@ namespace Aether {
 					{"channel", "0"}
 				}
 			});
-			
+
 			spec->add_child<Spectrum>(UIElement::CreateInfo{
 				.visible = true, .inert = true,
 				.style = {
@@ -1098,9 +1101,11 @@ namespace Aether {
 		if (!gladLoadGLLoader((GLADloadproc)&pugl::getProcAddress))
 			return pugl::Status::failure;
 
-		glEnable(GL_DEBUG_OUTPUT);
-		glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 0, nullptr, GL_FALSE);
-		glDebugMessageCallback(opengl_err_callback, 0);
+		#ifndef NDEBUG
+			glEnable(GL_DEBUG_OUTPUT);
+			glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 0, nullptr, GL_FALSE);
+			glDebugMessageCallback(opengl_err_callback, 0);
+		#endif
 
 		try {
 			ui_tree.initialize_context();
@@ -1226,7 +1231,7 @@ namespace Aether {
 			}
 			std::fill(output.begin()+size, output.end(), 0.f);
 		};
-		
+
 		update_channel(0);
 		update_channel(1);
 	}
