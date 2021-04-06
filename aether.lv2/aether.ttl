@@ -39,7 +39,7 @@
 	doap:license <http://opensource.org/licenses/MIT>;
 
 	ui:ui <http://github.com/Dougal-s/Aether#ui>;
-	lv2:requiredFeature urid:map, props:supportsStrictBounds;
+	lv2:requiredFeature urid:map;
 	lv2:optionalFeature lv2:hardRTCapable;
 
 	rdfs:comment "A stereo algorithmic reverb based on Cloudseed";
@@ -102,7 +102,6 @@
 		lv2:symbol "mix";
 		lv2:name "Mix";
 		rdfs:comment "dry/wet ratio";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:default 100.0;
 		lv2:minimum 0.0;
 		lv2:maximum 100.0;
@@ -176,7 +175,6 @@
 		lv2:symbol "predelay";
 		lv2:name "Predelay";
 		rdfs:comment "Delay between the input signal and the first reverberations";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:default 20.0;
 		lv2:minimum 0.0;
 		lv2:maximum 400.0;
@@ -232,7 +230,6 @@
 		lv2:symbol "early_taps";
 		lv2:name "Delay Taps";
 		rdfs:comment "The number of delay taps in the early reflections multitap delay";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:portProperty lv2:integer;
 		lv2:default 12;
 		lv2:minimum 1;
@@ -243,7 +240,6 @@
 		lv2:symbol "early_tap_length";
 		lv2:name "Early Delay Length";
 		rdfs:comment "The length of the early reflections multitap delay";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:default 200.0;
 		lv2:minimum 0.0;
 		lv2:maximum 500.0;
@@ -254,7 +250,6 @@
 		lv2:symbol "early_tap_mix";
 		lv2:name "Early Tap Mix";
 		rdfs:comment "Dry/wet ratio of the multitap delay";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:default 100.0;
 		lv2:minimum 0.0;
 		lv2:maximum 100.0;
@@ -274,7 +269,6 @@
 		lv2:symbol "early_diffusion_stages";
 		lv2:name "Early Diffusion Stages";
 		rdfs:comment "The number of series allpass filters in the early reflections diffusion block";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:portProperty lv2:integer;
 		lv2:default 7;
 		lv2:minimum 0;
@@ -285,7 +279,6 @@
 		lv2:symbol "early_diffusion_delay";
 		lv2:name "Early Diffusion Delay";
 		rdfs:comment "The delay in the early reflections diffusion block";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:default 20;
 		lv2:minimum 10;
 		lv2:maximum 100;
@@ -296,7 +289,6 @@
 		lv2:symbol "early_diffusion_mod_depth";
 		lv2:name "Early Diffusion Mod Depth";
 		rdfs:comment "The modulation depth of the early reflections diffusion block delay";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:default 0.0;
 		lv2:minimum 0.0;
 		lv2:maximum 3.0;
@@ -329,7 +321,7 @@
 		lv2:symbol "late_order";
 		lv2:name "Late Order";
 		rdfs:comment "Controls the signal path in the late reverberation unit";
-		lv2:portProperty lv2:integer, lv2:enumeration, props:hasStrictBounds;
+		lv2:portProperty lv2:integer, lv2:enumeration;
 		lv2:scalePoints
 			[ rdfs:label "Pre"; rdf:value 0 ],
 			[ rdfs:label "Post"; rdf:value 1 ];
@@ -342,7 +334,6 @@
 		lv2:symbol "late_delay_lines";
 		lv2:name "Late Delay Lines";
 		rdfs:comment "The number of delay lines in the late reverberation unit";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:portProperty lv2:integer;
 		lv2:default 3;
 		lv2:minimum 1;
@@ -353,7 +344,6 @@
 		lv2:symbol "late_Delay";
 		lv2:name "Late Delay";
 		rdfs:comment "The delay time in the late reverberation delay lines";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:default 100.0;
 		lv2:minimum 0.05;
 		lv2:maximum 1000.0;
@@ -364,7 +354,6 @@
 		lv2:symbol "late_delay_mod_depth";
 		lv2:name "Late Delay Mod Depth";
 		rdfs:comment "The modulation depth of the line delay";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:default 0.2;
 		lv2:minimum 0.0;
 		lv2:maximum 50.0;
@@ -395,7 +384,6 @@
 		lv2:symbol "late_diffusion_stages";
 		lv2:name "Late Diffusion Stages";
 		rdfs:comment "The number of series allpass filters in the late diffusion block";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:portProperty lv2:integer;
 		lv2:default 7;
 		lv2:minimum 0;
@@ -406,7 +394,6 @@
 		lv2:symbol "late_diffusion_delay";
 		lv2:name "Late Diffusion Delay";
 		rdfs:comment "The delay in the late diffusion block";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:default 50;
 		lv2:minimum 10;
 		lv2:maximum 100;
@@ -417,7 +404,6 @@
 		lv2:symbol "late_diffusion_mod_depth";
 		lv2:name "Late Diffusion Mod Depth";
 		rdfs:comment "The modulation depth of the late diffusion block delay";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:default 0.2;
 		lv2:minimum 0.0;
 		lv2:maximum 3.0;
@@ -533,7 +519,6 @@
 		lv2:symbol "seed_crossmix";
 		lv2:name "Seed Crossmix";
 		rdfs:comment "How much random values for the left and right channels are mixed";
-		lv2:portProperty props:hasStrictBounds;
 		lv2:default 80.0;
 		lv2:minimum 0.0;
 		lv2:maximum 100.0;

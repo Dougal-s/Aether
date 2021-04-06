@@ -43,72 +43,86 @@ namespace Aether {
 			const float* audio_in_right;
 			float* audio_out_left;
 			float* audio_out_right;
-			const float* mix;
+		};
+
+		struct Parameters {
+			float mix;
 
 			// mixer
-			const float* dry_level;
-			const float* predelay_level;
-			const float* early_level;
-			const float* late_level;
+			float dry_level;
+			float predelay_level;
+			float early_level;
+			float late_level;
 
 			// Global
-			const float* interpolate;
+			float interpolate;
 
 			// predelay
-			const float* width;
-			const float* predelay;
+			float width;
+			float predelay;
 
 			// early
 			// filtering
-			const float* early_low_cut_enabled;
-			const float* early_low_cut_cutoff;
-			const float* early_high_cut_enabled;
-			const float* early_high_cut_cutoff;
+			float early_low_cut_enabled;
+			float early_low_cut_cutoff;
+			float early_high_cut_enabled;
+			float early_high_cut_cutoff;
 			// multitap delay
-			const float* early_taps;
-			const float* early_tap_length;
-			const float* early_tap_mix;
-			const float* early_tap_decay;
+			float early_taps;
+			float early_tap_length;
+			float early_tap_mix;
+			float early_tap_decay;
 			// diffusion
-			const float* early_diffusion_stages;
-			const float* early_diffusion_delay;
-			const float* early_diffusion_mod_depth;
-			const float* early_diffusion_mod_rate;
-			const float* early_diffusion_feedback;
+			float early_diffusion_stages;
+			float early_diffusion_delay;
+			float early_diffusion_mod_depth;
+			float early_diffusion_mod_rate;
+			float early_diffusion_feedback;
 
 			// late
-			const float* late_order;
-			const float* late_delay_lines;
+			float late_order;
+			float late_delay_lines;
 			// delay line
-			const float* late_delay;
-			const float* late_delay_mod_depth;
-			const float* late_delay_mod_rate;
-			const float* late_delay_line_feedback;
+			float late_delay;
+			float late_delay_mod_depth;
+			float late_delay_mod_rate;
+			float late_delay_line_feedback;
 			// diffusion
-			const float* late_diffusion_stages;
-			const float* late_diffusion_delay;
-			const float* late_diffusion_mod_depth;
-			const float* late_diffusion_mod_rate;
-			const float* late_diffusion_feedback;
+			float late_diffusion_stages;
+			float late_diffusion_delay;
+			float late_diffusion_mod_depth;
+			float late_diffusion_mod_rate;
+			float late_diffusion_feedback;
 			// Filter
-			const float* late_low_shelf_enabled;
-			const float* late_low_shelf_cutoff;
-			const float* late_low_shelf_gain;
-			const float* late_high_shelf_enabled;
-			const float* late_high_shelf_cutoff;
-			const float* late_high_shelf_gain;
-			const float* late_high_cut_enabled;
-			const float* late_high_cut_cutoff;
+			float late_low_shelf_enabled;
+			float late_low_shelf_cutoff;
+			float late_low_shelf_gain;
+			float late_high_shelf_enabled;
+			float late_high_shelf_cutoff;
+			float late_high_shelf_gain;
+			float late_high_cut_enabled;
+			float late_high_cut_cutoff;
 
 			// Seed
-			const float* seed_crossmix;
-			const float* tap_seed;
-			const float* early_diffusion_seed;
-			const float* delay_seed;
-			const float* late_diffusion_seed;
+			float seed_crossmix;
+			float tap_seed;
+			float early_diffusion_seed;
+			float delay_seed;
+			float late_diffusion_seed;
 		};
 
 		Ports ports = {};
+
+		std::array<const float*, 45> param_ports = {};
+		union {
+			Parameters param_smooth_named;
+			std::array<float, 45> param_smooth = {};
+		};
+
+		union {
+			Parameters params;
+			std::array<float, 45> params_arr;
+		};
 
 		/*
 			Member Functions
@@ -175,5 +189,7 @@ namespace Aether {
 		bool ui_open = false;
 
 		void write_sample_data_atom(int channel, int rate, float* data, uint32_t n_samples);
+
+		void update_parameters();
 	};
 }

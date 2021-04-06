@@ -51,8 +51,11 @@ static LV2_Handle instantiate(
 
 static void connect_port(LV2_Handle instance, uint32_t port, void* data) {
 	auto aether = static_cast<Aether::DSP*>(instance);
-	if (port >= sizeof(aether->ports)/sizeof(void*)) return;
-	*(reinterpret_cast<void**>(&aether->ports)+port) = data;
+	constexpr uint32_t misc_port_cnt = sizeof(aether->ports)/sizeof(void*);
+	if (port >= misc_port_cnt)
+		aether->param_ports[port-misc_port_cnt] = reinterpret_cast<const float*>(data);
+	else
+		*(reinterpret_cast<void**>(&aether->ports)+port) = data;
 }
 
 static void activate(LV2_Handle) {}

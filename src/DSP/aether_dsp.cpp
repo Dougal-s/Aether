@@ -5,6 +5,7 @@
 #include <lv2/lv2plug.in/ns/ext/atom/util.h>
 
 #include "aether_dsp.hpp"
+#include "../common/parameters.hpp"
 #include "../common/utils.hpp"
 
 namespace {
@@ -26,7 +27,31 @@ namespace Aether {
 		m_l_late_rev(rate, rng),
 		m_r_late_rev(rate, rng),
 		m_rate{rate}
-	{}
+	{
+		for (size_t i = 6; float& param : params_arr)
+			param = parameter_infos[i++].dflt;
+
+		param_smooth_named.mix = 50.f;
+
+		param_smooth_named.dry_level = 50.f;
+		param_smooth_named.predelay_level = 50.f;
+		param_smooth_named.early_level = 50.f;
+		param_smooth_named.late_level = 50.f;
+
+		param_smooth_named.width = 50.f;
+		param_smooth_named.predelay = 5000.f;
+
+		param_smooth_named.early_tap_mix = 50.f;
+		param_smooth_named.early_tap_decay = 25.f;
+
+		param_smooth_named.late_delay_line_feedback = 50.f;
+
+		for (float& smooth : param_smooth) {
+			constexpr float pi = std::numbers::pi_v<float>;
+			if (smooth != 0.f)
+				smooth = std::exp(-2*pi / (0.0001f*smooth * rate));
+		}
+	}
 
 	void DSP::map_uris(LV2_URID_Map* map) noexcept {
 		lv2_atom_forge_init(&atom_forge, map);
@@ -59,122 +84,6 @@ namespace Aether {
 			}
 		}
 
-		// Early Reflections
-		{ // Filters
-			float cutoff = *ports.early_low_cut_cutoff;
-			m_l_early_filters.highpass.set_cutoff(cutoff);
-			m_r_early_filters.highpass.set_cutoff(cutoff);
-		} {
-			float cutoff = *ports.early_high_cut_cutoff;
-			m_l_early_filters.lowpass.set_cutoff(cutoff);
-			m_r_early_filters.lowpass.set_cutoff(cutoff);
-		}
-
-		{ // Multitap Delay
-			float decay = *ports.early_tap_decay;
-			m_l_early_multitap.set_decay(decay);
-			m_r_early_multitap.set_decay(decay);
-		} {
-			float crossmix = *ports.seed_crossmix/200.f;
-			m_l_early_multitap.set_seed_crossmix(1.f-crossmix);
-			m_r_early_multitap.set_seed_crossmix(0.f+crossmix);
-		} {
-			uint32_t seed = static_cast<uint32_t>(*ports.tap_seed);
-			m_l_early_multitap.set_seed(seed);
-			m_r_early_multitap.set_seed(seed);
-		}
-
-		{ // Diffuser
-			float delay = m_rate**ports.early_diffusion_delay/1000.f;
-			m_l_early_diffuser.set_delay(delay);
-			m_r_early_diffuser.set_delay(delay);
-		} {
-			float mod_depth = m_rate**ports.early_diffusion_mod_depth/1000.f;
-			m_l_early_diffuser.set_mod_depth(mod_depth);
-			m_r_early_diffuser.set_mod_depth(mod_depth);
-		} {
-			float rate = *ports.early_diffusion_mod_rate*m_rate;
-			m_l_early_diffuser.set_mod_rate(rate);
-			m_r_early_diffuser.set_mod_rate(rate);
-		} {
-			float crossmix = *ports.seed_crossmix/200.f;
-			m_l_early_diffuser.set_seed_crossmix(1.f-crossmix);
-			m_r_early_diffuser.set_seed_crossmix(0.f+crossmix);
-		} {
-			uint32_t seed = static_cast<uint32_t>(*ports.early_diffusion_seed);
-			m_l_early_diffuser.set_seed(seed);
-			m_r_early_diffuser.set_seed(seed);
-		}
-
-		// Late Reverberations
-		{ // General
-			float crossmix = *ports.seed_crossmix/200.f;
-			m_l_late_rev.set_seed_crossmix(1.f-crossmix);
-			m_r_late_rev.set_seed_crossmix(0.f+crossmix);
-		}
-
-		{ // Modulated Delay
-			float delay = m_rate**ports.late_delay/1000.f;
-			m_l_late_rev.set_delay(delay);
-			m_r_late_rev.set_delay(delay);
-		} {
-			float mod_depth = m_rate**ports.late_delay_mod_depth/1000.f;
-			m_l_late_rev.set_delay_mod_depth(mod_depth);
-			m_r_late_rev.set_delay_mod_depth(mod_depth);
-		} {
-			float mod_rate = *ports.late_delay_mod_rate/m_rate;
-			m_l_late_rev.set_delay_mod_rate(mod_rate);
-			m_r_late_rev.set_delay_mod_rate(mod_rate);
-		} {
-			float feedback = *ports.late_delay_line_feedback;
-			m_l_late_rev.set_delay_feedback(feedback);
-			m_r_late_rev.set_delay_feedback(feedback);
-		} {
-			uint32_t seed = static_cast<uint32_t>(*ports.delay_seed);
-			m_l_late_rev.set_delay_seed(seed);
-			m_r_late_rev.set_delay_seed(seed);
-		}
-
-		{ // Diffuser
-			float delay = m_rate**ports.late_diffusion_delay/1000.f;
-			m_l_late_rev.set_diffusion_delay(delay);
-			m_r_late_rev.set_diffusion_delay(delay);
-		} {
-			float depth = m_rate**ports.late_diffusion_mod_depth/1000.f;
-			m_l_late_rev.set_diffusion_mod_depth(depth);
-			m_r_late_rev.set_diffusion_mod_depth(depth);
-		} {
-			float rate = *ports.late_diffusion_mod_rate/m_rate;
-			m_l_late_rev.set_diffusion_mod_rate(rate);
-			m_r_late_rev.set_diffusion_mod_rate(rate);
-		} {
-			uint32_t seed = static_cast<uint32_t>(*ports.late_diffusion_seed);
-			m_l_late_rev.set_diffusion_seed(seed);
-			m_r_late_rev.set_diffusion_seed(seed);
-		}
-
-		{ // Filters
-			float cutoff = *ports.late_low_shelf_cutoff;
-			m_l_late_rev.set_low_shelf_cutoff(cutoff);
-			m_r_late_rev.set_low_shelf_cutoff(cutoff);
-		} {
-			float gain = dBtoGain(*ports.late_low_shelf_gain);
-			m_l_late_rev.set_low_shelf_gain(gain);
-			m_r_late_rev.set_low_shelf_gain(gain);
-		} {
-			float cutoff = *ports.late_high_shelf_cutoff;
-			m_l_late_rev.set_high_shelf_cutoff(cutoff);
-			m_r_late_rev.set_high_shelf_cutoff(cutoff);
-		} {
-			float gain = dBtoGain(*ports.late_high_shelf_gain);
-			m_l_late_rev.set_high_shelf_gain(gain);
-			m_r_late_rev.set_high_shelf_gain(gain);
-		} {
-			float cutoff = *ports.late_high_cut_cutoff;
-			m_l_late_rev.set_high_cut_cutoff(cutoff);
-			m_r_late_rev.set_high_cut_cutoff(cutoff);
-		}
-
 		std::pair<float, float> peak_dry = {0,0},
 			peak_dry_stage = {0,0},
 			peak_predelay_stage = {0,0},
@@ -183,8 +92,10 @@ namespace Aether {
 			peak_out = {0,0};
 
 		for (uint32_t sample = 0; sample < n_samples; ++sample) {
+			update_parameters();
+
 			// Dry
-			float dry_level = *ports.dry_level/100.f;
+			float dry_level = params.dry_level/100.f;
 			float dry_left = ports.audio_in_left[sample];
 			float dry_right = ports.audio_in_right[sample];
 			{
@@ -193,16 +104,16 @@ namespace Aether {
 			}
 
 			// Predelay
-			float predelay_level = *ports.predelay_level/100.f;
+			float predelay_level = params.predelay_level/100.f;
 			float predelay_left = dry_left;
 			float predelay_right = dry_right;
 			{
-				float width = 0.5f-*ports.width/200.f;
+				float width = 0.5f-params.width/200.f;
 				predelay_left = std::lerp(dry_left, dry_right, width);
 				predelay_right = std::lerp(dry_right, dry_left, width);
 
 				// predelay in samples
-				uint32_t delay = static_cast<uint32_t>(*ports.predelay/1000.f*m_rate);
+				uint32_t delay = static_cast<uint32_t>(params.predelay/1000.f*m_rate);
 				predelay_left = m_l_predelay.push(predelay_left, delay);
 				predelay_right = m_r_predelay.push(predelay_right, delay);
 
@@ -211,37 +122,37 @@ namespace Aether {
 			}
 
 			// Early Reflections
-			float early_level = *ports.early_level/100.f;
+			float early_level = params.early_level/100.f;
 			float early_left = predelay_left;
 			float early_right = predelay_right;
 			{
 				// Filtering
-				if (*ports.early_low_cut_enabled > 0.f) {
+				if (params.early_low_cut_enabled > 0.f) {
 					early_left = m_l_early_filters.highpass.push(early_left);
 					early_right = m_r_early_filters.highpass.push(early_right);
 				}
 
-				if (*ports.early_high_cut_enabled > 0.f) {
+				if (params.early_high_cut_enabled > 0.f) {
 					early_left = m_l_early_filters.lowpass.push(early_left);
 					early_right = m_r_early_filters.lowpass.push(early_right);
 				}
 
 				{ // multitap delay
-					uint32_t taps = static_cast<uint32_t>(*ports.early_taps);
-					float length = *ports.early_tap_length/1000.f*m_rate;
+					uint32_t taps = static_cast<uint32_t>(params.early_taps);
+					float length = params.early_tap_length/1000.f*m_rate;
 
 					float multitap_left = m_l_early_multitap.push(early_left, taps, length);
 					float multitap_right = m_r_early_multitap.push(early_right, taps, length);
 
-					float tap_mix = *ports.early_tap_mix/100.f;
+					float tap_mix = params.early_tap_mix/100.f;
 					early_left = std::lerp( early_left, multitap_left, tap_mix);
 					early_right = std::lerp(early_right, multitap_right, tap_mix);
 				}
 
 				{ // allpass diffuser
 					AllpassDiffuser::PushInfo info = {
-						.stages = static_cast<uint32_t>(*ports.early_diffusion_stages),
-						.feedback = *ports.early_diffusion_feedback,
+						.stages = static_cast<uint32_t>(params.early_diffusion_stages),
+						.feedback = params.early_diffusion_feedback,
 						.interpolate = true
 					};
 
@@ -254,23 +165,23 @@ namespace Aether {
 			}
 
 			// Late Reverberations
-			float late_level = *ports.late_level/100.f;
+			float late_level = params.late_level/100.f;
 			float late_left = early_left;
 			float late_right = early_right;
 			{
-				uint32_t lines = static_cast<uint32_t>(*ports.late_delay_lines);
+				uint32_t lines = static_cast<uint32_t>(params.late_delay_lines);
 
 				Delayline::PushInfo push_info = {
-					.order = static_cast<Delayline::Order>(*ports.late_order),
+					.order = static_cast<Delayline::Order>(params.late_order),
 					.diffuser_info = {
-						.stages = static_cast<uint32_t>(*ports.late_diffusion_stages),
-						.feedback = *ports.late_diffusion_feedback,
-						.interpolate = *ports.interpolate > 0.f
+						.stages = static_cast<uint32_t>(params.late_diffusion_stages),
+						.feedback = params.late_diffusion_feedback,
+						.interpolate = params.interpolate > 0.f
 					},
 					.damping_info = {
-						.ls_enable = *ports.late_low_shelf_enabled > 0.f,
-						.hs_enable = *ports.late_high_shelf_enabled > 0.f,
-						.hc_enable = *ports.late_high_cut_enabled > 0.f
+						.ls_enable = params.late_low_shelf_enabled > 0.f,
+						.hs_enable = params.late_high_shelf_enabled > 0.f,
+						.hc_enable = params.late_high_cut_enabled > 0.f
 					}
 				};
 
@@ -281,7 +192,7 @@ namespace Aether {
 			}
 
 			{
-				float mix = *ports.mix/100.f;
+				float mix = params.mix/100.f;
 				ports.audio_out_left[sample] = std::lerp(dry_left, ports.audio_out_left[sample], mix);
 				ports.audio_out_right[sample] = std::lerp(dry_right, ports.audio_out_right[sample], mix);
 			}
@@ -361,6 +272,134 @@ namespace Aether {
 			lv2_atom_forge_vector(&atom_forge, sizeof(float), uris.atom_Float, n_samples, data);
 
 			lv2_atom_forge_pop(&atom_forge, &obj_frame);
+		}
+	}
+
+	void DSP::update_parameters() {
+		for (size_t p = 0; p < param_ports.size(); ++p) {
+			float new_val = std::clamp(
+				*param_ports[p],
+				parameter_infos[p+6].min,
+				parameter_infos[p+6].max
+			);
+
+			params_arr[p] = std::lerp(new_val, params_arr[p], param_smooth[p]);
+		}
+
+		// Early Reflections
+		{ // Filters
+			float cutoff = params.early_low_cut_cutoff;
+			m_l_early_filters.highpass.set_cutoff(cutoff);
+			m_r_early_filters.highpass.set_cutoff(cutoff);
+		} {
+			float cutoff = params.early_high_cut_cutoff;
+			m_l_early_filters.lowpass.set_cutoff(cutoff);
+			m_r_early_filters.lowpass.set_cutoff(cutoff);
+		}
+
+		{ // Multitap Delay
+			float decay = params.early_tap_decay;
+			m_l_early_multitap.set_decay(decay);
+			m_r_early_multitap.set_decay(decay);
+		} {
+			float crossmix = params.seed_crossmix/200.f;
+			m_l_early_multitap.set_seed_crossmix(1.f-crossmix);
+			m_r_early_multitap.set_seed_crossmix(0.f+crossmix);
+		} {
+			uint32_t seed = static_cast<uint32_t>(params.tap_seed);
+			m_l_early_multitap.set_seed(seed);
+			m_r_early_multitap.set_seed(seed);
+		}
+
+		{ // Diffuser
+			float delay = m_rate*params.early_diffusion_delay/1000.f;
+			m_l_early_diffuser.set_delay(delay);
+			m_r_early_diffuser.set_delay(delay);
+		} {
+			float mod_depth = m_rate*params.early_diffusion_mod_depth/1000.f;
+			m_l_early_diffuser.set_mod_depth(mod_depth);
+			m_r_early_diffuser.set_mod_depth(mod_depth);
+		} {
+			float rate = params.early_diffusion_mod_rate*m_rate;
+			m_l_early_diffuser.set_mod_rate(rate);
+			m_r_early_diffuser.set_mod_rate(rate);
+		} {
+			float crossmix = params.seed_crossmix/200.f;
+			m_l_early_diffuser.set_seed_crossmix(1.f-crossmix);
+			m_r_early_diffuser.set_seed_crossmix(0.f+crossmix);
+		} {
+			uint32_t seed = static_cast<uint32_t>(params.early_diffusion_seed);
+			m_l_early_diffuser.set_seed(seed);
+			m_r_early_diffuser.set_seed(seed);
+		}
+
+		// Late Reverberations
+		{ // General
+			float crossmix = params.seed_crossmix/200.f;
+			m_l_late_rev.set_seed_crossmix(1.f-crossmix);
+			m_r_late_rev.set_seed_crossmix(0.f+crossmix);
+		}
+
+		{ // Modulated Delay
+			float delay = m_rate*params.late_delay/1000.f;
+			m_l_late_rev.set_delay(delay);
+			m_r_late_rev.set_delay(delay);
+		} {
+			float mod_depth = m_rate*params.late_delay_mod_depth/1000.f;
+			m_l_late_rev.set_delay_mod_depth(mod_depth);
+			m_r_late_rev.set_delay_mod_depth(mod_depth);
+		} {
+			float mod_rate = params.late_delay_mod_rate/m_rate;
+			m_l_late_rev.set_delay_mod_rate(mod_rate);
+			m_r_late_rev.set_delay_mod_rate(mod_rate);
+		} {
+			float feedback = params.late_delay_line_feedback;
+			m_l_late_rev.set_delay_feedback(feedback);
+			m_r_late_rev.set_delay_feedback(feedback);
+		} {
+			uint32_t seed = static_cast<uint32_t>(params.delay_seed);
+			m_l_late_rev.set_delay_seed(seed);
+			m_r_late_rev.set_delay_seed(seed);
+		}
+
+		{ // Diffuser
+			float delay = m_rate*params.late_diffusion_delay/1000.f;
+			m_l_late_rev.set_diffusion_delay(delay);
+			m_r_late_rev.set_diffusion_delay(delay);
+		} {
+			float depth = m_rate*params.late_diffusion_mod_depth/1000.f;
+			m_l_late_rev.set_diffusion_mod_depth(depth);
+			m_r_late_rev.set_diffusion_mod_depth(depth);
+		} {
+			float rate = params.late_diffusion_mod_rate/m_rate;
+			m_l_late_rev.set_diffusion_mod_rate(rate);
+			m_r_late_rev.set_diffusion_mod_rate(rate);
+		} {
+			uint32_t seed = static_cast<uint32_t>(params.late_diffusion_seed);
+			m_l_late_rev.set_diffusion_seed(seed);
+			m_r_late_rev.set_diffusion_seed(seed);
+		}
+
+		{ // Filters
+			float cutoff = params.late_low_shelf_cutoff;
+			m_l_late_rev.set_low_shelf_cutoff(cutoff);
+			m_r_late_rev.set_low_shelf_cutoff(cutoff);
+		} {
+			float gain = dBtoGain(params.late_low_shelf_gain);
+			m_l_late_rev.set_low_shelf_gain(gain);
+			m_r_late_rev.set_low_shelf_gain(gain);
+		} {
+			float cutoff = params.late_high_shelf_cutoff;
+			m_l_late_rev.set_high_shelf_cutoff(cutoff);
+			m_r_late_rev.set_high_shelf_cutoff(cutoff);
+		} {
+			float gain = dBtoGain(params.late_high_shelf_gain);
+			m_l_late_rev.set_high_shelf_gain(gain);
+			m_r_late_rev.set_high_shelf_gain(gain);
+		} {
+			float cutoff = params.late_high_cut_cutoff;
+			m_l_late_rev.set_high_cut_cutoff(cutoff);
+			m_r_late_rev.set_high_cut_cutoff(cutoff);
 		}
 	}
 }
