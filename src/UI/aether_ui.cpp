@@ -312,9 +312,8 @@ namespace Aether {
 			});
 
 			const auto color_interpolate = [this, peak = 0.f](float t, auto) mutable -> std::string {
-				const float dt = 0.000001f*std::chrono::duration_cast<std::chrono::microseconds>(
-					std::chrono::steady_clock::now()-last_frame
-				).count();
+				using namespace std::chrono;
+				const float dt = 0.000001f*duration_cast<microseconds>(steady_clock::now()-last_frame).count();
 				peak = std::lerp(std::max(peak, t), t, std::min(1.f*dt, 1.f));
 				if (peak > 1.f/1.3f) // turn red if level goes above 1
 					return "#a52f3b";
@@ -1328,9 +1327,8 @@ namespace Aether {
 		// meters
 
 		const auto color_interpolate = [this, peak = 0.f](float t, auto) mutable -> std::string {
-			const float dt = 0.000001f*std::chrono::duration_cast<std::chrono::microseconds>(
-				std::chrono::steady_clock::now()-last_frame
-			).count();
+			using namespace std::chrono;
+			const float dt = 0.000001f*duration_cast<microseconds>(steady_clock::now()-last_frame).count();
 			peak = std::lerp(std::max(peak, t), t, std::min(1.f*dt, 1.f));
 			if (peak > 1.f/1.3f) // turn red if level goes above 1
 				return "#a52f3b";
