@@ -276,12 +276,15 @@ bool UIElement::set_fill() const {
 		return true;
 	}
 
-	return m_parent == m_root ? false : m_parent->set_fill();
+	return false;
+	// v implements fill inheritence v
+	// return m_parent == m_root ? false : m_parent->set_fill();
 }
 
 bool UIElement::set_stroke() const {
-	bool has_stroke = false;
-	if (m_parent) has_stroke = m_parent->set_stroke();
+	// v for stroke inheritence v
+	// bool has_stroke = false;
+	// if (m_parent) has_stroke = m_parent->set_stroke();
 
 	if (auto width = style.find("stroke-width"); width)
 		nvgStrokeWidth(m_root->ctx->nvg_ctx, to_px(width->second.data()).val);
@@ -361,7 +364,9 @@ bool UIElement::set_stroke() const {
 		return true;
 	}
 
-	return has_stroke;
+	return false;
+	// v for stroke inheritence v
+	// return has_stroke;
 }
 
 void UIElement::apply_transforms() const {
