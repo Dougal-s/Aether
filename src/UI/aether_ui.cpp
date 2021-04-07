@@ -216,7 +216,7 @@ namespace Aether {
 		setWindowTitle("Aether");
 		setDefaultSize(1230, 700);
 		setMinSize(615, 350);
-		setAspectRatio(1, 1, 2, 1);
+		setAspectRatio(1, 1, 23, 8);
 
 		setBackend(pugl::glBackend());
 
