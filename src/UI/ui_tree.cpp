@@ -112,25 +112,12 @@ void UIElement::draw() const {
 	}
 
 	if (m_visible) {
-		auto filter = style.find("filter");
-		if (filter) {
-			nvgEndFrame(m_root->ctx->nvg_ctx);
-			set_new_render_target();
-			nvgBeginFrame(m_root->ctx->nvg_ctx, 100*m_root->vw, 100*m_root->vh, 1);
-		}
-
 		nvgReset(m_root->ctx->nvg_ctx);
 
 		if (m_inert)
 			apply_transforms();
 
 		draw_impl();
-
-		if (filter) {
-			nvgEndFrame(m_root->ctx->nvg_ctx);
-			apply_filter(filter->second);
-			nvgBeginFrame(m_root->ctx->nvg_ctx, 100*m_root->vw, 100*m_root->vh, 1);
-		}
 	}
 }
 
@@ -388,57 +375,6 @@ void UIElement::apply_transforms() const {
 
 		nvgTranslate(m_root->ctx->nvg_ctx, -p_bounds[0], -p_bounds[1]);
 	}
-}
-
-void UIElement::set_new_render_target() const {
-	if (m_root->ctx->active_framebuffers == m_root->ctx->framebuffers.size())
-		m_root->ctx->framebuffers.emplace_back(m_root->vw*100, m_root->vh*100);
-
-	glBindFramebuffer(
-		GL_FRAMEBUFFER,
-		m_root->ctx->framebuffers[m_root->ctx->active_framebuffers].framebuffer
-	);
-
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-	++(m_root->ctx->active_framebuffers);
-}
-
-void UIElement::apply_filter(std::string_view filter) const {
-	--(m_root->ctx->active_framebuffers);
-
-	float blur = 0.3f;
-	std::string_view filter_name{filter.data(), filter.find('(')};
-	if (filter_name == "blur")
-		blur = std::max(to_px(filter.data()+filter_name.size()+1).val, 0.3f);
-	else
-		throw std::invalid_argument("unrecognized filter type");
-
-	Framebuffer& src_framebuffer = m_root->ctx->framebuffers[m_root->ctx->active_framebuffers];
-	Framebuffer& dst_framebuffer = m_root->ctx->framebuffers[m_root->ctx->active_framebuffers-1];
-
-	glBindFramebuffer(GL_FRAMEBUFFER, m_root->ctx->staging_buffer.framebuffer);
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-	m_root->ctx->filter_passes[0].use();
-	m_root->ctx->filter_passes[0].set_texture("src", src_framebuffer.color);
-	m_root->ctx->filter_passes[0].set_float("blur", blur);
-	m_root->ctx->filter_passes[0].draw();
-
-	if (m_root->ctx->active_framebuffers > 0)
-		glBindFramebuffer(GL_FRAMEBUFFER, dst_framebuffer.framebuffer);
-	else
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	m_root->ctx->filter_passes[1].use();
-	m_root->ctx->filter_passes[1].set_texture("src", m_root->ctx->staging_buffer.color);
-	m_root->ctx->filter_passes[1].set_float("blur", blur);
-	m_root->ctx->filter_passes[1].draw();
 }
 
 /*
@@ -1041,15 +977,10 @@ int Root::get_font(std::string font_face) {
 
 // Drawing Context
 
-void DrawingContext::initialize(uint32_t width, uint32_t height) {
+void DrawingContext::initialize() {
 	nvg_ctx = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
 	if (!nvg_ctx)
 		throw std::runtime_error("failed to create a NanoVG context");
-
-	filter_passes[0] = Shader(filter_vert_code, filter_pass_1_frag_code);
-	filter_passes[1] = Shader(filter_vert_code, filter_pass_2_frag_code);
-
-	staging_buffer = Framebuffer(width, height);
 }
 
 void DrawingContext::destroy() noexcept {
@@ -1074,11 +1005,7 @@ Root& UITree::root() noexcept { return m_root; }
 void UITree::update_viewport(size_t width, size_t height) {
 	m_root.vh = height/100.f;
 	m_root.vw = width/100.f;
-
-	for (auto& framebuffer : m_ctx.framebuffers)
-		framebuffer = Framebuffer(width, height);
-	m_ctx.staging_buffer = Framebuffer(width, height);
 }
 
-void UITree::initialize_context() { m_ctx.initialize(100*m_root.vw, 100*m_root.vh); }
+void UITree::initialize_context() { m_ctx.initialize(); }
 void UITree::destroy_context() noexcept { m_ctx.destroy(); }

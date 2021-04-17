@@ -5,54 +5,6 @@
 #include "gl_helper.hpp"
 
 /**
- * Framebuffer
- */
-
-Framebuffer::Framebuffer(Framebuffer&& other) noexcept : Framebuffer() {
-	*this = std::move(other);
-}
-
-Framebuffer::Framebuffer(int width, int height) {
-	// create framebuffer
-	glGenFramebuffers(1, &framebuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-	// create color attachment
-	glGenTextures(1, &color);
-	glBindTexture(GL_TEXTURE_2D, color);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, width, height);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color, 0);
-
-	// create depth/stencil attachment
-	glGenRenderbuffers(1, &depth_stencil);
-	glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil);
-
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		throw std::runtime_error("failed to create OpenGL framebuffer!");
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-Framebuffer& Framebuffer::operator=(Framebuffer&& other) noexcept {
-	std::swap(framebuffer, other.framebuffer);
-	std::swap(color, other.color);
-	std::swap(depth_stencil, other.depth_stencil);
-	return *this;
-}
-
-Framebuffer::operator bool() const { return framebuffer; }
-
-Framebuffer::~Framebuffer() {
-	glDeleteFramebuffers(1, &framebuffer);
-	glDeleteTextures(1, &color);
-	glDeleteRenderbuffers(1, &depth_stencil);
-}
-
-/**
  * Shader
  */
 

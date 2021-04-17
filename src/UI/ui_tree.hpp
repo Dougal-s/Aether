@@ -191,9 +191,6 @@ private:
 
 	*/
 	void apply_transforms() const;
-
-	void set_new_render_target() const;
-	void apply_filter(std::string_view filter) const;
 };
 
 /*
@@ -454,75 +451,8 @@ struct Root final : public Group {
 struct DrawingContext {
 	NVGcontext* nvg_ctx;
 
-	Shader filter_passes[2] = {};
-	size_t active_framebuffers = 0;
-	std::vector<Framebuffer> framebuffers;
-	Framebuffer staging_buffer;
-
-	void initialize(uint32_t width, uint32_t height);
+	void initialize();
 	void destroy() noexcept;
-private:
-
-	static constexpr const char* filter_pass_1_frag_code = ""
-		"#version 330 core\n"
-
-		"in vec2 uv;"
-		"out vec4 color;"
-
-		"uniform sampler2D src;"
-		"uniform float blur;"
-
-		"void main() {"
-		"	vec4 blurred = texture(src, uv);"
-		"	float step = 1.f/textureSize(src, 0).x;"
-		"	int radius = int(3.f*blur+0.5);"
-		"	for (int dx = 1; dx <= radius; dx += 1) {"
-		"		float weight = exp(-dx*dx/(2.f*blur*blur));"
-		"		blurred += weight*("
-		"			texture(src, uv+vec2(dx*step, 0)) +"
-		"			texture(src, uv-vec2(dx*step, 0))"
-		"		);"
-		"	}"
-		"	color = blurred;"
-		"}";
-
-	static constexpr const char* filter_pass_2_frag_code = ""
-		"#version 330 core\n"
-
-		"in vec2 uv;"
-		"out vec4 color;"
-
-		"uniform sampler2D src;"
-		"uniform float blur;"
-
-		"const float pi = 3.14159265359;"
-
-		"void main() {"
-		"	vec4 blurred = texture(src, uv);"
-		"	float step = 1.f/textureSize(src, 0).y;"
-		"	int radius = int(3.f*blur+0.5);"
-		"	for (int dy = 1; dy <= radius; dy += 1) {"
-		"		float weight = exp(-dy*dy/(2.f*blur*blur));"
-		"		blurred += weight*("
-		"			texture(src, uv+vec2(0, dy*step)) +"
-		"			texture(src, uv-vec2(0, dy*step))"
-		"		);"
-		"	}"
-		"	color = blurred/(blur*blur*2*pi);"
-		"}";
-
-	static constexpr const char* filter_vert_code = ""
-		"#version 330 core\n"
-
-		"layout(location = 0) in vec2 vertex_pos;"
-		"layout(location = 1) in vec2 vertex_uv;"
-
-		"out vec2 uv;"
-
-		"void main() {"
-		"	uv = vertex_uv;"
-		"	gl_Position = vec4(vertex_pos, 0, 1);"
-		"}";
 };
 
 class UITree {

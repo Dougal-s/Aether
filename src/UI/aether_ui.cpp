@@ -224,8 +224,8 @@ namespace Aether {
 		setHint(pugl::ViewHint::samples, 16);
 		setHint(pugl::ViewHint::stencilBits, 8);
 		setHint(pugl::ViewHint::doubleBuffer, true);
-		setHint(pugl::ViewHint::contextVersionMajor, 4);
-		setHint(pugl::ViewHint::contextVersionMinor, 6);
+		setHint(pugl::ViewHint::contextVersionMajor, 3);
+		setHint(pugl::ViewHint::contextVersionMinor, 3);
 
 		// Border
 		ui_tree.root().add_child<RoundedRect>({

@@ -1,24 +1,6 @@
 #pragma once
 #include <glad/glad.h>
 
-class Framebuffer {
-public:
-	Framebuffer() = default;
-	Framebuffer(Framebuffer&& other) noexcept;
-	Framebuffer(int width, int height);
-	~Framebuffer();
-
-	Framebuffer& operator=(Framebuffer&& other) noexcept;
-	Framebuffer& operator=(const Framebuffer& other) = delete;
-
-	operator bool() const;
-
-	GLenum framebuffer = 0;
-	GLenum color = 0;
-private:
-	GLenum depth_stencil = 0;
-};
-
 class Shader {
 public:
 	Shader() = default;
