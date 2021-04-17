@@ -221,7 +221,7 @@ namespace Aether {
 		setBackend(pugl::glBackend());
 
 		setHint(pugl::ViewHint::resizable, true);
-		setHint(pugl::ViewHint::samples, 16);
+		setHint(pugl::ViewHint::samples, 2);
 		setHint(pugl::ViewHint::stencilBits, 8);
 		setHint(pugl::ViewHint::doubleBuffer, true);
 		setHint(pugl::ViewHint::contextVersionMajor, 3);
