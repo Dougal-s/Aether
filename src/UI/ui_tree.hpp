@@ -56,6 +56,22 @@ static std::string interpolate_style(
 	return rtrn.str();
 }
 
+struct Frame {
+	float x1, y1, x2, y2;
+
+	float x() const noexcept { return x1; }
+	float left() const noexcept { return x1; }
+	float width() const noexcept { return x2-x1; }
+	float y() const noexcept { return y1; }
+	float top() const noexcept { return y1; }
+	float height() const noexcept { return y2-y1; }
+
+	// Checks whether the frame covers the point x,y
+	bool covers(float x, float y) const noexcept {
+		return (x >= x1 && x <= x2 && y >= y1 && y <= y2);
+	}
+};
+
 class UIElement {
 public:
 
@@ -89,21 +105,21 @@ public:
 		std::unordered_map<std::string, std::string> style;
 	};
 
-	UIElement(Root* root, Group* parent, CreateInfo create_info) noexcept;
+	UIElement(Root* root, CreateInfo create_info) noexcept;
 	UIElement(const UIElement& other) = delete;
 	virtual ~UIElement() = default;
 
 	UIElement& operator=(const UIElement& other) noexcept = delete;
 
 	/*
+		Updates the element's state and calculates its position
+	*/
+	void calculate_layout(Frame viewbox);
+
+	/*
 		Draws the UI element
 	*/
 	void draw() const;
-
-	/*
-		Updates the connection values
-	*/
-	void update_connections();
 
 	/*
 		checks if the element is interactable then calls element_at_impl.
@@ -150,9 +166,9 @@ public:
 protected:
 
 	// Variables
-	mutable Style style;
+	Style style;
 
-	Group* m_parent;
+	Frame m_viewbox;
 	Root* m_root;
 
 	/*
@@ -162,25 +178,17 @@ protected:
 	std::string_view get_style(const std::string& name, std::string err) const;
 
 	/*
-		unit conversions
-		They are member functions as some units are
-		relative to parent dimensions
-	*/
-	float to_px(std::string_view expr) const { std::istringstream ss{std::string(expr)}; return to_px(ss); };
-	float to_px(std::istringstream& expr) const;
-	float to_horizontal_px(std::string_view expr) const { std::istringstream ss{std::string(expr)}; return to_horizontal_px(ss); };
-	float to_horizontal_px(std::istringstream& expr) const;
-	float to_vertical_px(std::string_view expr) const { std::istringstream ss{std::string(expr)}; return to_vertical_px(ss); };
-	float to_vertical_px(std::istringstream& expr) const;
-	float to_rad(std::string_view expr) const { std::istringstream ss{std::string(expr)}; return to_rad(ss); };
-	float to_rad(std::istringstream& expr) const;
-
-	/*
 		sets the current fill/stroke to be rendered using nvgFill/nvgStroke
 		will return false if the element has no fill/stroke to be set
 	*/
 	bool set_fill() const;
 	bool set_stroke() const;
+
+	/*
+		Updates the element's state and calculates its position
+		implemented by the subclass
+	*/
+	virtual void calculate_layout_impl(Frame viewbox) = 0;
 
 	/*
 		draws the ui element
@@ -197,8 +205,8 @@ protected:
 private:
 	std::vector<Connection> param_connections;
 
-	mutable bool m_visible;
-	mutable bool m_inert;
+	bool m_visible;
+	bool m_inert;
 
 	ButtonPressCallback m_btn_prs_cb;
 	ButtonReleaseCallback m_btn_rls_cb;
@@ -216,79 +224,95 @@ private:
 
 class Circle : public UIElement {
 public:
-	Circle(Root* root, Group* parent, CreateInfo create_info) noexcept :
-		UIElement(root, parent, create_info) {}
+	Circle(Root* root, CreateInfo create_info) noexcept :
+		UIElement(root, create_info) {}
 protected:
 
-	[[nodiscard]] float cx() const;
-	[[nodiscard]] float cy() const;
-	[[nodiscard]] float r() const;
+	[[nodiscard]] float cx() const noexcept { return m_cx; }
+	[[nodiscard]] float cy() const noexcept { return m_cy; }
+	[[nodiscard]] float r() const noexcept { return m_r; }
 
 	/*
 		Virtual functions
 	*/
+	virtual void calculate_layout_impl(Frame viewbox) override;
 	virtual void draw_impl() const override;
 	virtual UIElement* element_at_impl(float x, float y) override;
+
+private:
+	float m_cx, m_cy, m_r;
 };
 
 class Arc : public Circle {
 public:
-	Arc(Root* root, Group* parent, CreateInfo create_info) noexcept :
-		Circle(root, parent, create_info) {}
+	Arc(Root* root, CreateInfo create_info) noexcept :
+		Circle(root, create_info) {}
 protected:
 
-	[[nodiscard]] float a0() const;
-	[[nodiscard]] float a1() const;
+	[[nodiscard]] float a0() const noexcept { return m_a0; }
+	[[nodiscard]] float a1() const noexcept { return m_a1; }
 
 	/*
 		Virtual functions
 	*/
+	virtual void calculate_layout_impl(Frame viewbox) override;
 	virtual void draw_impl() const override;
 	virtual UIElement* element_at_impl(float x, float y) override;
+
+private:
+	float m_a0, m_a1;
 };
 
 
 class Path : public UIElement {
 public:
-	Path(Root* root, Group* parent, CreateInfo create_info) noexcept :
-		UIElement(root, parent, create_info) {}
+	Path(Root* root, CreateInfo create_info) noexcept :
+		UIElement(root, create_info) {}
 
 	[[nodiscard]] std::string_view path() const;
 protected:
 	/*
 		Virtual functions
 	*/
+	virtual void calculate_layout_impl(Frame viewbox) override;
 	virtual void draw_impl() const override;
 	virtual UIElement* element_at_impl(float, float) override { return nullptr; }
+private:
+	float m_x, m_y;
 };
 
 class Rect : public UIElement {
 public:
-	Rect(Root* root, Group* parent, CreateInfo create_info) noexcept :
-		UIElement(root, parent, create_info) {}
+	Rect(Root* root, CreateInfo create_info) noexcept :
+		UIElement(root, create_info) {}
 	/*
 		returns the position of the top left corner in pixels
 	*/
-	[[nodiscard]] float x() const;
-	[[nodiscard]] float y() const;
+	[[nodiscard]] float x() const { return m_bounds.x(); };
+	[[nodiscard]] float y() const { return m_bounds.y(); };
 	/*
 		returns the elements dimensions in pixels
 	*/
-	[[nodiscard]] float width() const;
-	[[nodiscard]] float height() const;
+	[[nodiscard]] float width() const { return m_bounds.width(); };
+	[[nodiscard]] float height() const { return m_bounds.height(); };
 
-	[[nodiscard]] std::array<float, 4> bounds() const;
+	[[nodiscard]] Frame bounds() const { return m_bounds; };
 
 	/*
 		corner radius
 	*/
-	[[nodiscard]] float r() const;
+	[[nodiscard]] float r() const { return m_r; }
 protected:
 	/*
 		Virtual functions
 	*/
+	virtual void calculate_layout_impl(Frame viewbox) override;
 	virtual void draw_impl() const override;
 	virtual UIElement* element_at_impl(float x, float y) override;
+
+private:
+	float m_r;
+	Frame m_bounds;
 };
 
 class ShaderRect : public Rect {
@@ -304,8 +328,8 @@ public:
 		std::vector<UniformInfo> uniform_infos;
 	};
 
-	ShaderRect(Root* root, Group* parent, CreateInfo create_info) noexcept :
-		Rect(root, parent, create_info.base),
+	ShaderRect(Root* root, CreateInfo create_info) noexcept :
+		Rect(root, create_info.base),
 		m_frag_shader_code{create_info.frag_shader_code},
 		m_uniforms{create_info.uniform_infos}
 	{}
@@ -340,8 +364,8 @@ protected:
 
 class Spectrum : public Rect {
 public:
-	Spectrum(Root* root, Group* parent, CreateInfo create_info) noexcept :
-		Rect(root, parent, create_info)
+	Spectrum(Root* root, CreateInfo create_info) noexcept :
+		Rect(root, create_info)
 	{}
 protected:
 
@@ -354,17 +378,17 @@ protected:
 
 class Text : public Rect {
 public:
-	Text(Root* root, Group* parent, CreateInfo create_info) noexcept :
-		Rect(root, parent, create_info) {}
+	Text(Root* root, CreateInfo create_info) noexcept :
+		Rect(root, create_info) {}
 protected:
 
 	[[nodiscard]] std::string_view font_face() const;
 	[[nodiscard]] std::string_view text() const;
 
-	[[nodiscard]] std::array<float, 4> bounds() const;
-	[[nodiscard]] float font_size() const;
+	[[nodiscard]] Frame bounds() const;
+	[[nodiscard]] float font_size() const noexcept { return m_font_size; }
 
-	std::optional<float> defined_width() const;
+	std::optional<float> defined_width() const noexcept { return m_defined_width; }
 
 	void set_alignment() const;
 
@@ -373,11 +397,17 @@ protected:
 	/*
 		Virtual functions
 	*/
+	virtual void calculate_layout_impl(Frame viewbox) override;
 	virtual void draw_impl() const override;
 	virtual UIElement* element_at_impl(float x, float y) override;
 
 private:
-	std::array<float, 2> render_corner() const;
+	std::array<float, 2> m_render_corner;
+	float m_font_size;
+	std::optional<float> m_defined_width;
+
+	std::optional<float> calculate_defined_width(Frame viewbox);
+	std::array<float, 2> calculate_render_corner(Frame viewbox);
 };
 
 
@@ -385,8 +415,8 @@ private:
 
 class Group : public Rect {
 public:
-	Group(Root* root, Group* parent, CreateInfo create_info) noexcept :
-		Rect(root, parent, create_info) {}
+	Group(Root* root, CreateInfo create_info) noexcept :
+		Rect(root, create_info) {}
 
 	/*
 		modifiers
@@ -394,7 +424,7 @@ public:
 	template<class Subclass> requires std::is_base_of_v<UIElement, Subclass>
 	Subclass* add_child(typename Subclass::CreateInfo&& create_info) {
 		auto& added = m_children.emplace_back(
-			std::make_unique<Subclass>(m_root, this, std::forward<typename Subclass::CreateInfo>(create_info))
+			std::make_unique<Subclass>(m_root, std::forward<typename Subclass::CreateInfo>(create_info))
 		);
 		return dynamic_cast<Subclass*>(added.get());
 	}
@@ -408,6 +438,12 @@ protected:
 	/*
 		Virtual functions
 	*/
+	virtual void calculate_layout_impl(Frame viewbox) override {
+		Rect::calculate_layout_impl(viewbox);
+		for (const auto& child : m_children)
+			child->calculate_layout(bounds());
+	}
+
 	virtual void draw_impl() const override {
 		Rect::draw_impl();
 		for (const auto& child : m_children)
@@ -453,6 +489,28 @@ struct Root final : public Group {
 	mutable DrawingContext* ctx;
 
 	int get_font(std::string font_face);
+
+	/*
+		unit conversions
+		These are member functions as most units are
+		relative to the viewport dimesion
+	*/
+	float to_px(Frame viewbox, std::string_view expr) const {
+		std::istringstream ss{std::string(expr)};
+		return to_px(viewbox, ss);
+	}
+	float to_horizontal_px(Frame viewbox, std::string_view expr) const {
+		std::istringstream ss{std::string(expr)};
+		return to_horizontal_px(viewbox, ss);
+	}
+	float to_vertical_px(Frame viewbox, std::string_view expr) const {
+		std::istringstream ss{std::string(expr)};
+		return to_vertical_px(viewbox, ss);
+	}
+
+	float to_px(Frame viewbox, std::istringstream& expr) const;
+	float to_horizontal_px(Frame viewbox, std::istringstream& expr) const;
+	float to_vertical_px(Frame viewbox, std::istringstream& expr) const;
 };
 
 struct DrawingContext {
@@ -467,6 +525,7 @@ public:
 	UITree(uint32_t width, uint32_t height, std::filesystem::path bundle_path);
 	~UITree() = default;
 
+	void calculate_layout();
 	void draw() const;
 
 	[[nodiscard]] const Root& root() const noexcept;

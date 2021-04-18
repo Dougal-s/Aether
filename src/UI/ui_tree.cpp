@@ -71,13 +71,107 @@ namespace {
 		std::istringstream ss{std::string(expr)};
 		return parse_color(ss);
 	}
+
+	static float to_rad(std::istringstream& expr) {
+		expr.imbue(std::locale::classic());
+		float rad;
+		std::string units;
+		expr >> rad >> units;
+
+		if (units.starts_with("rad"))
+			return rad;
+		if (units.starts_with("deg"))
+			return rad * std::numbers::pi_v<float>/180.f;
+		if (units.starts_with("grad"))
+			return rad * std::numbers::pi_v<float>/200.f;
+		if (units.starts_with("turn"))
+			return rad * 2*std::numbers::pi_v<float>;
+		if (rad == 0) {
+			expr.seekg(-units.size(), std::ios::cur);
+			return 0.f;
+		}
+
+		throw std::invalid_argument("unrecognized angle units used!");
+	}
+
+	static float to_rad(std::string_view expr) {
+		std::istringstream ss{std::string(expr)};
+		return to_rad(ss);
+	}
+}
+
+// Frame
+
+float Root::to_px(Frame viewbox, std::istringstream& expr) const {
+	expr.imbue(std::locale::classic());
+	float distance;
+	std::string units;
+	expr >> distance >> units;
+
+	if (units.starts_with("sp"))
+		return distance * 100*vw/1230.f;
+	if (units.starts_with("vh"))
+		return distance * vh;
+	if (units.starts_with("vw"))
+		return distance * vw;
+	if (units.starts_with("%"))
+		return distance/100.f * std::hypot(viewbox.width(), viewbox.height())/std::sqrt(2.f);
+	if (distance == 0) {
+		expr.seekg(-units.size(), std::ios::cur);
+		return 0.f;
+	}
+
+	throw std::invalid_argument("unrecognized distance units used!");
+}
+
+float Root::to_horizontal_px(Frame viewbox, std::istringstream& expr) const {
+	expr.imbue(std::locale::classic());
+	float x;
+	std::string units;
+	expr >> x >> units;
+
+	if (units.starts_with("sp"))
+		return x * 100*vw/1230.f;
+	if (units.starts_with("vh"))
+		return x * vh;
+	if (units.starts_with("vw"))
+		return x * vw;
+	if (units.starts_with("%"))
+		return x * viewbox.width() / 100.f;
+	if (x == 0) {
+		expr.seekg(-units.size(), std::ios::cur);
+		return 0.f;
+	}
+
+	throw std::invalid_argument("unrecognized horizontal units used!");
+}
+
+float Root::to_vertical_px(Frame viewbox, std::istringstream& expr) const {
+	expr.imbue(std::locale::classic());
+	float y;
+	std::string units;
+	expr >> y >> units;
+
+	if (units.starts_with("sp"))
+		return y * 100*vw/1230.f;
+	if (units.starts_with("vh"))
+		return y * vh;
+	if (units.starts_with("vw"))
+		return y * vw;
+	if (units.starts_with("%"))
+		return y * viewbox.height() / 100.f;
+	if (y == 0) {
+		expr.seekg(-units.size(), std::ios::cur);
+		return 0.f;
+	}
+
+	throw std::invalid_argument("unrecognized vertical units used!");
 }
 
 // UIElement
 
-UIElement::UIElement(Root* root, Group* parent, CreateInfo create_info) noexcept :
+UIElement::UIElement(Root* root, CreateInfo create_info) noexcept :
 	style{std::move(create_info.style)},
-	m_parent{parent},
 	m_root{root},
 	param_connections{std::move(create_info.connections)},
 	m_visible{create_info.visible},
@@ -87,7 +181,8 @@ UIElement::UIElement(Root* root, Group* parent, CreateInfo create_info) noexcept
 	m_motion_cb{create_info.motion_callback}
 {}
 
-void UIElement::draw() const {
+void UIElement::calculate_layout(Frame viewbox) {
+	m_viewbox = viewbox;
 	// Update connections if parameters have changed since last draw
 	for (const auto& con : param_connections) {
 		if (con.last_value != m_root->parameters[con.param_idx]) {
@@ -107,16 +202,18 @@ void UIElement::draw() const {
 		}
 	}
 
-	if (m_visible) {
-		nvgReset(m_root->ctx->nvg_ctx);
+	calculate_layout_impl(std::move(viewbox));
+}
 
-		if (m_inert)
-			apply_transforms();
+void UIElement::draw() const {
+	if (!m_visible) return;
+	nvgReset(m_root->ctx->nvg_ctx);
 
-		nvgSave(m_root->ctx->nvg_ctx);
-		draw_impl();
-		nvgRestore(m_root->ctx->nvg_ctx);
-	}
+	nvgSave(m_root->ctx->nvg_ctx);
+	if (m_inert)
+		apply_transforms();
+	draw_impl();
+	nvgRestore(m_root->ctx->nvg_ctx);
 }
 
 std::string_view UIElement::get_style(const std::string& name, std::string err) const {
@@ -125,168 +222,129 @@ std::string_view UIElement::get_style(const std::string& name, std::string err) 
 	throw std::runtime_error(err);
 }
 
-float UIElement::to_px(std::istringstream& expr) const {
-	expr.imbue(std::locale::classic());
-	float distance;
-	std::string units;
-	expr >> distance >> units;
-
-	if (units.starts_with("sp"))
-		return distance * 100*m_root->vw/1230.f;
-	if (units.starts_with("vh"))
-		return distance * m_root->vh;
-	if (units.starts_with("vw"))
-		return distance * m_root->vw;
-	if (units.starts_with("%"))
-		return distance/100.f * std::hypot(m_parent->width(), m_parent->height())/std::sqrt(2.f);
-	if (distance == 0) {
-		expr.seekg(-units.size(), std::ios::cur);
-		return 0.f;
-	}
-
-	throw std::invalid_argument("unrecognized distance units used!");
-}
-
-float UIElement::to_horizontal_px(std::istringstream& expr) const {
-	expr.imbue(std::locale::classic());
-	float x;
-	std::string units;
-	expr >> x >> units;
-
-	if (units.starts_with("sp"))
-		return x * 100*m_root->vw/1230.f;
-	if (units.starts_with("vh"))
-		return x * m_root->vh;
-	if (units.starts_with("vw"))
-		return x * m_root->vw;
-	if (units.starts_with("%"))
-		return x * m_parent->width() / 100.f;
-	if (x == 0) {
-		expr.seekg(-units.size(), std::ios::cur);
-		return 0.f;
-	}
-
-	throw std::invalid_argument("unrecognized horizontal units used!");
-}
-
-float UIElement::to_vertical_px(std::istringstream& expr) const {
-	expr.imbue(std::locale::classic());
-	float y;
-	std::string units;
-	expr >> y >> units;
-
-	if (units.starts_with("sp"))
-		return y * 100*m_root->vw/1230.f;
-	if (units.starts_with("vh"))
-		return y * m_root->vh;
-	if (units.starts_with("vw"))
-		return y * m_root->vw;
-	if (units.starts_with("%"))
-		return y * m_parent->height() / 100.f;
-	if (y == 0) {
-		expr.seekg(-units.size(), std::ios::cur);
-		return 0.f;
-	}
-
-	throw std::invalid_argument("unrecognized vertical units used!");
-}
-
-float UIElement::to_rad(std::istringstream& expr) const {
-	expr.imbue(std::locale::classic());
-	float rad;
-	std::string units;
-	expr >> rad >> units;
-
-	if (units.starts_with("rad"))
-		return rad;
-	if (units.starts_with("deg"))
-		return rad * std::numbers::pi_v<float>/180.f;
-	if (units.starts_with("grad"))
-		return rad * std::numbers::pi_v<float>/200.f;
-	if (units.starts_with("turn"))
-		return rad * 2*std::numbers::pi_v<float>;
-	if (rad == 0) {
-		expr.seekg(-units.size(), std::ios::cur);
-		return 0.f;
-	}
-
-	throw std::invalid_argument("unrecognized angle units used!");
-}
-
-
 bool UIElement::set_fill() const {
-	if (auto it = style.find("fill"); it) {
-		std::string_view fill = it->second;
-		if (fill == "none") return false;
+	auto it = style.find("fill");
+	if (!it) return false;
 
-		if (fill.starts_with("linear-gradient")) {
-			fill.remove_prefix(sizeof("linear-gradient"));
+	std::string_view fill = it->second;
+	if (fill == "none") return false;
+
+	if (fill.starts_with("linear-gradient")) {
+		fill.remove_prefix(sizeof("linear-gradient"));
+		float sx, sy, ex, ey;
+		NVGcolor sc, ec;
+
+		std::istringstream ss{std::string(fill)};
+		sx = m_root->to_horizontal_px(m_viewbox, ss);
+		sy = m_root->to_vertical_px(m_viewbox, ss);
+		sc = parse_color(ss);
+
+		ex = m_root->to_horizontal_px(m_viewbox, ss);
+		ey = m_root->to_vertical_px(m_viewbox, ss);
+		ec = parse_color(ss);
+
+		sx += m_viewbox.x();
+		sy += m_viewbox.y();
+
+		ex += m_viewbox.x();
+		ey += m_viewbox.y();
+
+
+		nvgFillPaint(
+			m_root->ctx->nvg_ctx,
+			nvgLinearGradient(m_root->ctx->nvg_ctx, sx, sy, ex, ey, sc, ec)
+		);
+	} else if (fill.starts_with("radial-gradient")) {
+		fill.remove_prefix(sizeof("radial-gradient"));
+		float cx, cy, sr, er;
+		NVGcolor sc, ec;
+
+		std::istringstream ss{std::string(fill)};
+		cx = m_root->to_horizontal_px(m_viewbox, ss);
+		cy = m_root->to_vertical_px(m_viewbox, ss);
+		sr = m_root->to_px(m_viewbox, ss);
+		sc = parse_color(ss);
+
+		er = m_root->to_px(m_viewbox, ss);
+		ec = parse_color(ss);
+
+		cx += m_viewbox.x();
+		cy += m_viewbox.y();
+
+		nvgFillPaint(
+			m_root->ctx->nvg_ctx,
+			nvgRadialGradient(m_root->ctx->nvg_ctx, cx, cy, sr, er, sc, ec)
+		);
+	} else {
+		nvgFillColor(m_root->ctx->nvg_ctx, parse_color(fill));
+	}
+	return true;
+}
+
+bool UIElement::set_stroke() const {
+	if (auto it = style.find("stroke"); it) {
+		std::string_view stroke = it->second;
+		if (stroke == "none") return false;
+
+		if (stroke.starts_with("linear-gradient")) {
+			stroke.remove_prefix(sizeof("linear-gradient"));
 
 			float sx, sy, ex, ey;
 			NVGcolor sc, ec;
 
-			std::istringstream ss{std::string(fill)};
-			sx = to_horizontal_px(ss);
-			sy = to_vertical_px(ss);
+			std::istringstream ss{std::string(stroke)};
+			sx = m_root->to_horizontal_px(m_viewbox, ss);
+			sy = m_root->to_vertical_px(m_viewbox, ss);
 			sc = parse_color(ss);
 
-			ex = to_horizontal_px(ss);
-			ey = to_vertical_px(ss);
+			ex = m_root->to_horizontal_px(m_viewbox, ss);
+			ey = m_root->to_vertical_px(m_viewbox, ss);
 			ec = parse_color(ss);
 
-			sx += m_parent->x();
-			sy += m_parent->y();
+			sx += m_viewbox.x();
+			sy += m_viewbox.y();
 
-			ex += m_parent->x();
-			ey += m_parent->y();
+			ex += m_viewbox.x();
+			ey += m_viewbox.y();
 
-
-			nvgFillPaint(
+			nvgStrokePaint(
 				m_root->ctx->nvg_ctx,
 				nvgLinearGradient(m_root->ctx->nvg_ctx, sx, sy, ex, ey, sc, ec)
 			);
-		} else if (fill.starts_with("radial-gradient")) {
-			fill.remove_prefix(sizeof("radial-gradient"));
+		} else if (stroke.starts_with("radial-gradient")) {
+			stroke.remove_prefix(sizeof("radial-gradient"));
+
 			float cx, cy, sr, er;
 			NVGcolor sc, ec;
 
-			std::istringstream ss{std::string(fill)};
-			cx = to_horizontal_px(ss);
-			cy = to_vertical_px(ss);
-			sr = to_px(ss);
+			std::istringstream ss{std::string(stroke)};
+			cx = m_root->to_horizontal_px(m_viewbox, ss);
+			cy = m_root->to_vertical_px(m_viewbox, ss);
+			sr = m_root->to_px(m_viewbox, ss);
 			sc = parse_color(ss);
 
-			er = to_px(ss);
+			er = m_root->to_px(m_viewbox, ss);
 			ec = parse_color(ss);
 
-			cx += m_parent->x();
-			cy += m_parent->y();
+			cx += m_viewbox.x();
+			cy += m_viewbox.y();
 
-			nvgFillPaint(
+			nvgStrokePaint(
 				m_root->ctx->nvg_ctx,
 				nvgRadialGradient(m_root->ctx->nvg_ctx, cx, cy, sr, er, sc, ec)
 			);
 		} else {
-			nvgFillColor(m_root->ctx->nvg_ctx, parse_color(fill));
+			nvgStrokeColor(m_root->ctx->nvg_ctx, parse_color(stroke));
 		}
-		return true;
+	} else {
+		return false;
 	}
 
-	return false;
-	// v implements fill inheritence v
-	// return m_parent == m_root ? false : m_parent->set_fill();
-}
-
-bool UIElement::set_stroke() const {
-	// v for stroke inheritence v
-	// bool has_stroke = false;
-	// if (m_parent) has_stroke = m_parent->set_stroke();
-
 	if (auto width = style.find("stroke-width"); width)
-		nvgStrokeWidth(m_root->ctx->nvg_ctx, to_px(width->second));
+		nvgStrokeWidth(m_root->ctx->nvg_ctx, m_root->to_px(m_viewbox, width->second));
 
 	if (auto miter = style.find("stroke-miter"); miter)
-		nvgMiterLimit(m_root->ctx->nvg_ctx, to_px(miter->second));
+		nvgMiterLimit(m_root->ctx->nvg_ctx, m_root->to_px(m_viewbox, miter->second));
 
 	if (auto linecap = style.find("stroke-linecap"); linecap) {
 		if (linecap->second == "butt")
@@ -306,83 +364,23 @@ bool UIElement::set_stroke() const {
 			nvgLineJoin(m_root->ctx->nvg_ctx, NVG_BEVEL);
 	}
 
-	if (auto it = style.find("stroke"); it) {
-		std::string_view stroke = it->second;
-		if (stroke == "none") return false;
-
-		if (stroke.starts_with("linear-gradient")) {
-			stroke.remove_prefix(sizeof("linear-gradient"));
-
-			float sx, sy, ex, ey;
-			NVGcolor sc, ec;
-
-			std::istringstream ss{std::string(stroke)};
-			sx = to_horizontal_px(ss);
-			sy = to_vertical_px(ss);
-			sc = parse_color(ss);
-
-			ex = to_horizontal_px(ss);
-			ey = to_vertical_px(ss);
-			ec = parse_color(ss);
-
-			sx += m_parent->x();
-			sy += m_parent->y();
-
-			ex += m_parent->x();
-			ey += m_parent->y();
-
-			nvgStrokePaint(
-				m_root->ctx->nvg_ctx,
-				nvgLinearGradient(m_root->ctx->nvg_ctx, sx, sy, ex, ey, sc, ec)
-			);
-		} else if (stroke.starts_with("radial-gradient")) {
-			stroke.remove_prefix(sizeof("radial-gradient"));
-
-			float cx, cy, sr, er;
-			NVGcolor sc, ec;
-
-			std::istringstream ss{std::string(stroke)};
-			cx = to_horizontal_px(ss);
-			cy = to_vertical_px(ss);
-			sr = to_px(ss);
-			sc = parse_color(ss);
-
-			er = to_px(ss);
-			ec = parse_color(ss);
-
-			cx += m_parent->x();
-			cy += m_parent->y();
-
-			nvgStrokePaint(
-				m_root->ctx->nvg_ctx,
-				nvgRadialGradient(m_root->ctx->nvg_ctx, cx, cy, sr, er, sc, ec)
-			);
-		} else {
-			nvgStrokeColor(m_root->ctx->nvg_ctx, parse_color(stroke));
-		}
-
-		return true;
-	}
-
-	return false;
-	// v for stroke inheritence v
-	// return has_stroke;
+	return true;
 }
 
 void UIElement::apply_transforms() const {
-	if (auto it = style.find("transform"); it) {
-		std::string_view transform = style.find("transform")->second;
+	auto it = style.find("transform");
+	if (!it) return;
 
-		auto p_bounds = m_parent->bounds();
-		nvgTranslate(m_root->ctx->nvg_ctx, p_bounds[0], p_bounds[1]);
+	std::string_view transform = style.find("transform")->second;
 
-		if (transform.starts_with("rotate"))
-			nvgRotate(m_root->ctx->nvg_ctx, to_rad(transform.data()+sizeof("rotate")));
-		else
-			throw std::runtime_error("unrecognized transform type");
+	nvgTranslate(m_root->ctx->nvg_ctx, m_viewbox.x(), m_viewbox.y());
 
-		nvgTranslate(m_root->ctx->nvg_ctx, -p_bounds[0], -p_bounds[1]);
-	}
+	if (transform.starts_with("rotate"))
+		nvgRotate(m_root->ctx->nvg_ctx, to_rad(transform.data()+sizeof("rotate")));
+	else
+		throw std::runtime_error("unrecognized transform type");
+
+	nvgTranslate(m_root->ctx->nvg_ctx, -m_viewbox.x(), -m_viewbox.y());
 }
 
 /*
@@ -391,24 +389,14 @@ void UIElement::apply_transforms() const {
 
 // Circle
 
-float Circle::cx() const {
-	const auto cx_str = get_style("cx", "circle has undefined center x position");
-	return to_horizontal_px(cx_str) + m_parent->x();
-}
-float Circle::cy() const {
-	const auto cy_str = get_style("cy", "circle has undefined center y position");
-	return to_vertical_px(cy_str) + m_parent->y();
-}
-float Circle::r() const {
-	const auto r_str = get_style("r", "circle has undefined radius");
-	return to_px(r_str);
+void Circle::calculate_layout_impl(Frame viewbox) {
+	m_cx = viewbox.x() + m_root->to_horizontal_px(viewbox, get_style("cx", "circle has undefined center x position"));
+	m_cy = viewbox.y() + m_root->to_vertical_px(viewbox, get_style("cy", "circle has undefined center y position"));
+	m_r = m_root->to_px(viewbox, get_style("r", "circle has undefined radius"));
 }
 
 void Circle::draw_impl() const {
 	nvgBeginPath(m_root->ctx->nvg_ctx);
-
-	nvgBeginPath(m_root->ctx->nvg_ctx);
-
 	nvgCircle(m_root->ctx->nvg_ctx, cx(), cy(), r());
 
 	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
@@ -416,39 +404,29 @@ void Circle::draw_impl() const {
 }
 
 UIElement* Circle::element_at_impl(float x, float y) {
-	float dx = x-this->cx();
-	float dy = y-this->cy();
+	float dx = x-cx();
+	float dy = y-cy();
 	float r = this->r();
 
-	if (set_stroke())
+	if (style.find("stroke"))
 		if (auto it = style.find("stroke-width"); it)
-			r += 0.5f*to_px(it->second);
+			r += 0.5f*m_root->to_px(m_viewbox, it->second);
 
 	return (dx*dx + dy*dy < r*r) ? this : nullptr;
 }
 
 // Arc
 
-float Arc::a0() const {
-	const auto a0_str = get_style("a0", "arc has undefined start angle");
-	return to_rad(a0_str);
-}
-float Arc::a1() const {
-	const auto a1_str = get_style("a1", "arc has undefined end angle");
-	return to_rad(a1_str);
+void Arc::calculate_layout_impl(Frame viewbox) {
+	m_a0 = to_rad(get_style("a0", "arc has undefined start angle"));
+	m_a1 = to_rad(get_style("a1", "arc has undefined end angle"));
+	Circle::calculate_layout_impl(std::move(viewbox));
 }
 
 void Arc::draw_impl() const {
-	float cx = this->cx();
-	float cy = this->cy();
-
 	nvgBeginPath(m_root->ctx->nvg_ctx);
-
-	nvgMoveTo(m_root->ctx->nvg_ctx, cx, cy);
-
-	nvgArc(m_root->ctx->nvg_ctx, cx, cy, r(), a0(), a1(), NVG_CW);
-
-	nvgClosePath(m_root->ctx->nvg_ctx);
+	nvgMoveTo(m_root->ctx->nvg_ctx, cx(), cy());
+	nvgArc(m_root->ctx->nvg_ctx, cx(), cy(), r(), a0(), a1(), NVG_CW);
 
 	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
 	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
@@ -464,30 +442,22 @@ std::string_view Path::path() const {
 	return get_style("path", "path has undefined path");
 }
 
+void Path::calculate_layout_impl(Frame viewbox) {
+	auto x = style.find("x");
+	if (!x) x = style.find("left");
+	if (!x) throw std::runtime_error("path has undefined x position");
+	m_x = m_root->to_horizontal_px(viewbox, x->second) + viewbox.x();
+
+	auto y = style.find("y");
+	if (!y) y = style.find("top");
+	if (!y) throw std::runtime_error("path has undefined y position");
+	m_y = m_root->to_vertical_px(viewbox, y->second) + viewbox.y();
+}
+
 void Path::draw_impl() const {
 	nvgBeginPath(m_root->ctx->nvg_ctx);
 
-	{
-		const float x = [&](){
-			auto it = style.find("x");
-			if (!it)
-				it = style.find("left");
-			if (!it)
-				throw std::runtime_error("path has undefined x position");
-			return to_horizontal_px(it->second) + m_parent->x();
-		}();
-
-		const float y = [&](){
-			auto it = style.find("y");
-			if (!it)
-				it = style.find("top");
-			if (!it)
-				throw std::runtime_error("path has undefined y position");
-			return to_vertical_px(it->second) + m_parent->y();
-		}();
-
-		nvgTranslate(m_root->ctx->nvg_ctx, x, y);
-	}
+	nvgTranslate(m_root->ctx->nvg_ctx, m_x, m_y);
 
 	const auto sp2px = [&](float sp) { return sp*100*m_root->vw/1230; };
 	const auto extract_nums = [&]<size_t nums>(std::istringstream& ss) {
@@ -545,95 +515,12 @@ void Path::draw_impl() const {
 
 // Rect
 
-float Rect::x() const {
-	float x = 0.f;
-
-	auto it = style.find("x");
-	if (!it)
-		it = style.find("left");
-
-	if (it) {
-		x = to_horizontal_px(it->second);
-	} else if (
-		auto right_it = style.find("right"), width_it = style.find("width");
-		right_it && width_it
-	) {
-		float right = to_horizontal_px(right_it->second);
-		float width = to_horizontal_px(width_it->second);
-		x = m_parent->width() - width - right;
-	} else {
-		throw std::runtime_error("rectangle has undefined x position");
+void Rect::calculate_layout_impl(Frame viewbox) {
+	{ // corner radius
+		const auto it = style.find("r");
+		m_r = (it ? m_root->to_px(viewbox, it->second) : 0.f);
 	}
 
-	if (m_parent != m_root && this != m_root)
-		x += m_parent->x();
-
-	return x;
-}
-
-float Rect::y() const {
-	float y = 0.f;
-
-	auto it = style.find("y");
-	if (!it)
-		it = style.find("top");
-
-	if (it) {
-		y = to_vertical_px(it->second);
-	} else if (
-		auto bottom_it = style.find("bottom"), height_it = style.find("height");
-		bottom_it && height_it
-	) {
-		float bottom = to_vertical_px(bottom_it->second);
-		float height = to_vertical_px(height_it->second);
-		y = m_parent->height() - height - bottom;
-	} else {
-		throw std::runtime_error("rectangle has undefined y position");
-	}
-
-	if (m_parent != m_root && this != m_root)
-		y += m_parent->y();
-
-	return y;
-}
-
-float Rect::width() const {
-	if (auto width = style.find("width"); width) {
-		return to_horizontal_px(width->second);
-	} else {
-		auto left_it = style.find("x");
-		if (!left_it) left_it = style.find("left");
-		if (!left_it) throw std::runtime_error("Undefined width!");
-
-		float left = to_horizontal_px(left_it->second);
-
-		auto right_it = style.find("right");
-		if (!right_it) throw std::runtime_error("Undefined width!");
-
-		float right = m_parent->width() - to_horizontal_px(right_it->second);
-		return right-left;
-	}
-}
-
-float Rect::height() const {
-	if (auto height = style.find("height"); height) {
-		return to_vertical_px(height->second);
-	} else {
-		auto top_it = style.find("y");
-		if (!top_it) top_it = style.find("top");
-		if (!top_it) throw std::runtime_error("Undefined height!");
-
-		float top = to_vertical_px(top_it->second);
-
-		auto bottom_it = style.find("bottom");
-		if (!bottom_it) throw std::runtime_error("Undefined height!");
-
-		float bottom = m_parent->height() - to_vertical_px(bottom_it->second);
-		return bottom-top;
-	}
-}
-
-std::array<float, 4> Rect::bounds() const {
 	std::optional<float> left, right, width;
 	std::optional<float> top, bottom, height;
 
@@ -641,74 +528,62 @@ std::array<float, 4> Rect::bounds() const {
 		auto it = style.find("x");
 		if (!it) it = style.find("left");
 		if (it)
-			left = to_horizontal_px(it->second);
+			left = m_root->to_horizontal_px(viewbox, it->second);
 	}
 
 	if (auto it = style.find("right"); it)
-		right = to_horizontal_px(it->second);
+		right = m_root->to_horizontal_px(viewbox, it->second);
 	if (auto it = style.find("width"); it)
-		width = to_horizontal_px(it->second);
+		width = m_root->to_horizontal_px(viewbox, it->second);
 
 	{
 		auto it = style.find("y");
 		if (!it)
 			it = style.find("top");
 		if (it)
-			top = to_vertical_px(it->second);
+			top = m_root->to_vertical_px(viewbox, it->second);
 	}
 
 	if (auto it = style.find("bottom"); it)
-		bottom = to_vertical_px(it->second);
+		bottom = m_root->to_vertical_px(viewbox, it->second);
 	if (auto it = style.find("height"); it)
-		height = to_vertical_px(it->second);
+		height = m_root->to_vertical_px(viewbox, it->second);
 
+	if (left) *left += viewbox.x();
+	if (right) *right = viewbox.x() + viewbox.width() - *right;
+	if (top) *top += viewbox.y();
+	if (bottom) *bottom = viewbox.y() + viewbox.height() - *bottom;
 
-	if (m_parent) {
-		auto p_bounds = m_parent->bounds();
-
-		if (left) *left += p_bounds[0];
-		if (right) *right = p_bounds[0] + p_bounds[2] - *right;
-		if (top) *top += p_bounds[1];
-		if (bottom) *bottom = p_bounds[1] + p_bounds[3] - *bottom;
-
-		if (!left) {
-			if (width && right)
-				left = *right - *width;
-			else
-				throw std::runtime_error("rectangle has undefined x position");
-		} else if (!width) {
-			if (right)
-				width = *right - *left;
-			else
-				throw std::runtime_error("rectangle has undefined width");
-		}
-
-		if (!top) {
-			if (height && bottom)
-				top = *bottom - *height;
-			else
-				throw std::runtime_error("rectangle has undefined y position");
-		} else if (!height) {
-			if (bottom)
-				height = *bottom - *top;
-			else
-				throw std::runtime_error("rectangle has undefined height");
-		}
+	if (!left) {
+		if (width && right)
+			left = *right - *width;
+		else
+			throw std::runtime_error("rectangle has undefined x position");
+	} else if (!right) {
+		if (width)
+			right = *left + *width;
+		else
+			throw std::runtime_error("rectangle has undefined width");
 	}
 
-	return {*left, *top, *width, *height};
-}
+	if (!top) {
+		if (height && bottom)
+			top = *bottom - *height;
+		else
+			throw std::runtime_error("rectangle has undefined y position");
+	} else if (!bottom) {
+		if (height)
+			bottom = *top + *height;
+		else
+			throw std::runtime_error("rectangle has undefined height");
+	}
 
-float Rect::r() const {
-	const auto r = style.find("r");
-	return r ? to_px(r->second) : 0.f;
+	m_bounds = {*left, *top, *right, *bottom};
 }
 
 void Rect::draw_impl() const {
 	nvgBeginPath(m_root->ctx->nvg_ctx);
-	auto bounds = this->bounds();
-	float r = this->r();
-	nvgRoundedRect(m_root->ctx->nvg_ctx, bounds[0], bounds[1], bounds[2], bounds[3], r);
+	nvgRoundedRect(m_root->ctx->nvg_ctx, x(), y(), width(), height(), r());
 
 	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
 	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
@@ -717,13 +592,13 @@ void Rect::draw_impl() const {
 UIElement* Rect::element_at_impl(float x, float y) {
 	auto b = this->bounds();
 	if (auto width = style.find("stroke-width"); width) {
-		const float stroke_width = to_px(width->second);
-		b[0] -= stroke_width/2;
-		b[1] -= stroke_width/2;
-		b[2] += stroke_width;
-		b[3] += stroke_width;
+		const float stroke_width = m_root->to_px(m_viewbox, width->second);
+		b.x1 -= stroke_width/2;
+		b.x2 += stroke_width/2;
+		b.y1 -= stroke_width/2;
+		b.y2 += stroke_width/2;
 	}
-	return ((x -= b[0]) >= 0 && x <= b[2] && (y -= b[1]) >= 0 && y <= b[3]) ? this : nullptr;
+	return b.covers(x, y) ? this : nullptr;
 }
 
 // ShaderRect
@@ -732,19 +607,18 @@ void ShaderRect::draw_impl() const {
 	if (!m_shader)
 		m_shader = Shader(m_vert_shader_code, m_frag_shader_code.data());
 
-	auto bounds = this->bounds();
-	bounds[0] = 0.02f*bounds[0]/m_root->vw - 1.f;
-	bounds[1] = 1.f - 0.02f*bounds[1]/m_root->vh;
-	bounds[2] = 0.02f*bounds[2]/m_root->vw;
-	bounds[3] = 0.02f*bounds[3]/m_root->vh;
-	bounds[0] += bounds[2];
+	std::array<float, 4> rect;
+	rect[0] = 0.02f*(x()+width())/m_root->vw - 1.f;
+	rect[1] = 1.f - 0.02f*y()/m_root->vh;
+	rect[2] = 0.02f*width()/m_root->vw;
+	rect[3] = 0.02f*height()/m_root->vh;
 
 	glEnable(GL_BLEND);
 	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 
 	m_shader.use();
-	m_shader.set_vec_float("corner", bounds[0], bounds[1]);
-	m_shader.set_vec_float("dimensions", bounds[2], bounds[3]);
+	m_shader.set_vec_float("corner", rect[0], rect[1]);
+	m_shader.set_vec_float("dimensions", rect[2], rect[3]);
 
 	for (const auto& uniform : m_uniforms) {
 		m_shader.set_float(uniform.name, m_root->parameters[uniform.param_idx]);
@@ -758,8 +632,7 @@ void ShaderRect::draw_impl() const {
 void Spectrum::draw_impl() const {
 	nvgBeginPath(m_root->ctx->nvg_ctx);
 
-	const auto bounds = this->bounds();
-	nvgTranslate(m_root->ctx->nvg_ctx, bounds[0], bounds[1]);
+	nvgTranslate(m_root->ctx->nvg_ctx, x(), y());
 
 	const auto& channel = m_root->audio[std::strtoul(style.find("channel")->second.data(), nullptr, 10)];
 
@@ -768,17 +641,17 @@ void Spectrum::draw_impl() const {
 		return 1.f-std::clamp(db+60, 0.f, 63.f)/63.f;
 	};
 
-	nvgMoveTo(m_root->ctx->nvg_ctx, 0, bounds[3]*gain_to_y(channel[0]));
+	nvgMoveTo(m_root->ctx->nvg_ctx, 0, height()*gain_to_y(channel[0]));
 
 	size_t i = 1;
 	while(i < channel.size()) {
 		const float x = std::log(i+1)/std::log(channel.size());
-		size_t ip2 = std::ceil((i+1)*std::pow(static_cast<float>(channel.size()), 2.f/bounds[2]) - 1 );
+		size_t ip2 = std::ceil((i+1)*std::pow(static_cast<float>(channel.size()), 2.f/width()) - 1 );
 		ip2 = std::min(ip2, channel.size());
 		const float band_level = std::reduce(channel.begin() + i, channel.begin() + ip2) / (ip2-i);
 		const float y = gain_to_y(band_level);
 
-		nvgLineTo(m_root->ctx->nvg_ctx, bounds[2]*x, bounds[3]*y);
+		nvgLineTo(m_root->ctx->nvg_ctx, width()*x, height()*y);
 
 		i = ip2;
 	}
@@ -796,97 +669,24 @@ std::string_view Text::text() const {
 	return get_style("text", "text has no text property");
 }
 
-std::array<float, 4> Text::bounds() const {
-	auto corner = render_corner();
-	std::array<float, 4> bounds;
+Frame Text::bounds() const {
+	Frame bounds;
 	const std::string_view text = this->text();
-	if (auto width = defined_width(); width)
-		nvgTextBoxBounds(m_root->ctx->nvg_ctx, corner[0], corner[1], *width, text.begin(), text.end(), bounds.data());
-	else
-		nvgTextBounds(m_root->ctx->nvg_ctx, corner[0], corner[1], text.begin(), text.end(), bounds.data());
-	bounds[2] -= bounds[0];
-	bounds[3] -= bounds[1];
+	if (auto width = defined_width(); width) {
+		nvgTextBoxBounds(m_root->ctx->nvg_ctx,
+			m_render_corner[0], m_render_corner[1], *width,
+			text.begin(), text.end(),
+			reinterpret_cast<float*>(&bounds)
+		);
+	} else {
+		nvgTextBounds(m_root->ctx->nvg_ctx,
+			m_render_corner[0], m_render_corner[1],
+			text.begin(), text.end(),
+			reinterpret_cast<float*>(&bounds)
+		);
+	}
+
 	return bounds;
-}
-
-std::array<float, 2> Text::render_corner() const {
-	std::optional<float> left, top;
-
-	{
-		auto it = style.find("x");
-		if (!it)
-			it = style.find("left");
-		if (it)
-			left = to_horizontal_px(it->second);
-	} {
-		auto it = style.find("y");
-		if (!it)
-			it = style.find("top");
-		if (it)
-			top = to_vertical_px(it->second);
-	}
-
-	auto p_bounds = m_parent->bounds();
-
-	if (left && top)
-		return {p_bounds[0]+*left, p_bounds[1]+*top};
-
-	float text_bounds[4];
-	// styling has already been set outside this function
-	const std::string_view text = this->text();
-	if (auto width = defined_width(); width)
-		nvgTextBoxBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, *width, text.begin(), text.end(), text_bounds);
-	else
-		nvgTextBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, text.begin(), text.end(), text_bounds);
-
-	if (!left) {
-		float right;
-		if (auto it = style.find("right"); it)
-			right = to_horizontal_px(it->second);
-		else
-			throw std::runtime_error("text x position undefined");
-
-		left = p_bounds[2] - right - text_bounds[2];
-	}
-
-	if (!top) {
-		float bottom;
-		if (auto it = style.find("bottom"); it)
-			bottom = to_vertical_px(it->second);
-		else
-			throw std::runtime_error("text x position undefined");
-
-		top = p_bounds[3] - bottom - text_bounds[3];
-	}
-
-	return {p_bounds[0] + *left, p_bounds[1] + *top};
-
-}
-
-float Text::font_size() const {
-	const auto size_str = get_style("font-size", "text has undefined font size");
-	return to_px(size_str);
-}
-
-std::optional<float> Text::defined_width() const {
-	if (auto it = style.find("width"); it)
-		return to_horizontal_px(it->second);
-
-	auto left = style.find("x");
-	if (!left)
-		left = style.find("left");
-	if (!left)
-		return {};
-
-	auto right = style.find("right");
-	if (!right)
-		return {};
-
-	auto p_width = m_parent->width();
-
-	return p_width -
-		to_horizontal_px(left->second) -
-		to_horizontal_px(left->second);
 }
 
 void Text::set_alignment() const {
@@ -928,22 +728,102 @@ void Text::set_text_styling() const {
 	set_fill();
 }
 
+void Text::calculate_layout_impl(Frame viewbox) {
+	{
+		const auto size_str = get_style("font-size", "text has undefined font size");
+		m_font_size = m_root->to_px(viewbox, size_str);
+	}
+
+	set_text_styling();
+	m_defined_width = calculate_defined_width(viewbox);
+	m_render_corner = calculate_render_corner(viewbox);
+}
+
 void Text::draw_impl() const {
 	nvgBeginPath(m_root->ctx->nvg_ctx);
 	set_text_styling();
-	auto corner = render_corner();
-	const std::string_view text = this->text();
+	const auto text = this->text();
 	if (auto width = defined_width(); width)
-		nvgTextBox(m_root->ctx->nvg_ctx, corner[0], corner[1], *width, text.begin(), text.end());
+		nvgTextBox(m_root->ctx->nvg_ctx, m_render_corner[0], m_render_corner[1], *width, text.begin(), text.end());
 	else
-		nvgText(m_root->ctx->nvg_ctx, corner[0], corner[1], text.begin(), text.end());
+		nvgText(m_root->ctx->nvg_ctx, m_render_corner[0], m_render_corner[1], text.begin(), text.end());
 }
 
 UIElement* Text::element_at_impl(float x, float y) {
 	nvgReset(m_root->ctx->nvg_ctx);
 	set_text_styling();
-	auto b = bounds();
-	return ((x -= b[0]) >= 0 && x <= b[2] && (y -= b[1]) >= 0 && y <= b[3]) ? this : nullptr;
+	return bounds().covers(x, y) ? this : nullptr;
+}
+
+std::optional<float> Text::calculate_defined_width(Frame viewbox) {
+	if (auto it = style.find("width"); it)
+		return m_root->to_horizontal_px(viewbox, it->second);
+
+	auto left = style.find("x");
+	if (!left)
+		left = style.find("left");
+	if (!left)
+		return {};
+
+	auto right = style.find("right");
+	if (!right)
+		return {};
+
+	auto p_width = viewbox.width();
+
+	return p_width -
+		m_root->to_horizontal_px(viewbox, left->second) -
+		m_root->to_horizontal_px(viewbox, left->second);
+}
+
+std::array<float, 2> Text::calculate_render_corner(Frame viewbox) {
+	std::optional<float> left, top;
+	{
+		auto it = style.find("x");
+		if (!it)
+			it = style.find("left");
+		if (it)
+			left = m_root->to_horizontal_px(viewbox, it->second);
+	} {
+		auto it = style.find("y");
+		if (!it)
+			it = style.find("top");
+		if (it)
+			top = m_root->to_vertical_px(viewbox, it->second);
+	}
+
+	if (left && top)
+		return {viewbox.x()+*left, viewbox.y()+*top};
+
+	float text_bounds[4];
+	// styling has already been set outside this function
+	const std::string_view text = this->text();
+	if (auto width = defined_width(); width)
+		nvgTextBoxBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, *width, text.begin(), text.end(), text_bounds);
+	else
+		nvgTextBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, text.begin(), text.end(), text_bounds);
+
+	if (!left) {
+		float right;
+		if (auto it = style.find("right"); it)
+			right = m_root->to_horizontal_px(viewbox, it->second);
+		else
+			throw std::runtime_error("text x position undefined");
+
+		left = viewbox.width() - right - text_bounds[2];
+	}
+
+	if (!top) {
+		float bottom;
+		if (auto it = style.find("bottom"); it)
+			bottom = m_root->to_vertical_px(viewbox, it->second);
+		else
+			throw std::runtime_error("text x position undefined");
+
+		top = viewbox.height() - bottom - text_bounds[3];
+	}
+
+	return {viewbox.x() + *left, viewbox.y() + *top};
 }
 
 // UI Root
@@ -954,7 +834,7 @@ Root::Root(
 	std::filesystem::path path,
 	DrawingContext* context
 ) :
-	Group(this, nullptr, Group::CreateInfo{
+	Group(this, Group::CreateInfo{
 		.visible = true,
 		.inert = false,
 		.connections = {},
@@ -992,6 +872,10 @@ void DrawingContext::destroy() noexcept {
 UITree::UITree(uint32_t width, uint32_t height, std::filesystem::path bundle_path) :
 	m_ctx{}, m_root{width, height, bundle_path, &m_ctx}
 {}
+
+void UITree::calculate_layout() {
+	m_root.calculate_layout({0, 0, 100*m_root.vw, 100*m_root.vh});
+}
 
 void UITree::draw() const {
 	nvgEndFrame(m_root.ctx->nvg_ctx);

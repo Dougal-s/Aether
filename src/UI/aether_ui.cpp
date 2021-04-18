@@ -1413,7 +1413,7 @@ namespace Aether {
 
 				float sensitivity = (e.state & pugl::Mod::PUGL_MOD_CTRL) ? 0.1f : 1.f;
 				auto bounds = dynamic_cast<Rect*>(elem)->bounds();
-				float dy = sensitivity*(mouse_callback_info.y - static_cast<float>(e.y))/bounds[3];
+				float dy = sensitivity*(mouse_callback_info.y - static_cast<float>(e.y))/bounds.height();
 				float new_value = std::clamp(get_parameter(mixer_ctrl_idx) + 100*dy, 0.f, 100.f);
 
 				update_dsp_param(mixer_ctrl_idx, new_value);
