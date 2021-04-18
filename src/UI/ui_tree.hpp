@@ -278,6 +278,11 @@ public:
 	[[nodiscard]] float height() const;
 
 	[[nodiscard]] std::array<float, 4> bounds() const;
+
+	/*
+		corner radius
+	*/
+	[[nodiscard]] float r() const;
 protected:
 	/*
 		Virtual functions
@@ -346,22 +351,6 @@ protected:
 	virtual void draw_impl() const override;
 };
 
-class RoundedRect : public Rect {
-public:
-	RoundedRect(Root* root, Group* parent, CreateInfo create_info) noexcept :
-		Rect(root, parent, create_info) {}
-
-	/*
-		corner radius
-	*/
-	[[nodiscard]] float r() const;
-protected:
-	/*
-		Virtual functions
-	*/
-	virtual void draw_impl() const override;
-};
-
 
 class Text : public Rect {
 public:
@@ -420,6 +409,7 @@ protected:
 		Virtual functions
 	*/
 	virtual void draw_impl() const override {
+		Rect::draw_impl();
 		for (const auto& child : m_children)
 			child->draw();
 	}

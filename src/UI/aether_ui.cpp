@@ -60,19 +60,8 @@ namespace {
 	}
 #endif
 
-	void attach_panel_background(Group* g) {
-		// Background
-		g->add_child<RoundedRect>({
-			.visible = true, .inert = true,
-			.style = {
-				{"x", "0"}, {"y", "0"}, {"r", "5sp"},
-				{"width", "100%"}, {"height", "100%"},
-				{"fill", "#32333c"}
-			}
-		});
-
-		// Top bar
-		g->add_child<RoundedRect>({
+	void attach_panel_topbar(Group* g) {
+		g->add_child<Rect>({
 			.visible = true, .inert = true,
 			.style = {
 				{"x", "0"}, {"y", "0"}, {"r", "5sp"},
@@ -236,7 +225,7 @@ namespace Aether {
 		setHint(pugl::ViewHint::contextVersionMinor, 3);
 
 		// Border
-		ui_tree.root().add_child<RoundedRect>({
+		ui_tree.root().add_child<Rect>({
 			.visible = true, .inert = true,
 			.style = {
 				{"left","0"}, {"width","1175sp"}, {"r", "1sp"},
@@ -250,8 +239,7 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.style = {
 					{"left","0"}, {"width","1175sp"},
-					{"top","10sp"}, {"bottom","391sp"},
-					{"fill", "#fff"}
+					{"top","10sp"}, {"bottom","391sp"}
 				}
 			});
 
@@ -286,7 +274,7 @@ namespace Aether {
 			});
 
 			// Background
-			global_volume->add_child<RoundedRect>({
+			global_volume->add_child<Rect>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "0"}, {"y", "0"}, {"r", "1sp"},
@@ -294,7 +282,7 @@ namespace Aether {
 					{"fill", "#33343b"}
 				}
 			});
-			global_volume->add_child<RoundedRect>({
+			global_volume->add_child<Rect>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "7sp"}, {"y", "0"}, {"r", "1sp"},
@@ -302,7 +290,7 @@ namespace Aether {
 					{"fill", "#33343b"}
 				}
 			});
-			global_volume->add_child<RoundedRect>({
+			global_volume->add_child<Rect>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "18sp"}, {"y", "0"}, {"r", "1sp"},
@@ -310,7 +298,7 @@ namespace Aether {
 					{"fill", "#33343b"}
 				}
 			});
-			global_volume->add_child<RoundedRect>({
+			global_volume->add_child<Rect>({
 				.visible = true, .inert = true,
 				.style = {
 					{"x", "25sp"}, {"y", "0"}, {"r", "1sp"},
@@ -329,7 +317,7 @@ namespace Aether {
 			};
 
 			// levels
-			global_volume->add_child<RoundedRect>({
+			global_volume->add_child<Rect>({
 				.visible = true, .inert = true,
 				.connections = {
 					{
@@ -350,7 +338,7 @@ namespace Aether {
 					{"width", "5sp"}
 				}
 			});
-			global_volume->add_child<RoundedRect>({
+			global_volume->add_child<Rect>({
 				.visible = true, .inert = true,
 				.connections = {
 					{
@@ -371,7 +359,7 @@ namespace Aether {
 					{"width", "5sp"}
 				}
 			});
-			global_volume->add_child<RoundedRect>({
+			global_volume->add_child<Rect>({
 				.visible = true, .inert = true,
 				.connections = {
 					{
@@ -392,7 +380,7 @@ namespace Aether {
 					{"width", "5sp"}
 				}
 			});
-			global_volume->add_child<RoundedRect>({
+			global_volume->add_child<Rect>({
 				.visible = true, .inert = true,
 				.connections = {
 					{
@@ -580,12 +568,13 @@ namespace Aether {
 			auto dry = panels->add_child<Group>({
 				.visible = true, .inert = false,
 				.style = {
-					{"x", "0"}, {"y", "0"},
+					{"x", "0"}, {"y", "0"}, {"r", "5sp"},
 					{"width", "60sp"}, {"height", "100%"},
+					{"fill", "#32333c"}
 				}
 			});
 
-			attach_panel_background(dry);
+			attach_panel_topbar(dry);
 
 			// Title
 			dry->add_child<Text>({
@@ -625,12 +614,13 @@ namespace Aether {
 			auto predelay = panels->add_child<Group>({
 				.visible = true, .inert = false,
 				.style = {
-					{"x", "70sp"}, {"y", "0"},
+					{"x", "70sp"}, {"y", "0"}, {"r", "5sp"},
 					{"width", "160sp"}, {"height", "100%"},
+					{"fill", "#32333c"}
 				}
 			});
 
-			attach_panel_background(predelay);
+			attach_panel_topbar(predelay);
 
 			// Title
 			predelay->add_child<Text>({
@@ -675,12 +665,13 @@ namespace Aether {
 			auto early = panels->add_child<Group>({
 				.visible = true, .inert = false,
 				.style = {
-					{"x", "240sp"}, {"y", "0"},
+					{"x", "240sp"}, {"y", "0"}, {"r", "5sp"},
 					{"width", "455sp"}, {"height", "100%"},
+					{"fill", "#32333c"}
 				}
 			});
 
-			attach_panel_background(early);
+			attach_panel_topbar(early);
 
 			// Title
 			early->add_child<Text>({
@@ -841,12 +832,13 @@ namespace Aether {
 			auto late = panels->add_child<Group>({
 				.visible = true, .inert = false,
 				.style = {
-					{"x", "705sp"}, {"y", "0"},
+					{"x", "705sp"}, {"y", "0"}, {"r", "5sp"},
 					{"width", "505sp"}, {"height", "100%"},
+					{"fill", "#32333c"}
 				}
 			});
 
-			attach_panel_background(late);
+			attach_panel_topbar(late);
 
 			// Title
 			late->add_child<Text>({
@@ -1315,7 +1307,7 @@ namespace Aether {
 		size_t mixer_ctrl_idx
 	) {
 		// Background
-		g->add_child<RoundedRect>({
+		g->add_child<Rect>({
 			.visible = true, .inert = true,
 			.style = {
 				{"x", "5sp"}, {"y", "0"}, {"r", "2sp"},
@@ -1323,7 +1315,7 @@ namespace Aether {
 				{"fill", "#1b1d23"}
 			}
 		});
-		g->add_child<RoundedRect>({
+		g->add_child<Rect>({
 			.visible = true, .inert = true,
 			.style = {
 				{"right", "15sp"}, {"y", "0"}, {"r", "2sp"},
@@ -1343,7 +1335,7 @@ namespace Aether {
 			return "linear-gradient(0 0 #526db0 0 100% #3055a4)";
 		};
 
-		g->add_child<RoundedRect>({
+		g->add_child<Rect>({
 			.visible = true, .inert = true,
 			.connections = {
 				{
@@ -1363,7 +1355,7 @@ namespace Aether {
 				{"x", "5sp"}, {"bottom", "0"}, {"r", "2sp"}, {"width", "10sp"}
 			}
 		});
-		g->add_child<RoundedRect>({
+		g->add_child<Rect>({
 			.visible = true, .inert = true,
 			.connections = {
 				{
@@ -1501,7 +1493,7 @@ namespace Aether {
 				{"stroke", "#b6bfcc"}, {"stroke-width", to_string(strk_width) + "sp"}
 			}
 		});
-		center_group->add_child<RoundedRect>({
+		center_group->add_child<Rect>({
 			.visible = true, .inert = true,
 			.connections = {{
 				.param_idx = param_idx,
@@ -1641,7 +1633,7 @@ namespace Aether {
 			}
 		});
 
-		eq->add_child<RoundedRect>({
+		eq->add_child<Rect>({
 			.visible = true, .inert = true,
 			.style = {
 				{"x", "0"}, {"y", "0"},
@@ -1811,7 +1803,7 @@ namespace Aether {
 		const float box_size = ( 150 - margin*(infos.size()-1) ) / infos.size();
 
 		for (size_t i = 0; i < infos.size(); ++i) {
-			eq->add_child<RoundedRect>({
+			eq->add_child<Rect>({
 				.visible = true, .inert = false,
 				.btn_release_callback = [idx = infos[i].idxs[0], this](UIElement* elem, auto e){
 					if (elem->element_at(e.x, e.y)) {

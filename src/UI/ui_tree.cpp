@@ -113,7 +113,9 @@ void UIElement::draw() const {
 		if (m_inert)
 			apply_transforms();
 
+		nvgSave(m_root->ctx->nvg_ctx);
 		draw_impl();
+		nvgRestore(m_root->ctx->nvg_ctx);
 	}
 }
 
@@ -368,9 +370,6 @@ bool UIElement::set_stroke() const {
 }
 
 void UIElement::apply_transforms() const {
-	if (m_parent != m_root)
-		m_parent->apply_transforms();
-
 	if (auto it = style.find("transform"); it) {
 		std::string_view transform = style.find("transform")->second;
 
@@ -698,13 +697,18 @@ std::array<float, 4> Rect::bounds() const {
 	}
 
 	return {*left, *top, *width, *height};
+}
 
+float Rect::r() const {
+	const auto r = style.find("r");
+	return r ? to_px(r->second) : 0.f;
 }
 
 void Rect::draw_impl() const {
 	nvgBeginPath(m_root->ctx->nvg_ctx);
 	auto bounds = this->bounds();
-	nvgRect(m_root->ctx->nvg_ctx, bounds[0], bounds[1], bounds[2], bounds[3]);
+	float r = this->r();
+	nvgRoundedRect(m_root->ctx->nvg_ctx, bounds[0], bounds[1], bounds[2], bounds[3], r);
 
 	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
 	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
@@ -779,22 +783,6 @@ void Spectrum::draw_impl() const {
 		i = ip2;
 	}
 
-	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
-}
-
-// RoundedRect
-
-float RoundedRect::r() const {
-	const auto r_str = get_style("r", "rectangle corner radius not defined");
-	return to_px(r_str);
-}
-
-void RoundedRect::draw_impl() const {
-	nvgBeginPath(m_root->ctx->nvg_ctx);
-	auto bounds = this->bounds();
-	nvgRoundedRect(m_root->ctx->nvg_ctx, bounds[0], bounds[1], bounds[2], bounds[3], r());
-
-	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
 	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
 }
 
