@@ -11,26 +11,6 @@
  * LV2 UI
  */
 
-static int show_ui(LV2UI_Handle ui) {
-	try {
-		static_cast<Aether::UI*>(ui)->open();
-	} catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		return 1;
-	}
-	return 0;
-}
-
-static int hide_ui(LV2UI_Handle ui) {
-	try {
-		static_cast<Aether::UI*>(ui)->close();
-	} catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		return 1;
-	}
-	return 0;
-}
-
 static int idle_ui(LV2UI_Handle ui) {
 	return static_cast<Aether::UI*>(ui)->update_display();
 }
@@ -97,11 +77,8 @@ static const void* extension_data_ui(
 	const char* uri
 ) {
 	static const LV2UI_Idle_Interface idle_interface = {idle_ui};
-	static const LV2UI_Show_Interface show_interface = {show_ui, hide_ui};
 	if (std::string(uri) == std::string(LV2_UI__idleInterface))
 		return &idle_interface;
-	if (std::string(uri) == std::string(LV2_UI__showInterface))
-		return &show_interface;
 	return nullptr;
 }
 

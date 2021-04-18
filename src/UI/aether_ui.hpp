@@ -44,12 +44,6 @@ namespace Aether {
 		int update_display() noexcept;
 
 		/*
-			creates and destroys the window
-		*/
-		void open();
-		void close();
-
-		/*
 			returns the current window dimensions
 		*/
 		int width() const noexcept;
@@ -92,8 +86,7 @@ namespace Aether {
 
 		URIs uris;
 		LV2_Atom_Forge atom_forge;
-
-		std::filesystem::path m_bundle_path;
+		
 		LV2UI_Write_Function m_write_function;
 		LV2UI_Controller m_controller;
 

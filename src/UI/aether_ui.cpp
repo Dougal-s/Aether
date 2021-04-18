@@ -1994,7 +1994,6 @@ namespace Aether {
 	*/
 
 	UI::UI(const CreateInfo& create_info, LV2_URID_Map* map) :
-		m_bundle_path{create_info.bundle_path},
 		m_write_function{create_info.write_function},
 		m_controller{create_info.controller},
 		m_view{}
@@ -2004,18 +2003,6 @@ namespace Aether {
 	}
 
 	UI::~UI() {
-		if (m_view) close();
-	}
-
-	void UI::open() {
-		// create new view if m_view doesn't already exist
-		if (m_view) return;
-
-		CreateInfo create_info{nullptr, m_bundle_path, m_controller, m_write_function};
-		m_view = create_view(create_info);
-	}
-
-	void UI::close() {
 		// destroy ui
 		auto world = &m_view->world();
 
