@@ -1,5 +1,4 @@
 #include <cmath>
-#include <cstdlib>
 #include <cstring>
 #include <numbers>
 #include <numeric>
@@ -16,64 +15,61 @@
 
 namespace {
 
+	float strtof(std::string_view str) {
+		std::istringstream ss{std::string(str)};
+		float num;
+		ss >> num;
+		return num;
+	}
+
 	[[nodiscard]] constexpr static uint8_t hex_to_int(char hex_char) {
 		if (hex_char >= 'A')
 			hex_char = (hex_char & ~0x20) - 0x07;
 		return hex_char - '0';
 	}
 
-	static ParseResult<NVGcolor> parse_color(const char* expr) {
-		if (*expr == '#') {
+	static NVGcolor parse_color(std::istringstream& expr) {
+		expr.imbue(std::locale::classic());
 
-			uint8_t digits = 0;
-			while (std::isxdigit(expr[digits+1])) ++digits;
+		char hash;
+		expr >> hash;
+		if (hash != '#')
+			throw std::invalid_argument("unrecognized color format!");
 
-			uint8_t r = 255, g = 255, b = 255, a = 255;
-			switch (digits) {
-				case 4: // #rgba
-					a = 0x11*hex_to_int(expr[4]);
-					[[fallthrough]];
-				case 3: // #rgb
-					r = 0x11*hex_to_int(expr[1]);
-					g = 0x11*hex_to_int(expr[2]);
-					b = 0x11*hex_to_int(expr[3]);
-					break;
+		std::string hexcode;
+		hexcode.reserve(8);
+		while (std::isxdigit(expr.peek())) hexcode += expr.get();
 
-				case 8: // #rrggbbaa
-					a = (hex_to_int(expr[7])<<4) + hex_to_int(expr[8]);
-					[[fallthrough]];
-				case 6: // #rrggbb
-					r = (hex_to_int(expr[1])<<4) + hex_to_int(expr[2]);
-					g = (hex_to_int(expr[3])<<4) + hex_to_int(expr[4]);
-					b = (hex_to_int(expr[5])<<4) + hex_to_int(expr[6]);
-					break;
+		uint8_t r = 255, g = 255, b = 255, a = 255;
+		switch (hexcode.length()) {
+			case 4: // #rgba
+				a = 0x11*hex_to_int(hexcode[3]);
+				[[fallthrough]];
+			case 3: // #rgb
+				r = 0x11*hex_to_int(hexcode[0]);
+				g = 0x11*hex_to_int(hexcode[1]);
+				b = 0x11*hex_to_int(hexcode[2]);
+				break;
 
-				default:
-					throw std::invalid_argument("hex code has an invalid number of characters");
-			}
+			case 8: // #rrggbbaa
+				a = (hex_to_int(hexcode[6])<<4) + hex_to_int(hexcode[7]);
+				[[fallthrough]];
+			case 6: // #rrggbb
+				r = (hex_to_int(hexcode[0])<<4) + hex_to_int(hexcode[1]);
+				g = (hex_to_int(hexcode[2])<<4) + hex_to_int(hexcode[3]);
+				b = (hex_to_int(hexcode[4])<<4) + hex_to_int(hexcode[5]);
+				break;
 
-			return {nvgRGBA(r, g, b, a), expr+digits+1};
+			default:
+				throw std::invalid_argument("hex code has an invalid number of characters");
 		}
 
-		if (!strncmp(expr, "rgba", 4)) {
-			expr += 4;
-			float r = std::strtof(expr+1, const_cast<char**>(&expr));
-			float g = std::strtof(expr+1, const_cast<char**>(&expr));
-			float b = std::strtof(expr+1, const_cast<char**>(&expr));
-			float a = std::strtof(expr+1, const_cast<char**>(&expr));
-			return {nvgRGBAf(r/255.f, g/255.f, b/255.f, a/255.f), expr+1};
-		}
+		return nvgRGBA(r, g, b, a);
+	}
 
-		if (!strncmp(expr, "hsla", 4)) {
-			expr += 4;
-			float h = std::strtof(expr+1, const_cast<char**>(&expr));
-			float s = std::strtof(expr+1, const_cast<char**>(&expr));
-			float l = std::strtof(expr+1, const_cast<char**>(&expr));
-			float a = std::strtof(expr+1, const_cast<char**>(&expr));
-			return {nvgHSLA(h, s, l, a), expr+1};
-		}
-
-		throw std::invalid_argument("unrecognized color format!");
+	static NVGcolor parse_color(std::string_view expr) {
+		std::istringstream ss{std::string(expr)};
+		return parse_color(ss);
 	}
 }
 
@@ -127,84 +123,92 @@ std::string_view UIElement::get_style(const std::string& name, std::string err) 
 	throw std::runtime_error(err);
 }
 
-ParseResult<float> UIElement::to_px(const char* expr) const {
-	char* ptr;
-	float distance = std::strtof(expr, &ptr);
-	if (expr == ptr) throw std::invalid_argument("failed to convert string to float!");
-	const std::string_view units = ptr;
+float UIElement::to_px(std::istringstream& expr) const {
+	expr.imbue(std::locale::classic());
+	float distance;
+	std::string units;
+	expr >> distance >> units;
 
 	if (units.starts_with("sp"))
-		return {distance * 100*m_root->vw/1230.f, ptr+2};
+		return distance * 100*m_root->vw/1230.f;
 	if (units.starts_with("vh"))
-		return {distance * m_root->vh, ptr+2};
+		return distance * m_root->vh;
 	if (units.starts_with("vw"))
-		return {distance * m_root->vw, ptr+2};
+		return distance * m_root->vw;
 	if (units.starts_with("%"))
-		return {distance/100.f * std::hypot(m_parent->width(), m_parent->height())/std::sqrt(2.f), ptr+1};
-	if (distance == 0)
-		return {0.f, ptr};
+		return distance/100.f * std::hypot(m_parent->width(), m_parent->height())/std::sqrt(2.f);
+	if (distance == 0) {
+		expr.seekg(-units.size(), std::ios::cur);
+		return 0.f;
+	}
 
-	throw std::invalid_argument("unrecognized units used!");
+	throw std::invalid_argument("unrecognized distance units used!");
 }
 
-ParseResult<float> UIElement::to_horizontal_px(const char* expr) const {
-	char* ptr;
-	float x = std::strtof(expr, &ptr);
-	if (expr == ptr) throw std::invalid_argument("failed to convert string to float!");
-	const std::string_view units = ptr;
+float UIElement::to_horizontal_px(std::istringstream& expr) const {
+	expr.imbue(std::locale::classic());
+	float x;
+	std::string units;
+	expr >> x >> units;
 
 	if (units.starts_with("sp"))
-		return {x * 100*m_root->vw/1230.f, ptr+2};
+		return x * 100*m_root->vw/1230.f;
 	if (units.starts_with("vh"))
-		return {x * m_root->vh, ptr+2};
+		return x * m_root->vh;
 	if (units.starts_with("vw"))
-		return {x * m_root->vw, ptr+2};
+		return x * m_root->vw;
 	if (units.starts_with("%"))
-		return {x * m_parent->width() / 100.f, ptr+1};
-	if (x == 0)
-		return {0.f, ptr};
+		return x * m_parent->width() / 100.f;
+	if (x == 0) {
+		expr.seekg(-units.size(), std::ios::cur);
+		return 0.f;
+	}
 
-	throw std::invalid_argument("unrecognized units used!");
+	throw std::invalid_argument("unrecognized horizontal units used!");
 }
 
-ParseResult<float> UIElement::to_vertical_px(const char* expr) const {
-	char* ptr;
-	float y = std::strtof(expr, &ptr);
-	if (expr == ptr) throw std::invalid_argument("failed to convert string to float!");
-	const std::string_view units = ptr;
+float UIElement::to_vertical_px(std::istringstream& expr) const {
+	expr.imbue(std::locale::classic());
+	float y;
+	std::string units;
+	expr >> y >> units;
 
 	if (units.starts_with("sp"))
-		return {y * 100*m_root->vw/1230.f, ptr+2};
+		return y * 100*m_root->vw/1230.f;
 	if (units.starts_with("vh"))
-		return {y * m_root->vh, ptr+2};
+		return y * m_root->vh;
 	if (units.starts_with("vw"))
-		return {y * m_root->vw, ptr+2};
+		return y * m_root->vw;
 	if (units.starts_with("%"))
-		return {y * m_parent->height() / 100.f, ptr+1};
-	if (y == 0)
-		return {0.f, ptr};
+		return y * m_parent->height() / 100.f;
+	if (y == 0) {
+		expr.seekg(-units.size(), std::ios::cur);
+		return 0.f;
+	}
 
-	throw std::invalid_argument("unrecognized units used!");
+	throw std::invalid_argument("unrecognized vertical units used!");
 }
 
-ParseResult<float> UIElement::to_rad(const char* expr) const {
-	char* ptr;
-	float rad = std::strtof(expr, &ptr);
-	if (expr == ptr) throw std::invalid_argument("failed to convert string to float!");
-	const std::string_view units = ptr;
+float UIElement::to_rad(std::istringstream& expr) const {
+	expr.imbue(std::locale::classic());
+	float rad;
+	std::string units;
+	expr >> rad >> units;
 
 	if (units.starts_with("rad"))
-		return {rad, ptr+3};
+		return rad;
 	if (units.starts_with("deg"))
-		return {rad * std::numbers::pi_v<float>/180.f, ptr+3};
+		return rad * std::numbers::pi_v<float>/180.f;
 	if (units.starts_with("grad"))
-		return {rad * std::numbers::pi_v<float>/200.f, ptr+4};
+		return rad * std::numbers::pi_v<float>/200.f;
 	if (units.starts_with("turn"))
-		return {rad * 2*std::numbers::pi_v<float>, ptr+4};
-	if (rad == 0)
-		return {0.f, ptr};
+		return rad * 2*std::numbers::pi_v<float>;
+	if (rad == 0) {
+		expr.seekg(-units.size(), std::ios::cur);
+		return 0.f;
+	}
 
-	throw std::invalid_argument("unrecognized units used!");
+	throw std::invalid_argument("unrecognized angle units used!");
 }
 
 
@@ -214,17 +218,19 @@ bool UIElement::set_fill() const {
 		if (fill == "none") return false;
 
 		if (fill.starts_with("linear-gradient")) {
+			fill.remove_prefix(sizeof("linear-gradient"));
+
 			float sx, sy, ex, ey;
 			NVGcolor sc, ec;
 
-			const char* ptr = fill.data() + sizeof("linear-gradient");
-			std::tie(sx, ptr) = to_horizontal_px(ptr);
-			std::tie(sy, ptr) = to_vertical_px(ptr+1);
-			std::tie(sc, ptr) = parse_color(ptr+1);
+			std::istringstream ss{std::string(fill)};
+			sx = to_horizontal_px(ss);
+			sy = to_vertical_px(ss);
+			sc = parse_color(ss);
 
-			std::tie(ex, ptr) = to_horizontal_px(ptr+1);
-			std::tie(ey, ptr) = to_vertical_px(ptr+1);
-			std::tie(ec, ptr) = parse_color(ptr+1);
+			ex = to_horizontal_px(ss);
+			ey = to_vertical_px(ss);
+			ec = parse_color(ss);
 
 			sx += m_parent->x();
 			sy += m_parent->y();
@@ -238,17 +244,18 @@ bool UIElement::set_fill() const {
 				nvgLinearGradient(m_root->ctx->nvg_ctx, sx, sy, ex, ey, sc, ec)
 			);
 		} else if (fill.starts_with("radial-gradient")) {
+			fill.remove_prefix(sizeof("radial-gradient"));
 			float cx, cy, sr, er;
 			NVGcolor sc, ec;
 
-			const char* ptr = fill.data() + sizeof("radial-gradient");
-			std::tie(cx, ptr) = to_horizontal_px(ptr);
-			std::tie(cy, ptr) = to_vertical_px(ptr+1);
-			std::tie(sr, ptr) = to_px(ptr+1);
-			std::tie(sc, ptr) = parse_color(ptr+1);
+			std::istringstream ss{std::string(fill)};
+			cx = to_horizontal_px(ss);
+			cy = to_vertical_px(ss);
+			sr = to_px(ss);
+			sc = parse_color(ss);
 
-			std::tie(er, ptr) = to_px(ptr+1);
-			std::tie(ec, ptr) = parse_color(ptr+1);
+			er = to_px(ss);
+			ec = parse_color(ss);
 
 			cx += m_parent->x();
 			cy += m_parent->y();
@@ -258,7 +265,7 @@ bool UIElement::set_fill() const {
 				nvgRadialGradient(m_root->ctx->nvg_ctx, cx, cy, sr, er, sc, ec)
 			);
 		} else {
-			nvgFillColor(m_root->ctx->nvg_ctx, parse_color(fill.data()).val);
+			nvgFillColor(m_root->ctx->nvg_ctx, parse_color(fill));
 		}
 		return true;
 	}
@@ -274,10 +281,10 @@ bool UIElement::set_stroke() const {
 	// if (m_parent) has_stroke = m_parent->set_stroke();
 
 	if (auto width = style.find("stroke-width"); width)
-		nvgStrokeWidth(m_root->ctx->nvg_ctx, to_px(width->second.data()).val);
+		nvgStrokeWidth(m_root->ctx->nvg_ctx, to_px(width->second));
 
 	if (auto miter = style.find("stroke-miter"); miter)
-		nvgMiterLimit(m_root->ctx->nvg_ctx, to_px(miter->second.data()).val);
+		nvgMiterLimit(m_root->ctx->nvg_ctx, to_px(miter->second));
 
 	if (auto linecap = style.find("stroke-linecap"); linecap) {
 		if (linecap->second == "butt")
@@ -302,17 +309,19 @@ bool UIElement::set_stroke() const {
 		if (stroke == "none") return false;
 
 		if (stroke.starts_with("linear-gradient")) {
+			stroke.remove_prefix(sizeof("linear-gradient"));
+
 			float sx, sy, ex, ey;
 			NVGcolor sc, ec;
 
-			const char* ptr = stroke.data() + sizeof("linear-gradient");
-			std::tie(sx, ptr) = to_horizontal_px(ptr);
-			std::tie(sy, ptr) = to_vertical_px(ptr+1);
-			std::tie(sc, ptr) = parse_color(ptr+1);
+			std::istringstream ss{std::string(stroke)};
+			sx = to_horizontal_px(ss);
+			sy = to_vertical_px(ss);
+			sc = parse_color(ss);
 
-			std::tie(ex, ptr) = to_horizontal_px(ptr+1);
-			std::tie(ey, ptr) = to_vertical_px(ptr+1);
-			std::tie(ec, ptr) = parse_color(ptr+1);
+			ex = to_horizontal_px(ss);
+			ey = to_vertical_px(ss);
+			ec = parse_color(ss);
 
 			sx += m_parent->x();
 			sy += m_parent->y();
@@ -325,17 +334,19 @@ bool UIElement::set_stroke() const {
 				nvgLinearGradient(m_root->ctx->nvg_ctx, sx, sy, ex, ey, sc, ec)
 			);
 		} else if (stroke.starts_with("radial-gradient")) {
+			stroke.remove_prefix(sizeof("radial-gradient"));
+
 			float cx, cy, sr, er;
 			NVGcolor sc, ec;
 
-			const char* ptr = stroke.data() + sizeof("radial-gradient");
-			std::tie(cx, ptr) = to_horizontal_px(ptr);
-			std::tie(cy, ptr) = to_vertical_px(ptr+1);
-			std::tie(sr, ptr) = to_px(ptr+1);
-			std::tie(sc, ptr) = parse_color(ptr+1);
+			std::istringstream ss{std::string(stroke)};
+			cx = to_horizontal_px(ss);
+			cy = to_vertical_px(ss);
+			sr = to_px(ss);
+			sc = parse_color(ss);
 
-			std::tie(er, ptr) = to_px(ptr+1);
-			std::tie(ec, ptr) = parse_color(ptr+1);
+			er = to_px(ss);
+			ec = parse_color(ss);
 
 			cx += m_parent->x();
 			cy += m_parent->y();
@@ -345,7 +356,7 @@ bool UIElement::set_stroke() const {
 				nvgRadialGradient(m_root->ctx->nvg_ctx, cx, cy, sr, er, sc, ec)
 			);
 		} else {
-			nvgStrokeColor(m_root->ctx->nvg_ctx, parse_color(stroke.data()).val);
+			nvgStrokeColor(m_root->ctx->nvg_ctx, parse_color(stroke));
 		}
 
 		return true;
@@ -366,12 +377,10 @@ void UIElement::apply_transforms() const {
 		auto p_bounds = m_parent->bounds();
 		nvgTranslate(m_root->ctx->nvg_ctx, p_bounds[0], p_bounds[1]);
 
-		if (transform.starts_with("rotate")) {
-			auto [rad, ptr] = to_rad(transform.data()+sizeof("rotate"));
-			nvgRotate(m_root->ctx->nvg_ctx, rad);
-		} else {
+		if (transform.starts_with("rotate"))
+			nvgRotate(m_root->ctx->nvg_ctx, to_rad(transform.data()+sizeof("rotate")));
+		else
 			throw std::runtime_error("unrecognized transform type");
-		}
 
 		nvgTranslate(m_root->ctx->nvg_ctx, -p_bounds[0], -p_bounds[1]);
 	}
@@ -385,15 +394,15 @@ void UIElement::apply_transforms() const {
 
 float Circle::cx() const {
 	const auto cx_str = get_style("cx", "circle has undefined center x position");
-	return to_horizontal_px(cx_str.data()).val + m_parent->x();
+	return to_horizontal_px(cx_str) + m_parent->x();
 }
 float Circle::cy() const {
 	const auto cy_str = get_style("cy", "circle has undefined center y position");
-	return to_vertical_px(cy_str.data()).val + m_parent->y();
+	return to_vertical_px(cy_str) + m_parent->y();
 }
 float Circle::r() const {
 	const auto r_str = get_style("r", "circle has undefined radius");
-	return to_px(r_str.data()).val;
+	return to_px(r_str);
 }
 
 void Circle::draw_impl() const {
@@ -414,7 +423,7 @@ UIElement* Circle::element_at_impl(float x, float y) {
 
 	if (set_stroke())
 		if (auto it = style.find("stroke-width"); it)
-			r += 0.5f*to_px(it->second.data()).val;
+			r += 0.5f*to_px(it->second);
 
 	return (dx*dx + dy*dy < r*r) ? this : nullptr;
 }
@@ -423,11 +432,11 @@ UIElement* Circle::element_at_impl(float x, float y) {
 
 float Arc::a0() const {
 	const auto a0_str = get_style("a0", "arc has undefined start angle");
-	return to_rad(a0_str.data()).val;
+	return to_rad(a0_str);
 }
 float Arc::a1() const {
 	const auto a1_str = get_style("a1", "arc has undefined end angle");
-	return to_rad(a1_str.data()).val;
+	return to_rad(a1_str);
 }
 
 void Arc::draw_impl() const {
@@ -466,7 +475,7 @@ void Path::draw_impl() const {
 				it = style.find("left");
 			if (!it)
 				throw std::runtime_error("path has undefined x position");
-			return to_horizontal_px(it->second.data()).val + m_parent->x();
+			return to_horizontal_px(it->second) + m_parent->x();
 		}();
 
 		const float y = [&](){
@@ -475,52 +484,55 @@ void Path::draw_impl() const {
 				it = style.find("top");
 			if (!it)
 				throw std::runtime_error("path has undefined y position");
-			return to_vertical_px(it->second.data()).val + m_parent->y();
+			return to_vertical_px(it->second) + m_parent->y();
 		}();
 
 		nvgTranslate(m_root->ctx->nvg_ctx, x, y);
 	}
 
 	const auto sp2px = [&](float sp) { return sp*100*m_root->vw/1230; };
-	const auto extract_nums = [&]<size_t nums>(const char*& c) {
+	const auto extract_nums = [&]<size_t nums>(std::istringstream& ss) {
 		std::array<float, nums> numbers;
-		for (float& num : numbers)
-			num = sp2px(std::strtof(c, const_cast<char**>(&c)));
+		for (float& num : numbers) {
+			ss >> num;
+			num = sp2px(num);
+		}
 		return numbers;
 	};
 
-	std::string_view path = this->path();
-	for (auto c = path.begin(); c != path.end(); ++c) {
-		switch (*c++) {
+	std::istringstream path{std::string(this->path())};
+	path.imbue(std::locale::classic());
+	while ((path >> std::ws).good()) {
+		switch (path.get()) {
 			case 'M': {
-				auto [x, y] = extract_nums.operator()<2>(c);
+				auto [x, y] = extract_nums.operator()<2>(path);
 				nvgMoveTo(m_root->ctx->nvg_ctx, x, y);
 			} break;
 
 			case 'L': {
-				auto [x, y] = extract_nums.operator()<2>(c);
+				auto [x, y] = extract_nums.operator()<2>(path);
 				nvgLineTo(m_root->ctx->nvg_ctx, x, y);
 			} break;
 
 			case 'C': {
-				auto [x1, y1, x2, y2, x, y] = extract_nums.operator()<6>(c);
+				auto [x1, y1, x2, y2, x, y] = extract_nums.operator()<6>(path);
 				nvgBezierTo(m_root->ctx->nvg_ctx, x1, y1, x2, y2, x, y);
 			} break;
 
 			case 'Q': {
-				auto [cx, cy, x, y] = extract_nums.operator()<4>(c);
+				auto [cx, cy, x, y] = extract_nums.operator()<4>(path);
 				nvgQuadTo(m_root->ctx->nvg_ctx, cx, cy, x, y);
 			} break;
 
 			case 'A': {
-				auto [x1, y1, x2, y2, r] = extract_nums.operator()<5>(c);
+				auto [x1, y1, x2, y2, r] = extract_nums.operator()<5>(path);
 				nvgArcTo(m_root->ctx->nvg_ctx, x1, y1, x2, y2, r);
 			} break;
 
 			case 'Z':
 			case 'z':
 				nvgClosePath(m_root->ctx->nvg_ctx);
-				c = path.end()-1;
+				path.setstate(std::ios::eofbit);
 				break;
 
 			default:
@@ -542,13 +554,13 @@ float Rect::x() const {
 		it = style.find("left");
 
 	if (it) {
-		x = to_horizontal_px(it->second.data()).val;
+		x = to_horizontal_px(it->second);
 	} else if (
 		auto right_it = style.find("right"), width_it = style.find("width");
 		right_it && width_it
 	) {
-		float right = to_horizontal_px(right_it->second.data()).val;
-		float width = to_horizontal_px(width_it->second.data()).val;
+		float right = to_horizontal_px(right_it->second);
+		float width = to_horizontal_px(width_it->second);
 		x = m_parent->width() - width - right;
 	} else {
 		throw std::runtime_error("rectangle has undefined x position");
@@ -568,13 +580,13 @@ float Rect::y() const {
 		it = style.find("top");
 
 	if (it) {
-		y = to_vertical_px(it->second.data()).val;
+		y = to_vertical_px(it->second);
 	} else if (
 		auto bottom_it = style.find("bottom"), height_it = style.find("height");
 		bottom_it && height_it
 	) {
-		float bottom = to_vertical_px(bottom_it->second.data()).val;
-		float height = to_vertical_px(height_it->second.data()).val;
+		float bottom = to_vertical_px(bottom_it->second);
+		float height = to_vertical_px(height_it->second);
 		y = m_parent->height() - height - bottom;
 	} else {
 		throw std::runtime_error("rectangle has undefined y position");
@@ -588,36 +600,36 @@ float Rect::y() const {
 
 float Rect::width() const {
 	if (auto width = style.find("width"); width) {
-		return to_horizontal_px(width->second.data()).val;
+		return to_horizontal_px(width->second);
 	} else {
 		auto left_it = style.find("x");
 		if (!left_it) left_it = style.find("left");
 		if (!left_it) throw std::runtime_error("Undefined width!");
 
-		float left = to_horizontal_px(left_it->second.data()).val;
+		float left = to_horizontal_px(left_it->second);
 
 		auto right_it = style.find("right");
 		if (!right_it) throw std::runtime_error("Undefined width!");
 
-		float right = m_parent->width() - to_horizontal_px(right_it->second.data()).val;
+		float right = m_parent->width() - to_horizontal_px(right_it->second);
 		return right-left;
 	}
 }
 
 float Rect::height() const {
 	if (auto height = style.find("height"); height) {
-		return to_vertical_px(height->second.data()).val;
+		return to_vertical_px(height->second);
 	} else {
 		auto top_it = style.find("y");
 		if (!top_it) top_it = style.find("top");
 		if (!top_it) throw std::runtime_error("Undefined height!");
 
-		float top = to_vertical_px(top_it->second.data()).val;
+		float top = to_vertical_px(top_it->second);
 
 		auto bottom_it = style.find("bottom");
 		if (!bottom_it) throw std::runtime_error("Undefined height!");
 
-		float bottom = m_parent->height() - to_vertical_px(bottom_it->second.data()).val;
+		float bottom = m_parent->height() - to_vertical_px(bottom_it->second);
 		return bottom-top;
 	}
 }
@@ -630,26 +642,26 @@ std::array<float, 4> Rect::bounds() const {
 		auto it = style.find("x");
 		if (!it) it = style.find("left");
 		if (it)
-			left = to_horizontal_px(it->second.data()).val;
+			left = to_horizontal_px(it->second);
 	}
 
 	if (auto it = style.find("right"); it)
-		right = to_horizontal_px(it->second.data()).val;
+		right = to_horizontal_px(it->second);
 	if (auto it = style.find("width"); it)
-		width = to_horizontal_px(it->second.data()).val;
+		width = to_horizontal_px(it->second);
 
 	{
 		auto it = style.find("y");
 		if (!it)
 			it = style.find("top");
 		if (it)
-			top = to_vertical_px(it->second.data()).val;
+			top = to_vertical_px(it->second);
 	}
 
 	if (auto it = style.find("bottom"); it)
-		bottom = to_vertical_px(it->second.data()).val;
+		bottom = to_vertical_px(it->second);
 	if (auto it = style.find("height"); it)
-		height = to_vertical_px(it->second.data()).val;
+		height = to_vertical_px(it->second);
 
 
 	if (m_parent) {
@@ -701,7 +713,7 @@ void Rect::draw_impl() const {
 UIElement* Rect::element_at_impl(float x, float y) {
 	auto b = this->bounds();
 	if (auto width = style.find("stroke-width"); width) {
-		const float stroke_width = to_px(width->second.data()).val;
+		const float stroke_width = to_px(width->second);
 		b[0] -= stroke_width/2;
 		b[1] -= stroke_width/2;
 		b[2] += stroke_width;
@@ -774,7 +786,7 @@ void Spectrum::draw_impl() const {
 
 float RoundedRect::r() const {
 	const auto r_str = get_style("r", "rectangle corner radius not defined");
-	return to_px(r_str.data()).val;
+	return to_px(r_str);
 }
 
 void RoundedRect::draw_impl() const {
@@ -817,13 +829,13 @@ std::array<float, 2> Text::render_corner() const {
 		if (!it)
 			it = style.find("left");
 		if (it)
-			left = to_horizontal_px(it->second.data()).val;
+			left = to_horizontal_px(it->second);
 	} {
 		auto it = style.find("y");
 		if (!it)
 			it = style.find("top");
 		if (it)
-			top = to_vertical_px(it->second.data()).val;
+			top = to_vertical_px(it->second);
 	}
 
 	auto p_bounds = m_parent->bounds();
@@ -842,7 +854,7 @@ std::array<float, 2> Text::render_corner() const {
 	if (!left) {
 		float right;
 		if (auto it = style.find("right"); it)
-			right = to_horizontal_px(it->second.data()).val;
+			right = to_horizontal_px(it->second);
 		else
 			throw std::runtime_error("text x position undefined");
 
@@ -852,7 +864,7 @@ std::array<float, 2> Text::render_corner() const {
 	if (!top) {
 		float bottom;
 		if (auto it = style.find("bottom"); it)
-			bottom = to_vertical_px(it->second.data()).val;
+			bottom = to_vertical_px(it->second);
 		else
 			throw std::runtime_error("text x position undefined");
 
@@ -865,12 +877,12 @@ std::array<float, 2> Text::render_corner() const {
 
 float Text::font_size() const {
 	const auto size_str = get_style("font-size", "text has undefined font size");
-	return to_px(size_str.data()).val;
+	return to_px(size_str);
 }
 
 std::optional<float> Text::defined_width() const {
 	if (auto it = style.find("width"); it)
-		return to_horizontal_px(it->second.data()).val;
+		return to_horizontal_px(it->second);
 
 	auto left = style.find("x");
 	if (!left)
@@ -885,8 +897,8 @@ std::optional<float> Text::defined_width() const {
 	auto p_width = m_parent->width();
 
 	return p_width -
-		to_horizontal_px(left->second.data()).val -
-		to_horizontal_px(left->second.data()).val;
+		to_horizontal_px(left->second) -
+		to_horizontal_px(left->second);
 }
 
 void Text::set_alignment() const {
@@ -924,7 +936,7 @@ void Text::set_text_styling() const {
 	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
 	set_alignment();
 	if (auto line_height = style.find("line_height"); line_height)
-		nvgTextLineHeight(m_root->ctx->nvg_ctx, std::strtof(line_height->second.data(), nullptr));
+		nvgTextLineHeight(m_root->ctx->nvg_ctx, strtof(line_height->second));
 	set_fill();
 }
 

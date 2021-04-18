@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 #include <memory>
+#include <sstream>
 
 #include <pugl/pugl.hpp>
 
@@ -34,13 +35,25 @@ static std::string interpolate_style(
 	float t,
 	const std::pair<std::string, std::string>& range
 ) {
-	char* num1_end;
-	float val1 = std::strtof(range.first.c_str(), &num1_end);
-	char* num2_end;
-	float val2 = std::strtof(range.second.c_str(), &num2_end);
+
+	std::string unit;
+	float val1, val2;
+	{
+		std::istringstream ss(range.first);
+		ss.imbue(std::locale::classic());
+		ss >> val1 >> unit;
+	} {
+		std::istringstream ss(range.second);
+		ss.imbue(std::locale::classic());
+		ss >> val2;
+	}
+
 	T val = static_cast<T>(std::lerp(val1, val2, t));
 
-	return std::to_string(val) + num1_end;
+	std::ostringstream rtrn;
+	rtrn.imbue(std::locale::classic());
+	rtrn << val << unit;
+	return rtrn.str();
 }
 
 class UIElement {
@@ -153,10 +166,14 @@ protected:
 		They are member functions as some units are
 		relative to parent dimensions
 	*/
-	ParseResult<float> to_px(const char* expr) const;
-	ParseResult<float> to_horizontal_px(const char* expr) const;
-	ParseResult<float> to_vertical_px(const char* expr) const;
-	ParseResult<float> to_rad(const char* expr) const;
+	float to_px(std::string_view expr) const { std::istringstream ss{std::string(expr)}; return to_px(ss); };
+	float to_px(std::istringstream& expr) const;
+	float to_horizontal_px(std::string_view expr) const { std::istringstream ss{std::string(expr)}; return to_horizontal_px(ss); };
+	float to_horizontal_px(std::istringstream& expr) const;
+	float to_vertical_px(std::string_view expr) const { std::istringstream ss{std::string(expr)}; return to_vertical_px(ss); };
+	float to_vertical_px(std::istringstream& expr) const;
+	float to_rad(std::string_view expr) const { std::istringstream ss{std::string(expr)}; return to_rad(ss); };
+	float to_rad(std::istringstream& expr) const;
 
 	/*
 		sets the current fill/stroke to be rendered using nvgFill/nvgStroke
