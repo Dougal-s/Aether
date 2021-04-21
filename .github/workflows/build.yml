@@ -10,7 +10,51 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  build:
+  build-macos:
+    runs-on: macos-latest
+
+    outputs:
+        artifact-name: ${{ env.ARCHIVE_NAME }}
+
+    strategy:
+      matrix:
+        compiler: [clang++-10]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Install Dependencies
+      run: brew install lv2
+
+    - name: Set Archive Name
+      run: echo "ARCHIVE_NAME=Aether-macos.tar.xz" >> "$GITHUB_ENV"
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{github.workspace}}/build
+
+    - name: Build Plugin
+      working-directory: ${{github.workspace}}/build
+      env:
+        CXX: clang++
+      run: |
+        cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_TESTS="on"
+        cmake --build . --config $BUILD_TYPE
+
+    - name: Create Archive
+      run: tar -cJf ${{ env.ARCHIVE_NAME }} aether.lv2
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.ARCHIVE_NAME }}
+        path: ${{ env.ARCHIVE_NAME }}
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C $BUILD_TYPE
+
+  build-ubuntu:
     runs-on: ubuntu-20.04
 
     outputs:
