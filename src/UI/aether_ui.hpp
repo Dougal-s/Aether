@@ -7,9 +7,9 @@
 #include <pugl/pugl.hpp>
 
 // LV2
-#include <lv2/lv2plug.in/ns/extensions/ui/ui.h>
-#include <lv2/lv2plug.in/ns/ext/urid/urid.h>
-#include <lv2/lv2plug.in/ns/ext/atom/forge.h>
+#include <lv2/ui/ui.h>
+#include <lv2/urid/urid.h>
+#include <lv2/atom/forge.h>
 
 namespace Aether {
 

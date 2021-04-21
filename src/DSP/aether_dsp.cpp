@@ -2,7 +2,7 @@
 #include <cmath>
 
 // Lv2
-#include <lv2/lv2plug.in/ns/ext/atom/util.h>
+#include <lv2/atom/util.h>
 
 #include "aether_dsp.hpp"
 #include "../common/parameters.hpp"
