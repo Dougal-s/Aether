@@ -8,7 +8,6 @@
 #include <complex>
 #include <cstddef>
 #include <cstdint>
-#include <execution>
 #include <stdexcept>
 #include <numbers>
 #include <numeric>
