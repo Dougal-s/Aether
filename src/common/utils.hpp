@@ -5,7 +5,7 @@ struct join {
 	static constexpr auto join_strings() {
 		constexpr size_t length = (strings.size() + ... + 0);
 
-		std::array<char, length+1> buffer;
+		std::array<char, length+1> buffer = {};
 		auto append = [i = 0u, &buffer](const auto& s) mutable {
 			for (auto c : s) buffer[i++] = c;
 		};
