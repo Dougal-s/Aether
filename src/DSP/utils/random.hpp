@@ -4,7 +4,6 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
-#include <ranges>
 
 namespace Random {
 
@@ -52,7 +51,7 @@ namespace Random {
 		the output distribution will be more peak like at crossmix=0.5 and
 		uniform at crossmix=0 and 1.
 	*/
-	template <std::ranges::forward_range Container>
+	template <class Container>
 	void generate(Container& container, uint32_t seed, float cross_seed) noexcept {
 		Xorshift64s rng1(seed);
 		Xorshift64s rng2(~seed);

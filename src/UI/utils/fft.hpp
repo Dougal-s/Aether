@@ -3,7 +3,6 @@
 #include <complex>
 #include <numbers>
 #include <numeric>
-#include <ranges>
 #include <span>
 
 
@@ -11,7 +10,7 @@ namespace fft {
 	/*
 		applies the hann window function to the input
 	*/
-	template <std::ranges::forward_range Container>
+	template <class Container>
 	void window_function(Container& container) {
 		const auto coefm = std::exp(std::complex<float>(0, std::numbers::pi_v<float> / (container.size() - 1)));
 		std::complex<float> coef = {1, 0};
@@ -37,7 +36,7 @@ namespace fft {
 		return reversed;
 	}
 
-	template <std::ranges::random_access_range Container>
+	template <class Container>
 	void bitReverseShuffle(Container& container) {
 		assert(std::has_single_bit(container.size()));
 		uint8_t numBits = std::countr_zero(container.size());
@@ -52,7 +51,7 @@ namespace fft {
 		performs bit reverse fft inplace
 		requires the input buffer size to be a power of 2
 	*/
-	template <std::ranges::random_access_range Container>
+	template <class Container>
 	void fft(Container& container) {
 		assert(std::has_single_bit(container.size()));
 
@@ -76,7 +75,7 @@ namespace fft {
 		computes the magnitude of each frequency inplace
 		requires an input size that is a power of two
 	*/
-	template <std::ranges::contiguous_range Container>
+	template <class Container>
 	void magnitudes(Container& container) {
 		assert(std::has_single_bit(container.size()));
 
