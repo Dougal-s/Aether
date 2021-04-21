@@ -9,7 +9,7 @@ target_include_directories(pugl SYSTEM PUBLIC "${PUGL_SOURCE_DIR}/bindings/cxx/i
 
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
-target_link_libraries(pugl OpenGL::OpenGL)
+target_link_libraries(pugl OpenGL::GL)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 	target_sources(pugl PRIVATE "${PUGL_SOURCE_DIR}/src/mac.m" "${PUGL_SOURCE_DIR}/src/mac_gl.m")
