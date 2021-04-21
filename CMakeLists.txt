@@ -19,6 +19,7 @@ add_library(aether_dsp MODULE
 	src/DSP/utils/random.hpp
 	src/DSP/utils/ringbuffer.hpp
 )
+target_include_directories(aether_dsp PRIVATE src/polyfills)
 
 target_compile_options(aether_dsp PRIVATE
 	-Wall -Wextra -Wpedantic -Wshadow -Weffc++ -Wstrict-aliasing
@@ -41,6 +42,7 @@ add_library(aether_ui MODULE
 	src/UI/ui_tree.hpp
 	src/common/parameters.hpp
 )
+target_include_directories(aether_ui PRIVATE src/polyfills)
 
 target_compile_options(aether_ui PRIVATE
 	-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing
