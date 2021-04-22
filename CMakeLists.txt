@@ -8,6 +8,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 set(CMAKE_CXX_EXTENSIONS false)
 
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+	include_directories(SYSTEM /usr/local/include)
+endif()
+
 add_library(aether_dsp MODULE
 	src/DSP/aether_dsp_lv2.cpp
 	src/DSP/aether_dsp.cpp
