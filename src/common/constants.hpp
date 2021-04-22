@@ -1,12 +1,7 @@
 #ifndef NUMBERS
 #define NUMBERS
 
-/*
-	This file is only included if the numbers header is missing,
-	hence why I'm adding things to the std namespace even though
-	you're not really supposed to.
-*/
-namespace std::numbers {
+namespace constants {
 	template <typename T>
 	inline constexpr T sqrt2_v = T(1.414213562373095048801688724209698079l);
 	inline constexpr double sqrt2 = sqrt2_v<double>;

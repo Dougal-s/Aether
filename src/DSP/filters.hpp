@@ -2,7 +2,8 @@
 #define FILTERS_HPP
 
 #include <cmath>
-#include <numbers>
+
+#include "../common/constants.hpp"
 
 
 // First Order Filters
@@ -21,7 +22,7 @@ public:
 	Lowpass6dB(float rate, float cutoff = 0.f) :
 		m_rate{rate},
 		m_cutoff{cutoff},
-		a{2.f*std::numbers::pi_v<float>*cutoff/rate}
+		a{2.f*constants::pi_v<float>*cutoff/rate}
 	{
 		a = a/(a+1.f);
 	}
@@ -38,7 +39,7 @@ public:
 			return;
 		m_cutoff = cutoff;
 
-		float w = 2.f*std::numbers::pi_v<float>*m_cutoff/m_rate;
+		float w = 2.f*constants::pi_v<float>*m_cutoff/m_rate;
 		a = w/(1+w);
 
 		if (a == 0)
@@ -141,8 +142,8 @@ protected:
 
 struct LowshelfGenerator {
 	constexpr auto operator()(float rate, float cutoff, float gain) noexcept {
-		constexpr auto pi = std::numbers::pi_v<float>;
-		constexpr auto sqrt2 = std::numbers::sqrt2_v<float>;
+		constexpr auto pi = constants::pi_v<float>;
+		constexpr auto sqrt2 = constants::sqrt2_v<float>;
 
 		float K = std::tan( pi*cutoff / rate );
 
@@ -162,8 +163,8 @@ struct LowshelfGenerator {
 
 struct HighshelfGenerator {
 	constexpr auto operator()(float rate, float cutoff, float gain) noexcept {
-		constexpr auto pi = std::numbers::pi_v<float>;
-		constexpr auto sqrt2 = std::numbers::sqrt2_v<float>;
+		constexpr auto pi = constants::pi_v<float>;
+		constexpr auto sqrt2 = constants::sqrt2_v<float>;
 
 		float K = std::tan( pi*cutoff / rate );
 

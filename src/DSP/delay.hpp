@@ -9,7 +9,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
-#include <numbers>
 #include <numeric>
 
 #include "utils/lfo.hpp"

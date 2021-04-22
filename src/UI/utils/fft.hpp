@@ -1,10 +1,10 @@
-#include <bit>
 #include <cmath>
 #include <complex>
-#include <numbers>
 #include <numeric>
 #include <span>
 
+#include "../../common/constants.hpp"
+#include "../../common/bit_ops.hpp"
 
 namespace fft {
 	/*
@@ -12,7 +12,7 @@ namespace fft {
 	*/
 	template <class Container>
 	void window_function(Container& container) {
-		const auto coefm = std::exp(std::complex<float>(0, std::numbers::pi_v<float> / (container.size() - 1)));
+		const auto coefm = std::exp(std::complex<float>(0, constants::pi_v<float> / (container.size() - 1)));
 		std::complex<float> coef = {1, 0};
 		float sum = 0.f;
 		for (float& e : container) {
@@ -38,8 +38,8 @@ namespace fft {
 
 	template <class Container>
 	void bitReverseShuffle(Container& container) {
-		assert(std::has_single_bit(container.size()));
-		uint8_t numBits = std::countr_zero(container.size());
+		assert(bits::has_single_bit(container.size()));
+		uint8_t numBits = bits::countr_zero(container.size());
 
 		for (size_t i = 0; i < container.size(); ++i) {
 			size_t j = reverseBits(i, numBits);
@@ -53,12 +53,12 @@ namespace fft {
 	*/
 	template <class Container>
 	void fft(Container& container) {
-		assert(std::has_single_bit(container.size()));
+		assert(bits::has_single_bit(container.size()));
 
 		bitReverseShuffle(container);
 
 		for (size_t m = 2; m <= container.size(); m <<= 1) {
-			const auto wm = std::exp(std::complex<float>(0.f, -2.f * std::numbers::pi_v<float> / m));
+			const auto wm = std::exp(std::complex<float>(0.f, -2.f * constants::pi_v<float> / m));
 			for (size_t k = 0; k < container.size(); k += m) {
 				std::complex<float> w = 1;
 				for (size_t j = 0; 2 * j < m; ++j, w *= wm) {
@@ -77,7 +77,7 @@ namespace fft {
 	*/
 	template <class Container>
 	void magnitudes(Container& container) {
-		assert(std::has_single_bit(container.size()));
+		assert(bits::has_single_bit(container.size()));
 
 		std::span<std::complex<float>> input(
 			reinterpret_cast<std::complex<float>*>(container.data()),
@@ -88,7 +88,7 @@ namespace fft {
 
 		container[0] = input[0].imag() + input[0].real();
 
-		const auto wm = std::exp(std::complex<float>(0.f, -2.f*std::numbers::pi_v<float> / container.size()));
+		const auto wm = std::exp(std::complex<float>(0.f, -2.f*constants::pi_v<float> / container.size()));
 		auto w = wm;
 		for (size_t r = 1; r < input.size() / 2; ++r, w *= wm) {
 			const auto i_r = input[r];

@@ -1,8 +1,6 @@
-#include <bit>
 #include <cassert>
 #include <chrono>
 #include <iostream>
-#include <span>
 #include <string>
 #include <stdexcept>
 #include <filesystem>
@@ -25,6 +23,7 @@
 #include <lv2/atom/util.h>
 #include <lv2/atom/forge.h>
 
+#include "../common/bit_ops.hpp"
 #include "../common/parameters.hpp"
 #include "../common/utils.hpp"
 #include "aether_ui.hpp"
@@ -1195,7 +1194,7 @@ namespace Aether {
 		auto& buf = sample_infos.samples[channel];
 		sample_infos.sample_rate = rate;
 
-		buf.resize(std::bit_ceil(rate / 10));
+		buf.resize(bits::bit_ceil(rate / 10));
 
 		if (n_samples < buf.size()) {
 			std::copy(buf.begin()+n_samples, buf.end(), buf.begin());

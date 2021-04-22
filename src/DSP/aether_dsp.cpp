@@ -47,7 +47,7 @@ namespace Aether {
 		param_smooth_named.late_delay_line_feedback = 50.f;
 
 		for (float& smooth : param_smooth) {
-			constexpr float pi = std::numbers::pi_v<float>;
+			constexpr float pi = constants::pi_v<float>;
 			if (smooth != 0.f)
 				smooth = std::exp(-2*pi / (0.0001f*smooth * rate));
 		}

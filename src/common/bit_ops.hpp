@@ -1,7 +1,23 @@
 #ifndef BIT_HEADER
 #define BIT_HEADER
 
-namespace std {
+#include <version>
+
+#ifdef __cpp_bit_ops
+
+#if __has_include(<bit>)
+	#include <bit>
+#endif
+
+namespace bits {
+	constexpr auto has_single_bit = std::has_single_bit;
+	constexpr auto bit_ceil = std::bit_ceil;
+	constexpr auto countr_zero = std::countr_zero;
+}
+
+#else
+
+namespace bits {
 
 	/*
 		from http://www.graphics.stanford.edu/~seander/bithacks.html
@@ -30,5 +46,7 @@ namespace std {
 		return count;
 	}
 }
+
+#endif
 
 #endif

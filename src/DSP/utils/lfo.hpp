@@ -2,10 +2,11 @@
 #define LFO_HPP
 
 #include <complex>
-#include <numbers>
+
+#include "../../common/constants.hpp"
 
 class LFO {
-	static constexpr double pi = std::numbers::pi;
+	static constexpr double pi = constants::pi;
 public:
 	LFO() {}
 	LFO(float phase, float rate = 0.f) : m_phase{std::polar(1.0, 2*pi*static_cast<double>(phase))} {

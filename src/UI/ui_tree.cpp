@@ -1,6 +1,5 @@
 #include <cmath>
 #include <cstring>
-#include <numbers>
 #include <numeric>
 #include <iostream>
 
@@ -10,6 +9,8 @@
 // NanoVG
 #include <nanovg.h>
 #include <nanovg_gl.h>
+
+#include "../common/constants.hpp"
 
 #include "ui_tree.hpp"
 
@@ -81,11 +82,11 @@ namespace {
 		if (units.starts_with("rad"))
 			return rad;
 		if (units.starts_with("deg"))
-			return rad * std::numbers::pi_v<float>/180.f;
+			return rad * constants::pi_v<float>/180.f;
 		if (units.starts_with("grad"))
-			return rad * std::numbers::pi_v<float>/200.f;
+			return rad * constants::pi_v<float>/200.f;
 		if (units.starts_with("turn"))
-			return rad * 2*std::numbers::pi_v<float>;
+			return rad * 2*constants::pi_v<float>;
 		if (rad == 0) {
 			expr.seekg(-units.size(), std::ios::cur);
 			return 0.f;
