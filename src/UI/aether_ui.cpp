@@ -83,7 +83,8 @@ namespace {
 namespace Aether {
 	class UI::View : public pugl::View {
 	public:
-		View(pugl::World& world, std::filesystem::path bundle_path, auto update_parameter_fn);
+		template <class UpdateFn>
+		View(pugl::World& world, std::filesystem::path bundle_path, UpdateFn update_parameter_fn);
 		View(const View&) = delete;
 		~View() = default;
 
@@ -198,10 +199,11 @@ namespace Aether {
 		View member function
 	*/
 
+	template <class UpdateFn>
 	UI::View::View(
 		pugl::World& world,
 		std::filesystem::path bundle_path,
-		auto update_function
+		UpdateFn update_function
 	) :
 		pugl::View(world),
 		update_dsp_param{update_function},
