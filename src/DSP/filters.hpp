@@ -141,7 +141,7 @@ protected:
 };
 
 struct LowshelfGenerator {
-	constexpr auto operator()(float rate, float cutoff, float gain) noexcept {
+	auto operator()(float rate, float cutoff, float gain) noexcept {
 		constexpr auto pi = constants::pi_v<float>;
 		constexpr auto sqrt2 = constants::sqrt2_v<float>;
 
@@ -162,7 +162,7 @@ struct LowshelfGenerator {
 };
 
 struct HighshelfGenerator {
-	constexpr auto operator()(float rate, float cutoff, float gain) noexcept {
+	auto operator()(float rate, float cutoff, float gain) noexcept {
 		constexpr auto pi = constants::pi_v<float>;
 		constexpr auto sqrt2 = constants::sqrt2_v<float>;
 
