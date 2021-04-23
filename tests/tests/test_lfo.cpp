@@ -1,8 +1,8 @@
 #include <random>
-#include <numbers>
 
 #include <gtest/gtest.h>
 
+#include "common/constants.hpp"
 #include "DSP/utils/lfo.hpp"
 
 namespace {
@@ -29,7 +29,7 @@ TEST(lfo, bounds_check_randomized) {
 }
 
 TEST(lfo, value_check_randomized) {
-	using namespace std::numbers;
+	using namespace constants;
 
 	std::uniform_real_distribution<float> dist{0.f, 1.f};
 	float phase = dist(rng);
