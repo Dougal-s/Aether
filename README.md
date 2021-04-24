@@ -26,7 +26,7 @@ Aether is an algorithmic reverb linux LV2 plugin based on [Cloudseed](https://gi
 
 | Compiler | Version |
 | -------- | ------- |
-| g++      | >=10.0  |
+| g++      | >=9.0  |
 | clang++  | >=10.0  |
 | AppleClang  | >=12.0  |
 

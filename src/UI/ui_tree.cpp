@@ -462,7 +462,7 @@ void Path::draw_impl() const {
 
 	const auto sp2px = [&](float sp) { return sp*100*m_root->vw/1230; };
 	const auto extract_nums = [&]<size_t nums>(std::istringstream& ss) {
-		std::array<float, nums> numbers;
+		std::array<float, nums> numbers = {};
 		for (float& num : numbers) {
 			ss >> num;
 			num = sp2px(num);
