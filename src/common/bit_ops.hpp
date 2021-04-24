@@ -31,8 +31,10 @@ namespace bits {
 	T bit_ceil(T x) {
 		if (has_single_bit(x)) return x;
 		unsigned lead = 0;
-		while (x >>= 1)
+		while (x) {
 			++lead;
+			x >>= 1;
+		}
 		return 1 << lead;
 	}
 
