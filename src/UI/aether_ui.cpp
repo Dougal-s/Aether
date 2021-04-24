@@ -1130,6 +1130,7 @@ namespace Aether {
 
 	pugl::Status UI::View::onEvent(const pugl::ExposeEvent&) noexcept {
 		try {
+			ui_tree.calculate_layout();
 			draw();
 		} catch (const std::exception& e) {
 			std::cerr << e.what() << std::endl;
