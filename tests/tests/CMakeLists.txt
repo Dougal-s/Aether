@@ -18,6 +18,12 @@ create_test(lfo
 	${PROJECT_SOURCE_DIR}/src/DSP/utils/lfo.hpp
 )
 
+create_test(common
+	test_common.cpp
+	${PROJECT_SOURCE_DIR}/src/common/bit_ops.hpp
+	${PROJECT_SOURCE_DIR}/src/common/constants.hpp
+)
+
 create_test(diffuser
 	test_diffuser.cpp
 	${PROJECT_SOURCE_DIR}/src/DSP/diffuser.hpp
