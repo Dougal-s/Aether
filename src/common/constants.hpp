@@ -1,5 +1,5 @@
-#ifndef NUMBERS
-#define NUMBERS
+#ifndef CONSTANTS_HPP
+#define CONSTANTS_HPP
 
 namespace constants {
 	template <typename T>

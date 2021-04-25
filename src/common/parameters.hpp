@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PARAMETERS_HPP
+#define PARAMETERS_HPP
 
 #include <array>
 
@@ -70,3 +71,5 @@ static constexpr ParameterInfo parameter_infos[] = {
 	{1,99999,1, true},
 	{1,99999,1, true} // 50
 };
+
+#endif

@@ -1,5 +1,5 @@
-#ifndef BIT_HEADER
-#define BIT_HEADER
+#ifndef BIT_OPS_HPP
+#define BIT_OPS_HPP
 
 #include <version>
 
