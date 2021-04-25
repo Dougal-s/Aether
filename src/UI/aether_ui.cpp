@@ -15,9 +15,6 @@
 #include <pugl/pugl.h>
 #include <pugl/pugl.hpp>
 
-// NanoVG
-#include <nanovg.h>
-
 // LV2
 #include <lv2/atom/atom.h>
 #include <lv2/atom/util.h>

@@ -1,3 +1,4 @@
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <filesystem>
@@ -9,7 +10,11 @@
 #include <memory>
 #include <sstream>
 
+// Pugl
 #include <pugl/pugl.hpp>
+
+// NanoVG
+#include <nanovg.h>
 
 #include "gl_helper.hpp"
 
