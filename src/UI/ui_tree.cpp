@@ -605,6 +605,7 @@ UIElement* Rect::element_at_impl(float x, float y) {
 // ShaderRect
 
 void ShaderRect::draw_impl() const {
+	nvgEndFrame(m_root->ctx->nvg_ctx);
 	if (!m_shader)
 		m_shader = Shader(m_vert_shader_code, m_frag_shader_code.data());
 
@@ -626,6 +627,7 @@ void ShaderRect::draw_impl() const {
 	}
 
 	m_shader.draw();
+	nvgBeginFrame(m_root->ctx->nvg_ctx, 100*m_root->vw, 100*m_root->vh, 1);
 }
 
 // Spectrum View
@@ -879,9 +881,9 @@ void UITree::calculate_layout() {
 }
 
 void UITree::draw() const {
-	nvgEndFrame(m_root.ctx->nvg_ctx);
-	m_root.draw();
 	nvgBeginFrame(m_root.ctx->nvg_ctx, 100*m_root.vw, 100*m_root.vh, 1);
+	m_root.draw();
+	nvgEndFrame(m_root.ctx->nvg_ctx);
 }
 
 const Root& UITree::root() const noexcept { return m_root; }
