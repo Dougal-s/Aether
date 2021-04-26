@@ -16,10 +16,6 @@ jobs:
     outputs:
         artifact-name: ${{ env.ARCHIVE_NAME }}
 
-    strategy:
-      matrix:
-        compiler: [clang++-10]
-
     steps:
     - uses: actions/checkout@v2
       with:
