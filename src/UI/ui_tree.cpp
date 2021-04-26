@@ -18,6 +18,7 @@ namespace {
 
 	float strtof(std::string_view str) {
 		std::istringstream ss{std::string(str)};
+		ss.imbue(std::locale::classic());
 		float num;
 		ss >> num;
 		return num;
