@@ -80,14 +80,19 @@ namespace {
 		std::string units;
 		expr >> rad >> units;
 
-		if (units.starts_with("rad"))
-			return rad;
+		/*
+			a weird issue with appleclang sets rad to 0
+			and units to an empty string for input
+			strings with units deg
 		if (units.starts_with("deg"))
-			return rad * constants::pi_v<float>/180.f;
+		return rad * constants::pi_v<float>/180.f;
+		*/
 		if (units.starts_with("grad"))
 			return rad * constants::pi_v<float>/200.f;
 		if (units.starts_with("turn"))
 			return rad * 2*constants::pi_v<float>;
+		if (units.starts_with("rad"))
+			return rad;
 		if (rad == 0) {
 			expr.seekg(-units.size(), std::ios::cur);
 			return 0.f;
