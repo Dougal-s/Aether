@@ -8,6 +8,17 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 set(CMAKE_CXX_EXTENSIONS false)
 
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+	include_directories(SYSTEM /usr/local/include)
+	set(UI_TYPE "CocoaUI")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	set(UI_TYPE "X11UI")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	set(UI_TYPE "WindowsUI")
+else()
+	message(FATAL_ERROR "Unrecognized Platform!")
+endif()
+
 add_library(aether_dsp MODULE
 	src/DSP/aether_dsp_lv2.cpp
 	src/DSP/aether_dsp.cpp
@@ -60,6 +71,8 @@ target_link_libraries(aether_ui PRIVATE pugl)
 include(TargetNanoVG)
 target_link_libraries(aether_ui PRIVATE nanovg)
 
+configure_file(resources/manifest.ttl.in ../aether.lv2/manifest.ttl)
+configure_file(resources/aether.ttl.in ../aether.lv2/aether.ttl)
 add_custom_command(TARGET aether_dsp POST_BUILD COMMAND cp aether_dsp.so ../aether.lv2/)
 add_custom_command(TARGET aether_ui POST_BUILD COMMAND cp aether_ui.so ../aether.lv2/)
 

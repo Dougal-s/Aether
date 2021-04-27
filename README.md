@@ -26,8 +26,9 @@ Aether is an algorithmic reverb linux LV2 plugin based on [Cloudseed](https://gi
 
 | Compiler | Version |
 | -------- | ------- |
-| g++      | >=10.0  |
+| g++      | >=9.0  |
 | clang++  | >=10.0  |
+| AppleClang  | >=12.0  |
 
 **Libraries**
 
@@ -38,9 +39,13 @@ Aether is an algorithmic reverb linux LV2 plugin based on [Cloudseed](https://gi
 | OpenGL  | `libgl1-mesa-dev` `libglu1-mesa-dev` |
 
 **Ubuntu/Debian**
-The prerequisites can be installed using apt via the command:
 ```bash
 sudo apt install cmake g++-10 lv2-dev libx11-dev libgl1-mesa-dev libglu1-mesa-dev
+```
+
+**MacOS**
+```bash
+brew install cmake lv2
 ```
 
 ### Compiling

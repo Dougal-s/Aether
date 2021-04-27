@@ -1,19 +1,17 @@
-#include <bit>
 #include <cmath>
 #include <complex>
-#include <numbers>
 #include <numeric>
-#include <ranges>
-#include <span>
 
+#include "../../common/constants.hpp"
+#include "../../common/bit_ops.hpp"
 
 namespace fft {
 	/*
 		applies the hann window function to the input
 	*/
-	template <std::ranges::forward_range Container>
+	template <class Container>
 	void window_function(Container& container) {
-		const auto coefm = std::exp(std::complex<float>(0, std::numbers::pi_v<float> / (container.size() - 1)));
+		const auto coefm = std::exp(std::complex<float>(0, constants::pi_v<float> / (container.size() - 1)));
 		std::complex<float> coef = {1, 0};
 		float sum = 0.f;
 		for (float& e : container) {
@@ -37,14 +35,15 @@ namespace fft {
 		return reversed;
 	}
 
-	template <std::ranges::random_access_range Container>
-	void bitReverseShuffle(Container& container) {
-		assert(std::has_single_bit(container.size()));
-		uint8_t numBits = std::countr_zero(container.size());
+	template <class Iterator>
+	void bitReverseShuffle(Iterator first, Iterator last) {
+		const size_t size = last-first;
+		assert(bits::has_single_bit(size));
+		uint8_t numBits = bits::countr_zero(size);
 
-		for (size_t i = 0; i < container.size(); ++i) {
+		for (size_t i = 0; i < size; ++i) {
 			size_t j = reverseBits(i, numBits);
-			if (i < j) std::swap(container[i], container[j]);
+			if (i < j) std::swap(first[i], first[j]);
 		}
 	}
 
@@ -52,21 +51,22 @@ namespace fft {
 		performs bit reverse fft inplace
 		requires the input buffer size to be a power of 2
 	*/
-	template <std::ranges::random_access_range Container>
-	void fft(Container& container) {
-		assert(std::has_single_bit(container.size()));
+	template <class Iterator>
+	void fft(Iterator first, Iterator last) {
+		const size_t size = last-first;
+		assert(bits::has_single_bit(size));
 
-		bitReverseShuffle(container);
+		bitReverseShuffle(first, last);
 
-		for (size_t m = 2; m <= container.size(); m <<= 1) {
-			const auto wm = std::exp(std::complex<float>(0.f, -2.f * std::numbers::pi_v<float> / m));
-			for (size_t k = 0; k < container.size(); k += m) {
+		for (size_t m = 2; m <= size; m <<= 1) {
+			const auto wm = std::exp(std::complex<float>(0.f, -2.f * constants::pi_v<float> / m));
+			for (size_t k = 0; k < size; k += m) {
 				std::complex<float> w = 1;
 				for (size_t j = 0; 2 * j < m; ++j, w *= wm) {
-					const auto t = w * container[k + j + m / 2];
-					const auto u = container[k + j];
-					container[k + j] = u + t;
-					container[k + j + m / 2] = u - t;
+					const auto t = w * first[k + j + m / 2];
+					const auto u = first[k + j];
+					first[k + j] = u + t;
+					first[k + j + m / 2] = u - t;
 				}
 			}
 		}
@@ -76,24 +76,22 @@ namespace fft {
 		computes the magnitude of each frequency inplace
 		requires an input size that is a power of two
 	*/
-	template <std::ranges::contiguous_range Container>
+	template <class Container>
 	void magnitudes(Container& container) {
-		assert(std::has_single_bit(container.size()));
+		assert(bits::has_single_bit(container.size()));
 
-		std::span<std::complex<float>> input(
-			reinterpret_cast<std::complex<float>*>(container.data()),
-			container.size()/2
-		);
+		std::complex<float>* first = reinterpret_cast<std::complex<float>*>(container.data());
+		const size_t size = container.size()/2;
 
-		fft(input);
+		fft(first, first+size);
 
-		container[0] = input[0].imag() + input[0].real();
+		container[0] = first[0].imag() + first[0].real();
 
-		const auto wm = std::exp(std::complex<float>(0.f, -2.f*std::numbers::pi_v<float> / container.size()));
+		const auto wm = std::exp(std::complex<float>(0.f, -2.f*constants::pi_v<float> / container.size()));
 		auto w = wm;
-		for (size_t r = 1; r < input.size() / 2; ++r, w *= wm) {
-			const auto i_r = input[r];
-			const auto i_smr = input[input.size() - r];
+		for (size_t r = 1; r < size / 2; ++r, w *= wm) {
+			const auto i_r = first[r];
+			const auto i_smr = first[size - r];
 
 			{
 				const auto F = 0.5f * (i_r + std::conj(i_smr));
@@ -110,6 +108,6 @@ namespace fft {
 			}
 		}
 
-		std::copy(container.end()-input.size()/2+1, container.end(), container.begin()+input.size()/2);
+		std::copy(container.end()-size/2+1, container.end(), container.begin()+size/2);
 	}
 }

@@ -1,6 +1,5 @@
 #include <cmath>
 #include <cstring>
-#include <numbers>
 #include <numeric>
 #include <iostream>
 
@@ -11,12 +10,15 @@
 #include <nanovg.h>
 #include <nanovg_gl.h>
 
+#include "../common/constants.hpp"
+
 #include "ui_tree.hpp"
 
 namespace {
 
 	float strtof(std::string_view str) {
 		std::istringstream ss{std::string(str)};
+		ss.imbue(std::locale::classic());
 		float num;
 		ss >> num;
 		return num;
@@ -78,14 +80,19 @@ namespace {
 		std::string units;
 		expr >> rad >> units;
 
+		/*
+			a weird issue with appleclang sets rad to 0
+			and units to an empty string for input
+			strings with units deg
+		if (units.starts_with("deg"))
+		return rad * constants::pi_v<float>/180.f;
+		*/
+		if (units.starts_with("grad"))
+			return rad * constants::pi_v<float>/200.f;
+		if (units.starts_with("turn"))
+			return rad * 2*constants::pi_v<float>;
 		if (units.starts_with("rad"))
 			return rad;
-		if (units.starts_with("deg"))
-			return rad * std::numbers::pi_v<float>/180.f;
-		if (units.starts_with("grad"))
-			return rad * std::numbers::pi_v<float>/200.f;
-		if (units.starts_with("turn"))
-			return rad * 2*std::numbers::pi_v<float>;
 		if (rad == 0) {
 			expr.seekg(-units.size(), std::ios::cur);
 			return 0.f;
@@ -461,7 +468,7 @@ void Path::draw_impl() const {
 
 	const auto sp2px = [&](float sp) { return sp*100*m_root->vw/1230; };
 	const auto extract_nums = [&]<size_t nums>(std::istringstream& ss) {
-		std::array<float, nums> numbers;
+		std::array<float, nums> numbers = {};
 		for (float& num : numbers) {
 			ss >> num;
 			num = sp2px(num);
@@ -604,6 +611,7 @@ UIElement* Rect::element_at_impl(float x, float y) {
 // ShaderRect
 
 void ShaderRect::draw_impl() const {
+	nvgEndFrame(m_root->ctx->nvg_ctx);
 	if (!m_shader)
 		m_shader = Shader(m_vert_shader_code, m_frag_shader_code.data());
 
@@ -625,6 +633,7 @@ void ShaderRect::draw_impl() const {
 	}
 
 	m_shader.draw();
+	nvgBeginFrame(m_root->ctx->nvg_ctx, 100*m_root->vw, 100*m_root->vh, 1);
 }
 
 // Spectrum View
@@ -878,9 +887,9 @@ void UITree::calculate_layout() {
 }
 
 void UITree::draw() const {
-	nvgEndFrame(m_root.ctx->nvg_ctx);
-	m_root.draw();
 	nvgBeginFrame(m_root.ctx->nvg_ctx, 100*m_root.vw, 100*m_root.vh, 1);
+	m_root.draw();
+	nvgEndFrame(m_root.ctx->nvg_ctx);
 }
 
 const Root& UITree::root() const noexcept { return m_root; }

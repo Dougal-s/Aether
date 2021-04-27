@@ -1,8 +1,6 @@
-#include <bit>
 #include <cassert>
 #include <chrono>
 #include <iostream>
-#include <span>
 #include <string>
 #include <stdexcept>
 #include <filesystem>
@@ -17,14 +15,12 @@
 #include <pugl/pugl.h>
 #include <pugl/pugl.hpp>
 
-// NanoVG
-#include <nanovg.h>
-
 // LV2
-#include <lv2/lv2plug.in/ns/ext/atom/atom.h>
-#include <lv2/lv2plug.in/ns/ext/atom/util.h>
-#include <lv2/lv2plug.in/ns/ext/atom/forge.h>
+#include <lv2/atom/atom.h>
+#include <lv2/atom/util.h>
+#include <lv2/atom/forge.h>
 
+#include "../common/bit_ops.hpp"
 #include "../common/parameters.hpp"
 #include "../common/utils.hpp"
 #include "aether_ui.hpp"
@@ -84,7 +80,8 @@ namespace {
 namespace Aether {
 	class UI::View : public pugl::View {
 	public:
-		View(pugl::World& world, std::filesystem::path bundle_path, auto update_parameter_fn);
+		template <class UpdateFn>
+		View(pugl::World& world, std::filesystem::path bundle_path, UpdateFn update_parameter_fn);
 		View(const View&) = delete;
 		~View() = default;
 
@@ -199,10 +196,11 @@ namespace Aether {
 		View member function
 	*/
 
+	template <class UpdateFn>
 	UI::View::View(
 		pugl::World& world,
 		std::filesystem::path bundle_path,
-		auto update_function
+		UpdateFn update_function
 	) :
 		pugl::View(world),
 		update_dsp_param{update_function},
@@ -958,7 +956,7 @@ namespace Aether {
 						{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
 						{"fill", "#b6bfcc"},
 						{"text", "DELAY"},
-						{"transform", "rotate(-90deg)"}
+						{"transform", "rotate(-0.25turn)"}
 					}
 				});
 
@@ -1020,7 +1018,7 @@ namespace Aether {
 						{"font-family", "Roboto-Light"}, {"font-size", "17.333333sp"},
 						{"fill", "#b6bfcc"},
 						{"text", "DIFFUSION"},
-						{"transform", "rotate(-90deg)"}
+						{"transform", "rotate(-0.25turn)"}
 					}
 				});
 				diffusion->add_child<Text>({
@@ -1196,7 +1194,7 @@ namespace Aether {
 		auto& buf = sample_infos.samples[channel];
 		sample_infos.sample_rate = rate;
 
-		buf.resize(std::bit_ceil(rate / 10));
+		buf.resize(bits::bit_ceil(rate / 10));
 
 		if (n_samples < buf.size()) {
 			std::copy(buf.begin()+n_samples, buf.end(), buf.begin());
@@ -1455,9 +1453,9 @@ namespace Aether {
 				{"cx", "0"},
 				{"cy", "0"},
 				{"r", to_string(dial_size) + "sp"},
-				{"a0", "-135deg"}, {"a1", "135deg"},
+				{"a0", "-150grad"}, {"a1", "150grad"},
 				{"fill", "#1b1d23"},
-				{"transform", "rotate(-90deg)"}
+				{"transform", "rotate(-0.25turn)"}
 			}
 		});
 		center_group->add_child<Arc>({
@@ -1466,7 +1464,7 @@ namespace Aether {
 				.param_idx = param_idx,
 				.style ="a1",
 				.in_range = {parameter_infos[param_idx].min, parameter_infos[param_idx].max},
-				.out_range = {"-135deg", "135deg"},
+				.out_range = {"-150grad", "150grad"},
 				.interpolate = [param_idx](float t, auto out) {
 					if (parameter_infos[param_idx].integer)
 						t = static_cast<int>(t * (parameter_infos[param_idx].range()))
@@ -1478,10 +1476,10 @@ namespace Aether {
 				{"cx", "0"},
 				{"cy", "0"},
 				{"r", to_string(dial_size) + "sp"},
-				{"a0", "-135deg"},
+				{"a0", "-150grad"},
 				{"fill", "#43444b"},
 				{"stroke", "#b6bfcc"}, {"stroke-width", to_string(strk_width) + "sp"},
-				{"transform", "rotate(-90deg)"}
+				{"transform", "rotate(-0.25turn)"}
 			}
 		});
 		center_group->add_child<Circle>({
@@ -1505,7 +1503,7 @@ namespace Aether {
 					if (parameter_infos[param_idx].integer)
 						t = static_cast<int>(t * (parameter_infos[param_idx].range()))
 							/ (parameter_infos[param_idx].range());
-					return "rotate(" + to_string(std::lerp(-135, 135, t)) + "deg)";
+					return "rotate(" + to_string(std::lerp(-150, 150, t)) + "grad)";
 				}
 			}},
 			.style = {

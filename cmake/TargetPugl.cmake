@@ -9,12 +9,11 @@ target_include_directories(pugl SYSTEM PUBLIC "${PUGL_SOURCE_DIR}/bindings/cxx/i
 
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
-target_link_libraries(pugl OpenGL::OpenGL)
+target_link_libraries(pugl OpenGL::GL)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 	target_sources(pugl PRIVATE "${PUGL_SOURCE_DIR}/src/mac.m" "${PUGL_SOURCE_DIR}/src/mac_gl.m")
-	find_library(Cocoa Cocoa)
-	target_link_libraries(pugl ${Cocoa})
+	target_link_libraries(pugl "-framework Cocoa -framework CoreVideo")
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	target_sources(pugl PRIVATE "${PUGL_SOURCE_DIR}/src/x11.c" "${PUGL_SOURCE_DIR}/src/x11_gl.c")
 	find_library(X11 X11)

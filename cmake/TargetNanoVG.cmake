@@ -6,7 +6,7 @@ target_compile_options(nanovg PRIVATE -O3 -DNDEBUG)
 
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
-target_link_libraries(nanovg OpenGL::OpenGL)
+target_link_libraries(nanovg OpenGL::GL)
 target_compile_definitions(nanovg PUBLIC NANOVG_GL3_IMPLEMENTATION)
 
 target_include_directories(nanovg SYSTEM PUBLIC "${NANOVG_SOURCE_DIR}")

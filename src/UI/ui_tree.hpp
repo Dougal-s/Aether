@@ -1,3 +1,4 @@
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <filesystem>
@@ -9,7 +10,11 @@
 #include <memory>
 #include <sstream>
 
+// Pugl
 #include <pugl/pugl.hpp>
+
+// NanoVG
+#include <nanovg.h>
 
 #include "gl_helper.hpp"
 
@@ -421,7 +426,10 @@ public:
 	/*
 		modifiers
 	*/
-	template<class Subclass> requires std::is_base_of_v<UIElement, Subclass>
+	template <
+		class Subclass,
+		std::enable_if_t<std::is_base_of_v<UIElement, Subclass>, bool> = true
+	>
 	Subclass* add_child(typename Subclass::CreateInfo&& create_info) {
 		auto& added = m_children.emplace_back(
 			std::make_unique<Subclass>(m_root, std::forward<typename Subclass::CreateInfo>(create_info))
