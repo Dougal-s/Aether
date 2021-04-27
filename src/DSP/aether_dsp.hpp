@@ -166,8 +166,8 @@ namespace Aether {
 		struct Filters {
 			Filters(float rate) : lowpass(rate), highpass(rate) {}
 
-			Lowpass6dB lowpass;
-			Highpass6dB highpass;
+			Lowpass6dB<float> lowpass;
+			Highpass6dB<float> highpass;
 		};
 
 		Filters m_l_early_filters;
@@ -176,8 +176,8 @@ namespace Aether {
 		MultitapDelay m_l_early_multitap;
 		MultitapDelay m_r_early_multitap;
 
-		AllpassDiffuser m_l_early_diffuser;
-		AllpassDiffuser m_r_early_diffuser;
+		AllpassDiffuser<float> m_l_early_diffuser;
+		AllpassDiffuser<float> m_r_early_diffuser;
 
 		// Late
 		LateRev m_l_late_rev;

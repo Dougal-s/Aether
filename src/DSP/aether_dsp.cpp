@@ -150,7 +150,7 @@ namespace Aether {
 				}
 
 				{ // allpass diffuser
-					AllpassDiffuser::PushInfo info = {
+					AllpassDiffuser<float>::PushInfo info = {
 						.stages = static_cast<uint32_t>(params.early_diffusion_stages),
 						.feedback = params.early_diffusion_feedback,
 						.interpolate = true

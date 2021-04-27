@@ -17,6 +17,7 @@
 /*
 	Schroeder Allpass filter
 */
+template <class FpType>
 class ModulatedAllpass {
 public:
 	ModulatedAllpass() = default;
@@ -39,7 +40,7 @@ public:
 
 	void set_mod_rate(float mod_rate) noexcept { m_lfo.set_rate(mod_rate); }
 
-	float push(float sample, bool interpolate, float feedback) noexcept;
+	FpType push(FpType sample, bool interpolate, float feedback) noexcept;
 
 	void clear() noexcept { m_buf.clear(); }
 
@@ -49,7 +50,7 @@ public:
 	static constexpr std::pair<float, float> mod_bounds = {0.f, 0.003f};
 
 private:
-	Ringbuffer<float> m_buf = {};
+	Ringbuffer<FpType> m_buf = {};
 
 	float m_delay = 1.f;
 	float m_mod_depth = 0.f;
@@ -58,17 +59,20 @@ private:
 };
 
 
-inline ModulatedAllpass::ModulatedAllpass(float rate, float mod_phase) :
+template <class FpType>
+inline ModulatedAllpass<FpType>::ModulatedAllpass(float rate, float mod_phase) :
 	m_buf{static_cast<size_t>((delay_bounds.second+mod_bounds.second) * rate)},
 	m_lfo{mod_phase} {}
 
-inline ModulatedAllpass::ModulatedAllpass(ModulatedAllpass&& other) :
+template <class FpType>
+inline ModulatedAllpass<FpType>::ModulatedAllpass(ModulatedAllpass&& other) :
 	ModulatedAllpass()
 {
 	*this = std::move(other);
 }
 
-inline ModulatedAllpass& ModulatedAllpass::operator=(
+template <class FpType>
+inline ModulatedAllpass<FpType>& ModulatedAllpass<FpType>::operator=(
 	ModulatedAllpass&& other
 ) noexcept {
 	std::swap(m_buf, other.m_buf);
@@ -78,8 +82,9 @@ inline ModulatedAllpass& ModulatedAllpass::operator=(
 	return *this;
 }
 
-inline float ModulatedAllpass::push(
-	float sample,
+template <class FpType>
+inline FpType ModulatedAllpass<FpType>::push(
+	FpType sample,
 	bool interpolate,
 	float feedback
 ) noexcept {
@@ -92,13 +97,13 @@ inline float ModulatedAllpass::push(
 	uint32_t delay_floor = static_cast<uint32_t>(delay);
 	size_t idx1 = m_buf.end - delay_floor + (m_buf.end < delay_floor ? m_buf.size : 0);
 	size_t idx2 = idx1-1 + (idx1 < 1 ? m_buf.size : 0);
-	float t = delay-static_cast<float>(delay_floor);
-	float delayed = interpolate ?
+	FpType t = static_cast<FpType>(delay-static_cast<float>(delay_floor));
+	FpType delayed = interpolate ?
 		std::lerp(m_buf.buf[idx1], m_buf.buf[idx2], t) : m_buf.buf[idx1];
 
-	m_buf.push(sample + delayed*feedback);
+	m_buf.push(sample + delayed*static_cast<FpType>(feedback));
 
-	return delayed - m_buf.buf[m_buf.end]*feedback;
+	return delayed - m_buf.buf[m_buf.end]*static_cast<FpType>(feedback);
 }
 
 
@@ -107,6 +112,7 @@ inline float ModulatedAllpass::push(
 	An allpass diffuser consisting of up
 	to 8 modulated allpass filters in series
 */
+template <class FpType>
 class AllpassDiffuser {
 public:
 	struct PushInfo {
@@ -116,7 +122,14 @@ public:
 	};
 
 	template <class RNG>
-	AllpassDiffuser(float sample_rate, RNG& rng);
+	AllpassDiffuser(float rate, RNG& rng) : m_rate(rate) {
+		std::uniform_real_distribution<float> dist(0.f, 1.f);
+		for (auto& filter : m_filters)
+			filter = ModulatedAllpass<FpType>(rate, dist(rng));
+
+		Random::generate(m_rand_vals, m_seed, m_crossmix);
+	}
+
 	AllpassDiffuser(const AllpassDiffuser&) = delete;
 	~AllpassDiffuser() = default;
 
@@ -128,7 +141,7 @@ public:
 	void set_mod_depth(float mod_depth) noexcept;
 	void set_mod_rate(float mod_rate) noexcept;
 
-	float push(float sample, PushInfo info) noexcept {
+	FpType push(FpType sample, PushInfo info) noexcept {
 		for (uint32_t i = 0; i < info.stages; ++i)
 			sample = m_filters[i].push(sample, info.interpolate, info.feedback);
 		return sample;
@@ -141,13 +154,13 @@ public:
 
 	static constexpr uint32_t max_stages = 8;
 
-	static constexpr std::pair<float, float> delay_bounds = ModulatedAllpass::delay_bounds;
+	static constexpr std::pair<float, float> delay_bounds = ModulatedAllpass<FpType>::delay_bounds;
 	static constexpr std::pair<float, float> mod_bounds = {
-		ModulatedAllpass::mod_bounds.first/0.85f,
-		ModulatedAllpass::mod_bounds.second/1.15f
+		ModulatedAllpass<FpType>::mod_bounds.first/0.85f,
+		ModulatedAllpass<FpType>::mod_bounds.second/1.15f
 	};
 private:
-	std::array<ModulatedAllpass, max_stages> m_filters = {};
+	std::array<ModulatedAllpass<FpType>, max_stages> m_filters = {};
 	// used for mod_amt, mod_rate and delay
 	std::array<float, 3*max_stages> m_rand_vals = {};
 
@@ -166,17 +179,8 @@ private:
 };
 
 
-template <class RNG>
-AllpassDiffuser::AllpassDiffuser(float rate, RNG& rng) : m_rate(rate) {
-	std::uniform_real_distribution<float> dist(0.f, 1.f);
-	for (auto& filter : m_filters)
-		filter = ModulatedAllpass(rate, dist(rng));
-
-	Random::generate(m_rand_vals, m_seed, m_crossmix);
-}
-
-
-inline void AllpassDiffuser::set_seed(uint32_t seed) noexcept {
+template <class FpType>
+inline void AllpassDiffuser<FpType>::set_seed(uint32_t seed) noexcept {
 	if (m_seed == seed) return;
 	m_seed = seed;
 
@@ -185,7 +189,8 @@ inline void AllpassDiffuser::set_seed(uint32_t seed) noexcept {
 	generate_mod_rate();
 }
 
-inline void AllpassDiffuser::set_seed_crossmix(float crossmix) noexcept {
+template <class FpType>
+inline void AllpassDiffuser<FpType>::set_seed_crossmix(float crossmix) noexcept {
 	if (m_crossmix == crossmix) return;
 	m_crossmix = crossmix;
 
@@ -194,28 +199,32 @@ inline void AllpassDiffuser::set_seed_crossmix(float crossmix) noexcept {
 	generate_mod_rate();
 }
 
-inline void AllpassDiffuser::set_delay(float delay) noexcept {
+template <class FpType>
+inline void AllpassDiffuser<FpType>::set_delay(float delay) noexcept {
 	if (m_delay == delay) return;
 	m_delay = delay;
 
 	generate_delay();
 }
 
-inline void AllpassDiffuser::set_mod_depth(float mod_depth) noexcept {
+template <class FpType>
+inline void AllpassDiffuser<FpType>::set_mod_depth(float mod_depth) noexcept {
 	if (m_mod_depth == mod_depth) return;
 	m_mod_depth = mod_depth;
 
 	generate_mod_depth();
 }
 
-inline void AllpassDiffuser::set_mod_rate(float mod_rate) noexcept {
+template <class FpType>
+inline void AllpassDiffuser<FpType>::set_mod_rate(float mod_rate) noexcept {
 	if (m_mod_rate == mod_rate) return;
 	m_mod_rate = mod_rate;
 
 	generate_mod_rate();
 }
 
-inline void AllpassDiffuser::generate_delay() noexcept {
+template <class FpType>
+inline void AllpassDiffuser<FpType>::generate_delay() noexcept {
 	for (size_t filter = 0; filter < m_filters.size(); ++filter) {
 		m_filters[filter].set_delay(
 			m_delay*std::exp( -2.3f*m_rand_vals[filter] )
@@ -223,7 +232,8 @@ inline void AllpassDiffuser::generate_delay() noexcept {
 	}
 }
 
-inline void AllpassDiffuser::generate_mod_depth() noexcept {
+template <class FpType>
+inline void AllpassDiffuser<FpType>::generate_mod_depth() noexcept {
 	for (size_t filter = 0; filter < m_filters.size(); ++filter) {
 		m_filters[filter].set_mod_depth(
 			m_mod_depth * (0.85f + 0.3f*m_rand_vals[max_stages+filter])
@@ -231,7 +241,8 @@ inline void AllpassDiffuser::generate_mod_depth() noexcept {
 	}
 }
 
-inline void AllpassDiffuser::generate_mod_rate() noexcept {
+template <class FpType>
+inline void AllpassDiffuser<FpType>::generate_mod_rate() noexcept {
 	for (size_t filter = 0; filter < m_filters.size(); ++filter) {
 		m_filters[filter].set_mod_rate(
 			m_mod_rate * (0.85f + 0.3f*m_rand_vals[2*max_stages+filter]) / m_rate

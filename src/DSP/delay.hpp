@@ -47,9 +47,12 @@ private:
 /*
 	A tap delay with a modulated delay length
 */
+template <class FpType>
 class ModulatedDelay {
 public:
-	ModulatedDelay(float sample_rate, float phase);
+	ModulatedDelay(float sample_rate, float phase) :
+		m_buf{static_cast<size_t>( (max_delay+max_mod) * sample_rate ) + 1},
+		m_lfo(phase) {}
 	ModulatedDelay(const ModulatedDelay&) = delete;
 
 	ModulatedDelay& operator=(const ModulatedDelay&) = delete;
@@ -66,39 +69,32 @@ public:
 
 	void clear() noexcept { m_buf.clear(); }
 
-	float push(float sample) noexcept;
+	FpType push(FpType sample) noexcept {
+		m_buf.push(sample);
+
+		float delay = std::max(m_delay + m_mod_depth*m_lfo.depth(), 0.f);
+		m_lfo.next();
+
+		uint32_t delay_floor = static_cast<uint32_t>(delay);
+		size_t idx1 = m_buf.end - delay_floor
+			+ (m_buf.end < delay_floor ? m_buf.size : 0);
+		size_t idx2 = idx1 - 1 + (idx1 < 1 ? m_buf.size : 0);
+		FpType t = static_cast<FpType>(delay-static_cast<float>(delay_floor));
+
+		return std::lerp(m_buf.buf[idx1], m_buf.buf[idx2], t);
+	}
 
 	// maximum in seconds
 	static constexpr float max_delay = 1.5f;
 	static constexpr float max_mod = 0.05f;
 
 private:
-	Ringbuffer<float> m_buf;
+	Ringbuffer<FpType> m_buf;
 	LFO m_lfo;
 
 	float m_delay = 0.f;
 	float m_mod_depth = 0.f;
 };
-
-inline ModulatedDelay::ModulatedDelay(float sample_rate, float phase) :
-	m_buf{static_cast<size_t>( (max_delay+max_mod) * sample_rate ) + 1},
-	m_lfo(phase)
-{}
-
-inline float ModulatedDelay::push(float sample) noexcept {
-	m_buf.push(sample);
-
-	float delay = std::max(m_delay + m_mod_depth*m_lfo.depth(), 0.f);
-	m_lfo.next();
-
-	uint32_t delay_floor = static_cast<uint32_t>(delay);
-	size_t idx1 = m_buf.end - delay_floor
-		+ (m_buf.end < delay_floor ? m_buf.size : 0);
-	size_t idx2 = idx1 - 1 + (idx1 < 1 ? m_buf.size : 0);
-	float t = delay-static_cast<float>(delay_floor);
-
-	return std::lerp(m_buf.buf[idx1], m_buf.buf[idx2], t);
-}
 
 
 /*
