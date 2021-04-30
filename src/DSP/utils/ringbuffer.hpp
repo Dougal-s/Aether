@@ -41,41 +41,4 @@ namespace std {
 	}
 }
 
-/*
-template <class T>
-class Ringbuffer {
-public:
-	class Iterator {
-	public:
-
-	private:
-		Ringbuffer& m_rb;
-		size_t m_pos;
-	};
-
-	Ringbuffer& operator=(const Ringbuffer& other) {
-		m_sz = other.m_sz;
-		delete[] m_buf;
-		m_buf = new T[m_sz];
-		std::copy_n(other.m_buf, m_sz, m_buf);
-	}
-
-	Ringbuffer& operator=(Ringbuffer&& other) {
-		this->swap(other);
-	}
-
-
-	size_t size() const noexcept { return size; }
-
-	T& operator[](size_t idx) noexcept { return m_buf[idx]; }
-
-	T* data() { return m_buf; }
-
-	size_t end = 0;
-private:
-	size_t m_sz;
-	T* m_buf;
-};
-*/
-
 #endif
