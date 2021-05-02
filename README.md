@@ -1,6 +1,6 @@
 # Aether
 
-![Automated builds](https://github.com/Dougal-s/Aether/workflows/Automated%20builds/badge.svg?branch=master&event=push)
+[![Automated builds](https://github.com/Dougal-s/Aether/workflows/Automated%20builds/badge.svg?branch=master&event=push)](https://github.com/Dougal-s/Aether/actions/workflows/build.yml?query=branch%3Amaster)
 
 ![screenshot of the Aether UI](screenshot.png)
 
