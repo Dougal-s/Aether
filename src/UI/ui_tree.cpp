@@ -524,8 +524,18 @@ void Path::draw_impl() const {
 
 void Rect::calculate_layout_impl(Frame viewbox) {
 	{ // corner radius
-		const auto it = style.find("r");
-		m_r = (it ? m_root->to_px(viewbox, it->second) : 0.f);
+		m_r = {0, 0, 0, 0};
+		if (auto it = style.find("r"); it) {
+			std::istringstream ss(std::string(it->second));
+			uint32_t count = 0;
+			while ((ss >> std::ws).good() && count < 4)
+				m_r[count++] = m_root->to_px(viewbox, ss);
+
+			uint32_t repeats = static_cast<uint32_t>(4.f/count);
+			for (uint32_t i = 1; i < repeats; ++i)
+				std::copy_n(m_r.begin(), count, m_r.begin() + i*count);
+			std::copy_n(m_r.begin(), 4 - repeats*count, m_r.begin() + repeats*count);
+		}
 	}
 
 	std::optional<float> left, right, width;
@@ -590,7 +600,7 @@ void Rect::calculate_layout_impl(Frame viewbox) {
 
 void Rect::draw_impl() const {
 	nvgBeginPath(m_root->ctx->nvg_ctx);
-	nvgRoundedRect(m_root->ctx->nvg_ctx, x(), y(), width(), height(), r());
+	nvgRoundedRectVarying(m_root->ctx->nvg_ctx, x(), y(), width(), height(), r()[0], r()[1], r()[2], r()[3]);
 
 	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
 	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);

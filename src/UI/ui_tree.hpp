@@ -306,7 +306,7 @@ public:
 	/*
 		corner radius
 	*/
-	[[nodiscard]] float r() const { return m_r; }
+	[[nodiscard]] std::array<float, 4> r() const { return m_r; }
 protected:
 	/*
 		Virtual functions
@@ -316,7 +316,7 @@ protected:
 	virtual UIElement* element_at_impl(float x, float y) override;
 
 private:
-	float m_r;
+	std::array<float, 4> m_r;
 	Frame m_bounds;
 };
 

@@ -60,17 +60,8 @@ namespace {
 		g->add_child<Rect>({
 			.visible = true, .inert = true,
 			.style = {
-				{"x", "0"}, {"y", "0"}, {"r", "5sp"},
-				{"width", "100%"}, {"height", "10sp"},
-				{"fill", "#4b4f56"}
-			}
-		});
-
-		g->add_child<Rect>({
-			.visible = true, .inert = true,
-			.style = {
-				{"x", "0"}, {"y", "5sp"},
-				{"width", "100%"}, {"height", "15sp"},
+				{"x", "0"}, {"y", "0"}, {"r", "5sp 5sp 0 0"},
+				{"width", "100%"}, {"height", "20sp"},
 				{"fill", "#4b4f56"}
 			}
 		});
