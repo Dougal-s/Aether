@@ -1865,7 +1865,7 @@ namespace Aether {
 						parameter_infos[infos[i].idxs[2]].min,
 						parameter_infos[infos[i].idxs[2]].max
 					},
-					.out_range = {"97sp", "32sp"}
+					.out_range = {"97sp", "24.75sp"}
 				});
 			}
 
@@ -1899,18 +1899,20 @@ namespace Aether {
 					}
 				},
 				.motion_callback = [idxs = infos[i].idxs, this](UIElement* elem, const auto& e) {
-
 					if (e.state & pugl::Mod::PUGL_MOD_SHIFT) {
+						// reset filter frequency
 						update_dsp_param(idxs[1], parameter_infos[idxs[1]].dflt);
 						parameter_update(idxs[1], parameter_infos[idxs[1]].dflt);
 						if (idxs.size() >= 3) {
+							// reset filter gain
 							update_dsp_param(idxs[2], parameter_infos[idxs[2]].dflt);
 							parameter_update(idxs[2], parameter_infos[idxs[2]].dflt);
 						}
 						return;
 					}
+
 					float sensitivity = (e.state & pugl::Mod::PUGL_MOD_CTRL) ? 0.1f : 1.f;
-					float area[2] = {134*100*elem->root()->vw/1230, 65*100*elem->root()->vw/1230};
+					float area[2] = {134*100*elem->root()->vw/1230, 72.25f*100*elem->root()->vw/1230};
 					{
 						float dx = sensitivity*(static_cast<float>(e.x) - mouse_callback_info.x)/area[0];
 
