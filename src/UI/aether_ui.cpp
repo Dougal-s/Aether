@@ -1997,20 +1997,22 @@ namespace Aether {
 		delete world;
 
 		// inform dsp part that a ui has been destroyed
+
+		// create the atom in a temporary byte array
 		std::array<uint8_t, 64> obj_buf;
 		lv2_atom_forge_set_buffer(&atom_forge, obj_buf.data(), sizeof(obj_buf));
-
 		LV2_Atom_Forge_Frame frame;
 		auto msg = reinterpret_cast<LV2_Atom*>(
 			lv2_atom_forge_object(&atom_forge, &frame, 0, uris.ui_close)
 		);
-
 		lv2_atom_forge_pop(&atom_forge, &frame);
+
+		// copy the message to the dsp control port
 		m_write_function(m_controller,
-			0,
-			lv2_atom_total_size(msg),
-			uris.atom_eventTransfer,
-			msg
+			0, // port number
+			lv2_atom_total_size(msg), // msg size
+			uris.atom_eventTransfer, // msg type
+			msg // msg
 		);
 	}
 
@@ -2037,8 +2039,8 @@ namespace Aether {
 					0
 				);
 
-				const float* peaks = reinterpret_cast<const float*>(
-					reinterpret_cast<const char*>(&atom_peaks->body) + sizeof(LV2_Atom_Vector_Body)
+				auto peaks = reinterpret_cast<const float*>(
+					reinterpret_cast<const char*>(atom_peaks) + sizeof(LV2_Atom_Vector)
 				);
 
 				m_view->add_peaks(atom_n_samples->body, peaks);
@@ -2056,8 +2058,8 @@ namespace Aether {
 				const size_t n_samples =
 					(atom_samples->atom.size-sizeof(LV2_Atom_Vector_Body))/sizeof(float);
 
-				const float* samples = reinterpret_cast<const float*>(
-					reinterpret_cast<const char*>(&atom_samples->body) + sizeof(LV2_Atom_Vector_Body)
+				auto samples = reinterpret_cast<const float*>(
+					reinterpret_cast<const char*>(atom_samples) + sizeof(LV2_Atom_Vector)
 				);
 
 				m_view->add_samples(atom_channel->body, atom_rate->body, samples, n_samples);
@@ -2119,8 +2121,8 @@ namespace Aether {
 
 		LV2_Atom_Forge_Frame frame;
 		auto msg = reinterpret_cast<LV2_Atom*>(lv2_atom_forge_object(&atom_forge, &frame, 0, uris.ui_open));
-
 		lv2_atom_forge_pop(&atom_forge, &frame);
+
 		create_info.write_function(create_info.controller,
 			0,
 			lv2_atom_total_size(msg),
