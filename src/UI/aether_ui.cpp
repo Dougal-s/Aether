@@ -102,9 +102,9 @@ namespace Aether {
 		void parameter_update(size_t index, float new_value) noexcept;
 		float get_parameter(size_t index) const noexcept;
 
-		void add_peaks(int64_t n_samples, const float* peaks);
+		void add_peaks(size_t n_samples, const float* peaks);
 
-		void add_samples(uint32_t channel, uint32_t rate, const float* samples, size_t n_samples);
+		void add_samples(uint32_t channel, uint32_t rate, size_t n_samples, const float* l_samples, const float* r_samples);
 
 	private:
 
@@ -126,9 +126,11 @@ namespace Aether {
 		} peak_infos;
 
 		struct SampleInfo {
+			static constexpr size_t n_streams = 2;
+
 			int32_t sample_rate;
-			std::array<std::vector<float>, 2> samples;
-			std::vector<float> spectrum;
+			std::array<std::vector<float>, 2*n_streams> samples;
+			std::array<std::vector<float>, 2> spectrum;
 		} sample_infos;
 
 		std::function<void (size_t, float)> update_dsp_param;
@@ -201,7 +203,7 @@ namespace Aether {
 		setWindowTitle("Aether");
 		setDefaultSize(1230, 700);
 		setMinSize(615, 350);
-		setAspectRatio(1, 1, 23, 8);
+		setAspectRatio(1, 1, 8, 3);
 
 		setBackend(pugl::glBackend());
 
@@ -212,6 +214,9 @@ namespace Aether {
 		setHint(pugl::ViewHint::useCompatProfile, false);
 		setHint(pugl::ViewHint::contextVersionMajor, 3);
 		setHint(pugl::ViewHint::contextVersionMinor, 3);
+
+		parameter_update(63, 1.f);
+		parameter_update(64, 1.f);
 
 		// Border
 		ui_tree.root().add_child<Rect>({
@@ -224,6 +229,86 @@ namespace Aether {
 		});
 
 		{
+			auto spec_type = ui_tree.root().add_child<Group>({
+				.visible = true, .inert = false,
+				.style = {
+					{"right","50sp"}, {"width","50sp"},
+					{"top","10sp"}, {"height","50sp"}
+				}
+			});
+
+			spec_type->add_child<Text>({
+				.visible = true, .inert = true,
+				.connections = {
+					{
+						.param_idx = 63,
+						.style ="fill",
+						.in_range = {0.f, 1.f},
+						.out_range = {}, // unused
+						.interpolate = [](float t, auto) -> std::string {
+							return (t > 0.f) ? "#80A5BF" : "#c1c1c180";
+						}
+					}
+				},
+				.style = {
+					{"x", "0"}, {"width", "100%"}, {"y", "25%"}, {"height", "25%"},
+					{"font-family", "Roboto-Light"}, {"font-size", "16sp"},
+					{"vertical-align", "middle"}, {"text-align", "center"},
+					{"letter-spacing", "2"}, {"text", "IN"}
+				}
+			});
+
+			spec_type->add_child<Rect>({
+				.visible = false, .inert = false,
+				.btn_release_callback = [this](UIElement* elem, auto e){
+					if (elem->element_at(e.x, e.y)) {
+						float new_val = get_parameter(63) > 0.f ? 0.f : 1.f;
+						parameter_update(63, new_val);
+						update_dsp_param(63, new_val);
+					}
+				},
+				.style = {
+					{"x", "0"}, {"width", "100%"}, {"y", "0"}, {"height", "50%"}
+				}
+			});
+
+			spec_type->add_child<Text>({
+				.visible = true, .inert = true,
+				.connections = {
+					{
+						.param_idx = 64,
+						.style ="fill",
+						.in_range = {0.f, 1.f},
+						.out_range = {}, // unused
+						.interpolate = [](float t, auto) -> std::string {
+							return (t > 0.f) ? "#E4777C" : "#c1c1c180";
+						}
+					}
+				},
+				.style = {
+					{"x", "0"}, {"width", "100%"}, {"y", "75%"}, {"height", "25%"},
+					{"font-family", "Roboto-Light"}, {"font-size", "16sp"},
+					{"vertical-align", "middle"}, {"text-align", "center"},
+					{"text", "OUT"}
+				}
+			});
+
+			spec_type->add_child<Rect>({
+				.visible = false, .inert = false,
+				.btn_release_callback = [this](UIElement* elem, auto e){
+					if (elem->element_at(e.x, e.y)) {
+						float new_val = get_parameter(64) > 0.f ? 0.f : 1.f;
+						parameter_update(64, new_val);
+						update_dsp_param(64, new_val);
+					}
+				},
+				.style = {
+					{"x", "0"}, {"width", "100%"}, {"y", "50%"}, {"height", "50%"},
+				}
+			});
+		}
+
+		{
 			auto spec = ui_tree.root().add_child<Group>({
 				.visible = true, .inert = true,
 				.style = {
@@ -234,20 +319,62 @@ namespace Aether {
 
 			spec->add_child<Spectrum>({
 				.visible = true, .inert = true,
+				.connections = {
+					{
+						.param_idx = 63,
+						.style ="stroke",
+						.in_range = {0.f, 1.f},
+						.out_range = {},
+						.interpolate = [](float t, auto) -> std::string {
+							return (t > 0.f) ? "linear-gradient(0 100% #80A5BF00 0 60% #80A5BF80)"
+								: "linear-gradient(0 100% #E4777C00 0 60% #E4777C80)";
+						}
+					}, {
+						.param_idx = 63,
+						.style ="fill",
+						.in_range = {0.f, 1.f},
+						.out_range = {},
+						.interpolate = [](float t, auto) -> std::string {
+							return (t > 0.f) ? "linear-gradient(0 100% #80A5BF00 0 60% #80A5BF20)"
+								: "linear-gradient(0 100% #E4777C00 0 60% #E4777C20)";
+						}
+					}
+				},
 				.style = {
 					{"x","0"}, {"width","100%"},
 					{"y","0"}, {"height","100%"},
-					{"stroke", "linear-gradient(0 100% #b6bfcc00 0 60% #b6bfcc50)"}, {"stroke-width", "2sp"},
+					{"stroke-width", "2sp"},
 					{"channel", "0"}
 				}
 			});
 
 			spec->add_child<Spectrum>({
 				.visible = true, .inert = true,
+				.connections = {
+					{
+						.param_idx = 64,
+						.style ="stroke",
+						.in_range = {0.f, 1.f},
+						.out_range = {},
+						.interpolate = [](float t, auto) -> std::string {
+							return (t > 0.f) ? "linear-gradient(0 100% #E4777C00 0 60% #E4777C80)"
+								: "linear-gradient(0 100% #80A5BF00 0 60% #80A5BF80)";
+						}
+					}, {
+						.param_idx = 64,
+						.style ="fill",
+						.in_range = {0.f, 1.f},
+						.out_range = {},
+						.interpolate = [](float t, auto) -> std::string {
+							return (t > 0.f) ? "linear-gradient(0 100% #E4777C00 0 60% #E4777C20)"
+								: "linear-gradient(0 100% #80A5BF00 0 60% #80A5BF20)";
+						}
+					}
+				},
 				.style = {
 					{"x","0"}, {"width","100%"},
 					{"y","0"}, {"height","100%"},
-					{"stroke", "linear-gradient(0 100% #b6bfcc00 0 60% #b6bfcc50)"}, {"stroke-width", "2sp"},
+					{"stroke-width", "2sp"},
 					{"channel", "1"}
 				}
 			});
@@ -1181,18 +1308,23 @@ namespace Aether {
 		return ui_tree.root().parameters[idx];
 	}
 
-	void UI::View::add_samples(uint32_t channel, uint32_t rate, const float* samples, size_t n_samples) {
-		auto& buf = sample_infos.samples[channel];
+	void UI::View::add_samples(uint32_t stream, uint32_t rate, size_t n_samples, const float* l_samples, const float* r_samples) {
 		sample_infos.sample_rate = rate;
 
-		buf.resize(bits::bit_ceil(rate / 10));
+		const auto copy_channel = [&](const float* in, size_t idx){
+			auto& buf = sample_infos.samples[idx];
+			buf.resize(bits::bit_ceil(rate / 10));
 
-		if (n_samples < buf.size()) {
-			std::copy(buf.begin()+n_samples, buf.end(), buf.begin());
-			std::copy_n(samples, n_samples, buf.end()-n_samples);
-		} else {
-			std::copy_n(samples+n_samples-buf.size(), buf.size(), buf.begin());
-		}
+			if (n_samples < buf.size()) {
+				std::copy(buf.begin()+n_samples, buf.end(), buf.begin());
+				std::copy_n(in, n_samples, buf.end()-n_samples);
+			} else {
+				std::copy_n(in+n_samples-buf.size(), buf.size(), buf.begin());
+			}
+		};
+
+		copy_channel(l_samples, 2*stream+0);
+		copy_channel(r_samples, 2*stream+1);
 	}
 
 	void UI::View::update_samples() {
@@ -1200,32 +1332,60 @@ namespace Aether {
 		// time since last frame in seconds
 		const float dt = 0.000001f*duration_cast<microseconds>(steady_clock::now()-last_frame).count();
 
-		const auto update_channel = [&](const size_t channel){
-			auto& input = sample_infos.samples[channel];
-			auto& output = ui_tree.root().audio[channel];
+		const auto process_samples = [&](size_t stream, size_t channel) {
+			auto& input = sample_infos.samples[stream*2+channel];
 
 			if (!input.size()) return;
 
-			const size_t size = std::min(input.size()/2-1, output.size());
+			sample_infos.spectrum[channel] = input;
+			fft::window_function(sample_infos.spectrum[channel]);
+			fft::magnitudes(sample_infos.spectrum[channel]);
+		};
 
-			sample_infos.spectrum = input;
-			fft::window_function(sample_infos.spectrum);
-			fft::magnitudes(sample_infos.spectrum);
+		const auto update_channel = [&](size_t in, size_t out) {
+			auto& output = ui_tree.root().audio[out];
+
+			if (sample_infos.spectrum[in].size() == 0) return;
+
+			const size_t size = std::min(sample_infos.spectrum[in].size()/2-1, output.size());
 
 			for (size_t i = 0; i < size; ++i) {
-				if (output[i] < sample_infos.spectrum[i+1])
-					output[i] = std::lerp(output[i], sample_infos.spectrum[i+1], std::min(16.f*dt, 1.f));
+				if (output[i] < sample_infos.spectrum[in][i+1])
+					output[i] = std::lerp(output[i], sample_infos.spectrum[in][i+1], std::min(16.f*dt, 1.f));
 				else
-					output[i] = std::lerp(output[i], sample_infos.spectrum[i+1], std::min(8.f*dt, 1.f));
+					output[i] = std::lerp(output[i], sample_infos.spectrum[in][i+1], std::min(8.f*dt, 1.f));
 			}
 			std::fill(output.begin()+size, output.end(), 0.f);
 		};
 
-		update_channel(0);
-		update_channel(1);
+
+		if (get_parameter(63) > 0.f && get_parameter(64) > 0.f) {
+			for (size_t stream = 0; stream < SampleInfo::n_streams; ++stream) {
+				process_samples(stream, 0);
+				process_samples(stream, 1);
+				for (size_t i = 0; i < sample_infos.spectrum[0].size(); ++i) {
+					sample_infos.spectrum[0][i] =
+						0.5f*(sample_infos.spectrum[0][i] + sample_infos.spectrum[1][i]);
+				}
+				update_channel(0, stream);
+			}
+		} else if (get_parameter(63) > 0.f) {
+			process_samples(0, 0);
+			process_samples(0, 1);
+			update_channel(0, 0);
+			update_channel(1, 1);
+		} else if (get_parameter(64) > 0.f) {
+			process_samples(1, 0);
+			process_samples(1, 1);
+			update_channel(0, 0);
+			update_channel(1, 1);
+		} else {
+			ui_tree.root().audio[0] = {};
+			ui_tree.root().audio[1] = {};
+		}
 	}
 
-	void UI::View::add_peaks(int64_t, const float* peaks) {
+	void UI::View::add_peaks(size_t, const float* peaks) {
 		for (size_t i = 0; i < peak_infos.peaks.size(); ++i)
 			peak_infos.peaks[i] = peaks[i];
 	}
@@ -2031,38 +2191,40 @@ namespace Aether {
 		} else if (format == uris.atom_eventTransfer) {
 			auto object = reinterpret_cast<const LV2_Atom_Object*>(buffer);
 			if (object->body.otype == uris.peak_data) {
-				const LV2_Atom_Long* atom_n_samples = nullptr;
+				const LV2_Atom_Int* atom_n_samples = nullptr;
 				const LV2_Atom_Vector* atom_peaks = nullptr;
 				lv2_atom_object_get_typed(object,
-					uris.sample_count, &atom_n_samples, uris.atom_Long,
+					uris.sample_count, &atom_n_samples, uris.atom_Int,
 					uris.peaks, &atom_peaks, uris.atom_Vector,
 					0
 				);
 
-				auto peaks = reinterpret_cast<const float*>(
-					reinterpret_cast<const char*>(atom_peaks) + sizeof(LV2_Atom_Vector)
-				);
+				auto peaks = static_cast<const float*>(
+					LV2_ATOM_CONTENTS_CONST(LV2_Atom_Vector, atom_peaks));
 
 				m_view->add_peaks(atom_n_samples->body, peaks);
 			} else if (object->body.otype == uris.sample_data) {
 				const LV2_Atom_Int* atom_rate = nullptr;
 				const LV2_Atom_Int* atom_channel = nullptr;
-				const LV2_Atom_Vector* atom_samples = nullptr;
+				const LV2_Atom_Vector* atom_l_samples = nullptr;
+				const LV2_Atom_Vector* atom_r_samples = nullptr;
 				lv2_atom_object_get_typed(object,
 					uris.rate, &atom_rate, uris.atom_Int,
 					uris.channel, &atom_channel, uris.atom_Int,
-					uris.samples, &atom_samples, uris.atom_Vector,
+					uris.l_samples, &atom_l_samples, uris.atom_Vector,
+					uris.r_samples, &atom_r_samples, uris.atom_Vector,
 					0
 				);
 
 				const size_t n_samples =
-					(atom_samples->atom.size-sizeof(LV2_Atom_Vector_Body))/sizeof(float);
+					(atom_l_samples->atom.size-sizeof(LV2_Atom_Vector_Body))/sizeof(float);
 
-				auto samples = reinterpret_cast<const float*>(
-					reinterpret_cast<const char*>(atom_samples) + sizeof(LV2_Atom_Vector)
-				);
+				auto l_samples = static_cast<const float*>(
+					LV2_ATOM_CONTENTS_CONST(LV2_Atom_Vector, atom_l_samples));
+				auto r_samples = static_cast<const float*>(
+					LV2_ATOM_CONTENTS_CONST(LV2_Atom_Vector, atom_r_samples));
 
-				m_view->add_samples(atom_channel->body, atom_rate->body, samples, n_samples);
+				m_view->add_samples(atom_channel->body, atom_rate->body, n_samples, l_samples, r_samples);
 			}
 		}
 	}
@@ -2071,21 +2233,21 @@ namespace Aether {
 		lv2_atom_forge_init(&atom_forge, map);
 
 		uris.atom_eventTransfer = map->map(map->handle, LV2_ATOM__eventTransfer);
-		uris.atom_Long = map->map(map->handle, LV2_ATOM__Long);
-		uris.atom_Int = map->map(map->handle, LV2_ATOM__Int);
+		uris.atom_Int    = map->map(map->handle, LV2_ATOM__Int);
 		uris.atom_Vector = map->map(map->handle, LV2_ATOM__Vector);
 
-		uris.ui_open = map->map(map->handle, join_v<DSP::URI, DSP::ui_open_URI>);
+		uris.ui_open  = map->map(map->handle, join_v<DSP::URI, DSP::ui_open_URI>);
 		uris.ui_close = map->map(map->handle, join_v<DSP::URI, DSP::ui_close_URI>);
 
-		uris.peak_data = map->map(map->handle, join_v<DSP::URI, DSP::peak_data_URI>);
+		uris.peak_data    = map->map(map->handle, join_v<DSP::URI, DSP::peak_data_URI>);
 		uris.sample_count = map->map(map->handle, join_v<DSP::URI, DSP::sample_count_URI>);
-		uris.peaks = map->map(map->handle, join_v<DSP::URI, DSP::peaks_URI>);
+		uris.peaks        = map->map(map->handle, join_v<DSP::URI, DSP::peaks_URI>);
 
 		uris.sample_data = map->map(map->handle, join_v<DSP::URI, DSP::sample_data_URI>);
-		uris.rate = map->map(map->handle, join_v<DSP::URI, DSP::rate_URI>);
-		uris.channel = map->map(map->handle, join_v<DSP::URI, DSP::channel_URI>);
-		uris.samples = map->map(map->handle, join_v<DSP::URI, DSP::samples_URI>);
+		uris.rate        = map->map(map->handle, join_v<DSP::URI, DSP::rate_URI>);
+		uris.channel     = map->map(map->handle, join_v<DSP::URI, DSP::channel_URI>);
+		uris.l_samples   = map->map(map->handle, join_v<DSP::URI, DSP::l_samples_URI>);
+		uris.r_samples   = map->map(map->handle, join_v<DSP::URI, DSP::r_samples_URI>);
 	}
 
 	UI::View* UI::create_view(const CreateInfo& create_info) {

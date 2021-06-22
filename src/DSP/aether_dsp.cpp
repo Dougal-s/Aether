@@ -66,9 +66,10 @@ namespace Aether {
 		uris.peaks = map->map(map->handle, join_v<URI, peaks_URI>);
 
 		uris.sample_data = map->map(map->handle, join_v<URI, sample_data_URI>);
-		uris.rate = map->map(map->handle, join_v<URI, rate_URI>);
-		uris.channel = map->map(map->handle, join_v<URI, channel_URI>);
-		uris.samples = map->map(map->handle, join_v<URI, samples_URI>);
+		uris.rate        = map->map(map->handle, join_v<URI, rate_URI>);
+		uris.channel     = map->map(map->handle, join_v<URI, channel_URI>);
+		uris.l_samples   = map->map(map->handle, join_v<URI, l_samples_URI>);
+		uris.r_samples   = map->map(map->handle, join_v<URI, r_samples_URI>);
 	}
 
 	void DSP::process(uint32_t n_samples) noexcept {
@@ -82,6 +83,16 @@ namespace Aether {
 						ui_open = false;
 				}
 			}
+		}
+		LV2_Atom_Forge_Frame seq_frame;
+		const size_t seq_capacity = ports.notify->atom.size;
+		size_t min_seq_capacity = sizeof(LV2_Atom_Sequence)
+			+ sizeof_peak_data_atom() + 2*sizeof_sample_data_atom(n_samples);
+		lv2_atom_forge_set_buffer(&atom_forge, reinterpret_cast<uint8_t*>(ports.notify), seq_capacity);
+
+		if (ui_open && seq_capacity >= min_seq_capacity) {
+			lv2_atom_forge_sequence_head(&atom_forge, &seq_frame, 0);
+			write_sample_data_atom(0, static_cast<int>(m_rate), n_samples, ports.audio_in_left, ports.audio_in_right);
 		}
 
 		std::pair<float, float> peak_dry = {0,0},
@@ -197,7 +208,7 @@ namespace Aether {
 				ports.audio_out_right[sample] = std::lerp(dry_right, ports.audio_out_right[sample], mix);
 			}
 
-			if (ui_open) {
+			if (ui_open && seq_capacity >= min_seq_capacity) {
 				peak_dry.first = std::max(peak_dry.first, std::abs(dry_left));
 				peak_dry.second = std::max(peak_dry.second, std::abs(dry_right));
 				peak_dry_stage.first = std::max(peak_dry_stage.first, std::abs(dry_left*dry_level));
@@ -212,22 +223,15 @@ namespace Aether {
 				peak_out.second = std::max(peak_out.second, std::abs(ports.audio_out_right[sample]));
 			}
 		}
-
-		if (ui_open) {
-			LV2_Atom_Forge_Frame frame;
-			const size_t capacity = ports.notify->atom.size;
-			lv2_atom_forge_set_buffer(&atom_forge, reinterpret_cast<uint8_t*>(ports.notify), capacity);
-			lv2_atom_forge_sequence_head(&atom_forge, &frame, 0);
-
-			// Send peak info (size 104 bytes)
-			if (capacity < 104) goto end_atom_write;
+		if (ui_open && seq_capacity >= min_seq_capacity) {
+			// write peak data
 			lv2_atom_forge_frame_time(&atom_forge, 0);
 			{
 				LV2_Atom_Forge_Frame obj_frame;
 				lv2_atom_forge_object(&atom_forge, &obj_frame, 0, uris.peak_data);
 
 				lv2_atom_forge_key(&atom_forge, uris.sample_count);
-				lv2_atom_forge_long(&atom_forge, n_samples);
+				lv2_atom_forge_int(&atom_forge, static_cast<int32_t>(n_samples));
 
 				const std::array<float, 12> peaks = {
 					peak_dry.first				, peak_dry.second,
@@ -244,19 +248,38 @@ namespace Aether {
 				lv2_atom_forge_pop(&atom_forge, &obj_frame);
 			}
 
-			// Send sample data
-			if (capacity < 104 + (80 + sizeof(float)*n_samples)) goto end_atom_write;
-			write_sample_data_atom(0, static_cast<int>(m_rate), ports.audio_out_left, n_samples);
-			if (capacity < 104 + 2*(80 + sizeof(float)*n_samples)) goto end_atom_write;
-			write_sample_data_atom(1, static_cast<int>(m_rate), ports.audio_out_right, n_samples);
-
-			end_atom_write:
-
-			lv2_atom_forge_pop(&atom_forge, &frame);
+			// write sample data
+			write_sample_data_atom(1, static_cast<int>(m_rate), n_samples, ports.audio_out_left, ports.audio_out_right);
+			lv2_atom_forge_pop(&atom_forge, &seq_frame);
 		}
 	}
 
-	void DSP::write_sample_data_atom(int channel, int rate, float* data, uint32_t n_samples) {
+	size_t DSP::sizeof_peak_data_atom() noexcept {
+		return sizeof(LV2_Atom_Event) // timestamp
+			+ sizeof(LV2_Atom_Object_Body) // object header
+			+ sizeof(LV2_Atom_Property_Body) + sizeof(int32_t) // sample_count
+			+ sizeof(LV2_Atom_Property_Body) + sizeof(LV2_Atom_Vector_Body)
+				+ 12*sizeof(float); // peak data
+	}
+
+	size_t DSP::sizeof_sample_data_atom(uint32_t n_samples) noexcept {
+		return sizeof(LV2_Atom_Event) // timestamp
+			+ sizeof(LV2_Atom_Object_Body) // object header
+			+ sizeof(LV2_Atom_Property_Body) + sizeof(int32_t) //samplerate
+			+ sizeof(LV2_Atom_Property_Body) + sizeof(int32_t) // channel no.
+			+ sizeof(LV2_Atom_Property_Body) + sizeof(LV2_Atom_Vector_Body)
+				+ n_samples*sizeof(float) // left channel
+			+ sizeof(LV2_Atom_Property_Body) + sizeof(LV2_Atom_Vector_Body)
+				+ n_samples*sizeof(float); // right channel
+	}
+
+	void DSP::write_sample_data_atom(
+		int channel,
+		int rate,
+		uint32_t n_samples,
+		const float* l_samples,
+		const float* r_samples
+	) noexcept {
 		lv2_atom_forge_frame_time(&atom_forge, 0);
 		{
 			LV2_Atom_Forge_Frame obj_frame;
@@ -268,8 +291,10 @@ namespace Aether {
 			lv2_atom_forge_key(&atom_forge, uris.channel);
 			lv2_atom_forge_int(&atom_forge, channel);
 
-			lv2_atom_forge_key(&atom_forge, uris.samples);
-			lv2_atom_forge_vector(&atom_forge, sizeof(float), uris.atom_Float, n_samples, data);
+			lv2_atom_forge_key(&atom_forge, uris.l_samples);
+			lv2_atom_forge_vector(&atom_forge, sizeof(float), uris.atom_Float, n_samples, l_samples);
+			lv2_atom_forge_key(&atom_forge, uris.r_samples);
+			lv2_atom_forge_vector(&atom_forge, sizeof(float), uris.atom_Float, n_samples, r_samples);
 
 			lv2_atom_forge_pop(&atom_forge, &obj_frame);
 		}

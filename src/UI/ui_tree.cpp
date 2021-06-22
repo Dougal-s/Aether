@@ -649,10 +649,6 @@ void ShaderRect::draw_impl() const {
 // Spectrum View
 
 void Spectrum::draw_impl() const {
-	nvgBeginPath(m_root->ctx->nvg_ctx);
-
-	nvgTranslate(m_root->ctx->nvg_ctx, x(), y());
-
 	const auto& channel = m_root->audio[std::strtoul(style.find("channel")->second.data(), nullptr, 10)];
 
 	const auto gain_to_y = [](float gain) {
@@ -660,21 +656,33 @@ void Spectrum::draw_impl() const {
 		return 1.f-std::clamp(db+60, 0.f, 63.f)/63.f;
 	};
 
+	const auto draw_path = [&](){
+		size_t i = 1;
+		while(i < channel.size()) {
+			const float x = std::log(i+1)/std::log(channel.size());
+			size_t ip2 = std::ceil((i+1)*std::pow(static_cast<float>(channel.size()), 3.f/width()) - 1 );
+			ip2 = std::min(ip2, channel.size());
+			const float band_level = std::reduce(channel.begin() + i, channel.begin() + ip2) / (ip2-i);
+			const float y = gain_to_y(band_level);
+
+			nvgLineTo(m_root->ctx->nvg_ctx, width()*x, height()*y);
+
+			i = ip2;
+		}
+	};
+	nvgTranslate(m_root->ctx->nvg_ctx, x(), y());
+
+	nvgBeginPath(m_root->ctx->nvg_ctx);
+	nvgMoveTo(m_root->ctx->nvg_ctx, 0, height());
+	nvgLineTo(m_root->ctx->nvg_ctx, 0, height()*gain_to_y(channel[0]));
+	draw_path();
+	nvgLineTo(m_root->ctx->nvg_ctx, width(), height());
+	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
+
+
+	nvgBeginPath(m_root->ctx->nvg_ctx);
 	nvgMoveTo(m_root->ctx->nvg_ctx, 0, height()*gain_to_y(channel[0]));
-
-	size_t i = 1;
-	while(i < channel.size()) {
-		const float x = std::log(i+1)/std::log(channel.size());
-		size_t ip2 = std::ceil((i+1)*std::pow(static_cast<float>(channel.size()), 2.f/width()) - 1 );
-		ip2 = std::min(ip2, channel.size());
-		const float band_level = std::reduce(channel.begin() + i, channel.begin() + ip2) / (ip2-i);
-		const float y = gain_to_y(band_level);
-
-		nvgLineTo(m_root->ctx->nvg_ctx, width()*x, height()*y);
-
-		i = ip2;
-	}
-
+	draw_path();
 	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
 }
 
@@ -741,6 +749,8 @@ void Text::set_alignment() const {
 void Text::set_text_styling() const {
 	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(std::string(font_face())));
 	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
+	if (auto letter_spacing = style.find("letter-spacing"); letter_spacing)
+		nvgTextLetterSpacing(m_root->ctx->nvg_ctx, strtof(letter_spacing->second));
 	set_alignment();
 	if (auto line_height = style.find("line_height"); line_height)
 		nvgTextLineHeight(m_root->ctx->nvg_ctx, strtof(line_height->second));

@@ -67,7 +67,6 @@ namespace Aether {
 	private:
 		struct URIs {
 			LV2_URID atom_eventTransfer;
-			LV2_URID atom_Long;
 			LV2_URID atom_Int;
 			LV2_URID atom_Vector;
 			// custom uris
@@ -81,12 +80,13 @@ namespace Aether {
 			LV2_URID sample_data;
 			LV2_URID rate;
 			LV2_URID channel;
-			LV2_URID samples;
+			LV2_URID l_samples;
+			LV2_URID r_samples;
 		};
 
 		URIs uris;
 		LV2_Atom_Forge atom_forge;
-		
+
 		LV2UI_Write_Function m_write_function;
 		LV2UI_Controller m_controller;
 

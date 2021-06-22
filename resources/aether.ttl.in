@@ -62,7 +62,8 @@
 		lv2:index 1;
 		lv2:symbol "notify";
 		lv2:name "Notify";
-		rsz:minimumSize 33088;
+		# amount of data sent in a single 8192 sample process block
+		rsz:minimumSize 131428;
 		rdfs:comment "DSP -> UI communication"
 	], [
 		a lv2:InputPort, lv2:AudioPort;

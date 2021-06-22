@@ -34,7 +34,8 @@ namespace Aether {
 		static constexpr std::string_view sample_data_URI = "#sampleData";
 		static constexpr std::string_view rate_URI = "#rate";
 		static constexpr std::string_view channel_URI = "#channel";
-		static constexpr std::string_view samples_URI = "#samples";
+		static constexpr std::string_view l_samples_URI = "#lSamples";
+		static constexpr std::string_view r_samples_URI = "#rSamples";
 
 		struct Ports {
 			const LV2_Atom_Sequence* control;
@@ -152,7 +153,8 @@ namespace Aether {
 			LV2_URID sample_data;
 			LV2_URID rate;
 			LV2_URID channel;
-			LV2_URID samples;
+			LV2_URID l_samples;
+			LV2_URID r_samples;
 		};
 
 		URIs uris = {};
@@ -188,7 +190,15 @@ namespace Aether {
 		// send audio data if ui is open
 		bool ui_open = false;
 
-		void write_sample_data_atom(int channel, int rate, float* data, uint32_t n_samples);
+		static size_t sizeof_peak_data_atom() noexcept;
+		static size_t sizeof_sample_data_atom(uint32_t n_samples) noexcept;
+		void write_sample_data_atom(
+			int channel,
+			int rate,
+			uint32_t n_samples,
+			const float* l_samples,
+			const float* r_samples
+		) noexcept;
 
 		void update_parameters();
 	};
