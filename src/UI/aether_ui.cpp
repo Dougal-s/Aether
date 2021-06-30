@@ -152,8 +152,19 @@ namespace Aether {
 
 		void update_samples();
 
-		void dial_btn_press_cb(size_t param_idx, UIElement* elem, const pugl::ButtonPressEvent& e, float sensitivity = 1.f);
-		void dial_btn_motion_cb(size_t param_idx, UIElement* elem, const pugl::MotionEvent& e, float sensitivity = 1.f);
+		void dial_btn_press_cb(
+			size_t param_idx,
+			UIElement* elem,
+			const pugl::ButtonPressEvent& e,
+			float sensitivity = 1.f
+		);
+		void dial_btn_motion_cb(
+			size_t param_idx,
+			UIElement* elem,
+			const pugl::MotionEvent& e,
+			float sensitivity = 1.f,
+			float curvature = 1.f
+		);
 
 		void attach_level_meter(Group* g, size_t l_vol_idx, size_t r_vol_idx, size_t mixer_ctrl_idx);
 
@@ -167,6 +178,7 @@ namespace Aether {
 			std::string fill;
 			std::string font_size = "16sp";
 			std::function<float (float)> to_display_val = [](float x){return x;};
+			float curvature = 1.f;
 			bool logarithmic = false;
 		};
 		void attach_dial(Group* g, DialInfo info);
@@ -781,6 +793,7 @@ namespace Aether {
 				.label = "PREDELAY", .units = "ms",
 				.radius = 24, .cx = 60, .cy = 215,
 				.fill = "#33343b",
+				.curvature = 10.f,
 				.logarithmic = true
 			});
 
@@ -842,6 +855,7 @@ namespace Aether {
 				.label = "LENGTH", .units = "ms",
 				.radius = 24, .cx = 123, .cy = 60,
 				.fill = "#33343b",
+				.curvature = 10.f,
 				.logarithmic = true
 			});
 			attach_dial(early, {
@@ -920,6 +934,7 @@ namespace Aether {
 					.radius = 20, .cx = 83, .cy = 200,
 					.fill = "#1b1d23",
 					.font_size = "15sp",
+					.curvature = 10.f,
 					.logarithmic = true
 				});
 				attach_dial(diffusion, {
@@ -928,6 +943,7 @@ namespace Aether {
 					.radius = 20, .cx = 185, .cy = 200,
 					.fill = "#1b1d23",
 					.font_size = "15sp",
+					.curvature = 5.f,
 					.logarithmic = true
 				});
 				attach_dial(diffusion, {
@@ -936,6 +952,7 @@ namespace Aether {
 					.radius = 20, .cx = 185, .cy = 270,
 					.fill = "#1b1d23",
 					.font_size = "15sp",
+					.curvature = 5.f,
 					.logarithmic = true
 				});
 
@@ -1174,6 +1191,7 @@ namespace Aether {
 					.label = "DELAY", .units = "ms",
 					.radius = 20, .cx = 119, .cy = 30,
 					.fill = "#1b1d23", .font_size = "15sp",
+					.curvature = 10.f,
 					.logarithmic = true
 				});
 				attach_dial(delay, {
@@ -1181,6 +1199,7 @@ namespace Aether {
 					.label = "RATE", .units = "Hz",
 					.radius = 20, .cx = 186, .cy = 30,
 					.fill = "#1b1d23", .font_size = "15sp",
+					.curvature = 5.f,
 					.logarithmic = true
 				});
 				attach_dial(delay, {
@@ -1188,6 +1207,7 @@ namespace Aether {
 					.label = "DEPTH", .units = "ms",
 					.radius = 20, .cx = 186, .cy = 100,
 					.fill = "#1b1d23", .font_size = "15sp",
+					.curvature = 5.f,
 					.logarithmic = true
 				});
 
@@ -1289,6 +1309,7 @@ namespace Aether {
 					.label = "DELAY", .units = "ms",
 					.radius = 20, .cx = 119, .cy = 30,
 					.fill = "#1b1d23", .font_size = "15sp",
+					.curvature = 10.f,
 					.logarithmic = true
 				});
 				attach_dial(diffusion, {
@@ -1296,6 +1317,7 @@ namespace Aether {
 					.label = "RATE", .units = "Hz",
 					.radius = 20, .cx = 186, .cy = 30,
 					.fill = "#1b1d23", .font_size = "15sp",
+					.curvature = 5.f,
 					.logarithmic = true
 				});
 				attach_dial(diffusion, {
@@ -1303,6 +1325,7 @@ namespace Aether {
 					.label = "DEPTH", .units = "ms",
 					.radius = 20, .cx = 186, .cy = 100,
 					.fill = "#1b1d23", .font_size = "15sp",
+					.curvature = 5.f,
 					.logarithmic = true
 				});
 
@@ -1555,7 +1578,8 @@ namespace Aether {
 		size_t param_idx,
 		UIElement*,
 		const pugl::MotionEvent& e,
-		float sensitivity
+		float sensitivity,
+		float curvature
 	) {
 		if (e.state & pugl::Mod::PUGL_MOD_SHIFT) {
 			update_dsp_param(param_idx, parameter_infos[param_idx].dflt);
@@ -1564,11 +1588,23 @@ namespace Aether {
 		}
 
 		sensitivity *= 0.003f*(e.state & pugl::Mod::PUGL_MOD_CTRL ? 0.1f : 1.f);
-		float dx = sensitivity*(static_cast<float>(e.x) - mouse_callback_info.x);
-		float dy = sensitivity*(mouse_callback_info.y - static_cast<float>(e.y));
-		float dval = (parameter_infos[param_idx].max-parameter_infos[param_idx].min)*(dx + dy);
-		float new_value = std::clamp(
-			get_parameter(param_idx) + dval,
+
+		float dx = static_cast<float>(e.x) - mouse_callback_info.x;
+		float dy = mouse_callback_info.y - static_cast<float>(e.y);
+		float dval = dx + dy;
+
+		float new_value = get_parameter(param_idx);
+		if (curvature == 1.f) {
+			new_value += parameter_infos[param_idx].range()*sensitivity*dval;
+		} else {
+			float normalized = (new_value - parameter_infos[param_idx].min)/parameter_infos[param_idx].range();
+			normalized = std::log1p(normalized*(curvature - 1)) / std::log(curvature);
+			normalized += sensitivity*dval;
+			normalized = (std::pow(curvature, normalized) - 1 ) / (curvature - 1);
+			new_value = parameter_infos[param_idx].range()*normalized + parameter_infos[param_idx].min;
+		}
+		new_value = std::clamp(
+			new_value,
 			parameter_infos[param_idx].min,
 			parameter_infos[param_idx].max
 		);
@@ -1724,6 +1760,19 @@ namespace Aether {
 		};
 	}
 
+	UIElement::Connection dial_logarithmic(size_t param_idx, float curvature) {
+		return {
+			.param_idx = param_idx,
+			.style ="value",
+			.in_range = {parameter_infos[param_idx].min, parameter_infos[param_idx].max},
+			.out_range = {"0", "1"},
+			.interpolate = [=](float t, auto out) {
+				t = std::log1p(t*(curvature - 1) ) / std::log(curvature);
+				return interpolate_style<float>(t, out);
+			}
+		};
+	}
+
 	void UI::View::attach_dial(
 		Group* g,
 		DialInfo info
@@ -1764,13 +1813,17 @@ namespace Aether {
 				dial->style.insert_or_assign("label", info.label);
 			},
 			.motion_callback = [=, this](UIElement* elem, const auto& e){
-				dial_btn_motion_cb(info.param_id, elem, e);
+				dial_btn_motion_cb(info.param_id, elem, e, 1.f, info.curvature);
 
 				auto* dial = dynamic_cast<Dial*>(elem);
 				if (!info.label.empty())
 					dial->style.insert_or_assign("label", val_to_str(info.param_id));
 			},
-			.connections = {dial_linear(info.param_id)},
+			.connections = {
+				info.curvature == 1.f ?
+					dial_linear(info.param_id) :
+					dial_logarithmic(info.param_id, info.curvature)
+			},
 			.style = {
 				{"cx", to_string(info.cx) + "sp"}, {"cy", to_string(info.cy) + "sp"},
 				{"r", to_string(info.radius) + "sp"},
