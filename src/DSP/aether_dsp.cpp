@@ -84,15 +84,20 @@ namespace Aether {
 				}
 			}
 		}
-		LV2_Atom_Forge_Frame seq_frame;
-		const size_t seq_capacity = ports.notify->atom.size;
-		size_t min_seq_capacity = sizeof(LV2_Atom_Sequence)
-			+ sizeof_peak_data_atom() + 2*sizeof_sample_data_atom(n_samples);
-		lv2_atom_forge_set_buffer(&atom_forge, reinterpret_cast<uint8_t*>(ports.notify), seq_capacity);
 
-		if (ui_open && seq_capacity >= min_seq_capacity) {
-			lv2_atom_forge_sequence_head(&atom_forge, &seq_frame, 0);
-			write_sample_data_atom(0, static_cast<int>(m_rate), n_samples, ports.audio_in_left, ports.audio_in_right);
+		LV2_Atom_Forge_Frame seq_frame;
+		bool notify_ui = ports.notify ? ui_open : false;
+		if (notify_ui) {
+			const size_t seq_capacity = ports.notify->atom.size;
+			size_t min_seq_capacity = sizeof(LV2_Atom_Sequence)
+				+ sizeof_peak_data_atom() + 2*sizeof_sample_data_atom(n_samples);
+			notify_ui = seq_capacity >= min_seq_capacity;
+
+			if (notify_ui) {
+				lv2_atom_forge_set_buffer(&atom_forge, reinterpret_cast<uint8_t*>(ports.notify), seq_capacity);
+				lv2_atom_forge_sequence_head(&atom_forge, &seq_frame, 0);
+				write_sample_data_atom(0, static_cast<int>(m_rate), n_samples, ports.audio_in_left, ports.audio_in_right);
+			}
 		}
 
 		std::pair<float, float> peak_dry = {0,0},
@@ -208,7 +213,7 @@ namespace Aether {
 				ports.audio_out_right[sample] = std::lerp(dry_right, ports.audio_out_right[sample], mix);
 			}
 
-			if (ui_open && seq_capacity >= min_seq_capacity) {
+			if (notify_ui) {
 				peak_dry.first = std::max(peak_dry.first, std::abs(dry_left));
 				peak_dry.second = std::max(peak_dry.second, std::abs(dry_right));
 				peak_dry_stage.first = std::max(peak_dry_stage.first, std::abs(dry_left*dry_level));
@@ -223,7 +228,7 @@ namespace Aether {
 				peak_out.second = std::max(peak_out.second, std::abs(ports.audio_out_right[sample]));
 			}
 		}
-		if (ui_open && seq_capacity >= min_seq_capacity) {
+		if (notify_ui) {
 			// write peak data
 			lv2_atom_forge_frame_time(&atom_forge, 0);
 			{
