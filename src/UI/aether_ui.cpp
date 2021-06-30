@@ -1603,17 +1603,25 @@ namespace Aether {
 			normalized = (std::pow(curvature, normalized) - 1 ) / (curvature - 1);
 			new_value = parameter_infos[param_idx].range()*normalized + parameter_infos[param_idx].min;
 		}
+
+		if (parameter_infos[param_idx].integer) {
+			float dv = std::trunc(new_value - get_parameter(param_idx));
+			new_value = get_parameter(param_idx) + dv;
+		}
+
 		new_value = std::clamp(
 			new_value,
 			parameter_infos[param_idx].min,
 			parameter_infos[param_idx].max
 		);
 
-		update_dsp_param(param_idx, parameter_infos[param_idx].integer ? static_cast<int>(new_value) : new_value);
-		parameter_update(param_idx, new_value);
+		if (new_value != get_parameter(param_idx)) {
+			update_dsp_param(param_idx, new_value);
+			parameter_update(param_idx, new_value);
 
-		mouse_callback_info.x = e.x;
-		mouse_callback_info.y = e.y;
+			mouse_callback_info.x = e.x;
+			mouse_callback_info.y = e.y;
+		}
 	}
 
 
@@ -1750,13 +1758,7 @@ namespace Aether {
 			.param_idx = param_idx,
 			.style ="value",
 			.in_range = {parameter_infos[param_idx].min, parameter_infos[param_idx].max},
-			.out_range = {"0", "1"},
-			.interpolate = [param_idx](float t, auto out) {
-				if (parameter_infos[param_idx].integer)
-					t = static_cast<int>(t * (parameter_infos[param_idx].range()))
-						/ (parameter_infos[param_idx].range());
-				return interpolate_style<float>(t, out);
-			}
+			.out_range = {"0", "1"}
 		};
 	}
 
