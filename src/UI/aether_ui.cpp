@@ -38,6 +38,10 @@ namespace {
 		return ss.str();
 	}
 
+	float gain_to_dB(float gain) noexcept {
+		return 20*std::log10(gain);
+	}
+
 #ifndef NDEBUG
 	void GLAPIENTRY opengl_err_callback(
 		[[maybe_unused]] GLenum source,
@@ -153,16 +157,19 @@ namespace Aether {
 
 		void attach_level_meter(Group* g, size_t l_vol_idx, size_t r_vol_idx, size_t mixer_ctrl_idx);
 
-		void attach_dial(
-			Group* g,
-			size_t param_idx,
-			const std::string& param_name,
-			int dial_size,
-			float cx,
-			float cy,
-			const std::string& center_fill,
-			float font_size = 16
-		);
+		struct DialInfo {
+			size_t param_id;
+			std::string label = "";
+			std::string units = "";
+			int radius;
+			float cx;
+			float cy;
+			std::string fill;
+			std::string font_size = "16sp";
+			std::function<float (float)> to_display_val = [](float x){return x;};
+			bool logarithmic = false;
+		};
+		void attach_dial(Group* g, DialInfo info);
 
 		void attach_delay_mod(
 			Group* g,
@@ -527,7 +534,8 @@ namespace Aether {
 					{"width","55sp"}, {"bottom","349sp"}
 				}
 			});
-			attach_dial(mix_group, 6, "", 20, 30, 27.5, "#1b1d23");
+
+			attach_dial(mix_group, {.param_id = 6, .radius = 20, .cx = 30, .cy = 27.5, .fill = "#1b1d23"});
 		}
 
 
@@ -762,8 +770,19 @@ namespace Aether {
 
 			// Width/Predelay
 
-			attach_dial(predelay, 12, "WIDTH", 24, 60, 100, "#33343b");
-			attach_dial(predelay, 13, "PREDELAY", 24, 60, 215, "#33343b");
+			attach_dial(predelay, {
+				.param_id = 12,
+				.label = "WIDTH", .units = "%",
+				.radius = 24, .cx = 60, .cy = 100,
+				.fill = "#33343b"
+			});
+			attach_dial(predelay, {
+				.param_id = 13,
+				.label = "PREDELAY", .units = "ms",
+				.radius = 24, .cx = 60, .cy = 215,
+				.fill = "#33343b",
+				.logarithmic = true
+			});
 
 			// Shadow
 			predelay->add_child<Rect>({
@@ -812,10 +831,32 @@ namespace Aether {
 			attach_level_meter(level, 57, 58, 9);
 
 			// Multitap diffuser
-			attach_dial(early, 18, "TAPS", 24, 47, 60, "#33343b");
-			attach_dial(early, 19, "LENGTH", 24, 123, 60, "#33343b");
-			attach_dial(early, 20, "MIX", 24, 47, 147, "#33343b");
-			attach_dial(early, 21, "DECAY", 24, 123, 147, "#33343b");
+			attach_dial(early, {
+				.param_id = 18,
+				.label = "TAPS",
+				.radius = 24, .cx = 47, .cy = 60,
+				.fill = "#33343b"
+			});
+			attach_dial(early, {
+				.param_id = 19,
+				.label = "LENGTH", .units = "ms",
+				.radius = 24, .cx = 123, .cy = 60,
+				.fill = "#33343b",
+				.logarithmic = true
+			});
+			attach_dial(early, {
+				.param_id = 20,
+				.label = "MIX", .units = "%",
+				.radius = 24, .cx = 47, .cy = 147,
+				.fill = "#33343b"
+			});
+			attach_dial(early, {
+				.param_id = 21,
+				.label = "DECAY",
+				.radius = 24, .cx = 123, .cy = 147,
+				.fill = "#33343b",
+				.logarithmic = true
+			});
 
 			attach_eq(early, 10, 200, {
 				EqInfo{
@@ -859,12 +900,44 @@ namespace Aether {
 					}
 				});
 
-				attach_dial(diffusion, 22, "STAGES", 24, 65, 85, "#1b1d23");
-				attach_dial(diffusion, 26, "FEEDBACK", 24, 160, 85, "#1b1d23");
+				attach_dial(diffusion, {
+					.param_id = 22,
+					.label = "STAGES",
+					.radius = 24, .cx = 65, .cy = 85,
+					.fill = "#1b1d23"
+				});
+				attach_dial(diffusion, {
+					.param_id = 26,
+					.label = "FEEDBACK", .units = "dB",
+					.radius = 24, .cx = 160, .cy = 85,
+					.fill = "#1b1d23",
+					.to_display_val = gain_to_dB
+				});
 
-				attach_dial(diffusion, 23, "DELAY", 20, 83, 200, "#1b1d23", 15);
-				attach_dial(diffusion, 25, "RATE", 20, 185, 200, "#1b1d23", 15);
-				attach_dial(diffusion, 24, "DEPTH", 20, 185, 270, "#1b1d23", 15);
+				attach_dial(diffusion, {
+					.param_id = 23,
+					.label = "DELAY", .units = "ms",
+					.radius = 20, .cx = 83, .cy = 200,
+					.fill = "#1b1d23",
+					.font_size = "15sp",
+					.logarithmic = true
+				});
+				attach_dial(diffusion, {
+					.param_id = 25,
+					.label = "RATE", .units = "Hz",
+					.radius = 20, .cx = 185, .cy = 200,
+					.fill = "#1b1d23",
+					.font_size = "15sp",
+					.logarithmic = true
+				});
+				attach_dial(diffusion, {
+					.param_id = 24,
+					.label = "DEPTH", .units = "ms",
+					.radius = 20, .cx = 185, .cy = 270,
+					.fill = "#1b1d23",
+					.font_size = "15sp",
+					.logarithmic = true
+				});
 
 				attach_delay_mod(diffusion, 26, 23, 25, 24, 25, 260);
 
@@ -1028,8 +1101,18 @@ namespace Aether {
 
 			// Delaylines/Crossmix
 
-			attach_dial(late, 28, "DELAYLINES", 24, 373, 65, "#33343b");
-			attach_dial(late, 46, "CROSSMIX", 24, 373, 148, "#33343b");
+			attach_dial(late, {
+				.param_id = 28,
+				.label = "DELAYLINES",
+				.radius = 24, .cx = 373, .cy = 65,
+				.fill = "#33343b"
+			});
+			attach_dial(late, {
+				.param_id = 46,
+				.label = "CROSSMIX", .units = "%",
+				.radius = 24, .cx = 373, .cy = 148,
+				.fill = "#33343b"
+			});
 
 			attach_eq(late, 295, 200, {
 				EqInfo{
@@ -1079,10 +1162,34 @@ namespace Aether {
 				});
 
 				// controls
-				attach_dial(delay, 32, "FEEDBACK", 20, 50, 30, "#1b1d23", 15);
-				attach_dial(delay, 29, "DELAY", 20, 119, 30, "#1b1d23", 15);
-				attach_dial(delay, 31, "RATE", 20, 186, 30, "#1b1d23", 15);
-				attach_dial(delay, 30, "DEPTH", 20, 186, 100, "#1b1d23", 15);
+				attach_dial(delay, {
+					.param_id = 32,
+					.label = "FEEDBACK", .units = "dB",
+					.radius = 20, .cx = 50, .cy = 30,
+					.fill = "#1b1d23", .font_size = "15sp",
+					.to_display_val = gain_to_dB
+				});
+				attach_dial(delay, {
+					.param_id = 29,
+					.label = "DELAY", .units = "ms",
+					.radius = 20, .cx = 119, .cy = 30,
+					.fill = "#1b1d23", .font_size = "15sp",
+					.logarithmic = true
+				});
+				attach_dial(delay, {
+					.param_id = 31,
+					.label = "RATE", .units = "Hz",
+					.radius = 20, .cx = 186, .cy = 30,
+					.fill = "#1b1d23", .font_size = "15sp",
+					.logarithmic = true
+				});
+				attach_dial(delay, {
+					.param_id = 30,
+					.label = "DEPTH", .units = "ms",
+					.radius = 20, .cx = 186, .cy = 100,
+					.fill = "#1b1d23", .font_size = "15sp",
+					.logarithmic = true
+				});
 
 				// visual
 				attach_delay_mod(delay, 32, 29, 31, 30, 25, 90);
@@ -1170,10 +1277,34 @@ namespace Aether {
 				});
 
 				// controls
-				attach_dial(diffusion, 37, "FEEDBACK", 20, 50, 30, "#1b1d23", 15);
-				attach_dial(diffusion, 34, "DELAY", 20, 119, 30, "#1b1d23", 15);
-				attach_dial(diffusion, 36, "RATE", 20, 186, 30, "#1b1d23", 15);
-				attach_dial(diffusion, 35, "DEPTH", 20, 186, 100, "#1b1d23", 15);
+				attach_dial(diffusion, {
+					.param_id = 37,
+					.label = "FEEDBACK", .units = "dB",
+					.radius = 20, .cx = 50, .cy = 30,
+					.fill = "#1b1d23", .font_size = "15sp",
+					.to_display_val = gain_to_dB
+				});
+				attach_dial(diffusion, {
+					.param_id = 34,
+					.label = "DELAY", .units = "ms",
+					.radius = 20, .cx = 119, .cy = 30,
+					.fill = "#1b1d23", .font_size = "15sp",
+					.logarithmic = true
+				});
+				attach_dial(diffusion, {
+					.param_id = 36,
+					.label = "RATE", .units = "Hz",
+					.radius = 20, .cx = 186, .cy = 30,
+					.fill = "#1b1d23", .font_size = "15sp",
+					.logarithmic = true
+				});
+				attach_dial(diffusion, {
+					.param_id = 35,
+					.label = "DEPTH", .units = "ms",
+					.radius = 20, .cx = 186, .cy = 100,
+					.fill = "#1b1d23", .font_size = "15sp",
+					.logarithmic = true
+				});
 
 				// visual
 				attach_delay_mod(diffusion, 37, 34, 36, 35, 25, 90);
@@ -1442,7 +1573,7 @@ namespace Aether {
 			parameter_infos[param_idx].max
 		);
 
-		update_dsp_param(param_idx, new_value);
+		update_dsp_param(param_idx, parameter_infos[param_idx].integer ? static_cast<int>(new_value) : new_value);
 		parameter_update(param_idx, new_value);
 
 		mouse_callback_info.x = e.x;
@@ -1578,118 +1709,76 @@ namespace Aether {
 		});
 	}
 
+	UIElement::Connection dial_linear(size_t param_idx) {
+		return {
+			.param_idx = param_idx,
+			.style ="value",
+			.in_range = {parameter_infos[param_idx].min, parameter_infos[param_idx].max},
+			.out_range = {"0", "1"},
+			.interpolate = [param_idx](float t, auto out) {
+				if (parameter_infos[param_idx].integer)
+					t = static_cast<int>(t * (parameter_infos[param_idx].range()))
+						/ (parameter_infos[param_idx].range());
+				return interpolate_style<float>(t, out);
+			}
+		};
+	}
+
 	void UI::View::attach_dial(
 		Group* g,
-		size_t param_idx,
-		const std::string& param_name,
-		int dial_size,
-		float cx,
-		float cy,
-		const std::string& center_fill,
-		float font_size
+		DialInfo info
 	) {
-		float strk_width = dial_size/24.f;
+		using namespace std::placeholders;
 
-		auto center_group = g->add_child<Group>({
-			.visible = true, .inert = true,
-			.style = {
-				{"x", to_string(cx).substr(0,3) + "sp"}, {"width", "0"},
-				{"y", to_string(cy).substr(0,3) + "sp"}, {"height", "0"}
-			}
-		});
+		const auto val_to_str = [=, this](size_t param_id) {
+			const float val = info.to_display_val(get_parameter(param_id));
+			std::ostringstream ss;
+			ss.imbue(std::locale::classic());
 
-		center_group->add_child<Arc>({
-			.visible = true, .inert = true,
-			.style = {
-				{"cx", "0"},
-				{"cy", "0"},
-				{"r", to_string(dial_size) + "sp"},
-				{"a0", "-150grad"}, {"a1", "150grad"},
-				{"fill", "#1b1d23"},
-				{"transform", "rotate(-0.25turn)"}
+			if (parameter_infos[param_id].integer) {
+				ss << static_cast<int>(val);
+			} else {
+				ss.setf(ss.fixed);
+				if (info.logarithmic)
+					ss.precision(std::max(2-std::max(static_cast<int>(std::log10(std::abs(val))), -1), 0));
+				else
+					ss.precision(std::max(1-std::max(static_cast<int>(std::log10(std::abs(val))), 0), 0));
+				ss << val;
 			}
-		});
-		center_group->add_child<Arc>({
-			.visible = true, .inert = true,
-			.connections = {{
-				.param_idx = param_idx,
-				.style ="a1",
-				.in_range = {parameter_infos[param_idx].min, parameter_infos[param_idx].max},
-				.out_range = {"-150grad", "150grad"},
-				.interpolate = [param_idx](float t, auto out) {
-					if (parameter_infos[param_idx].integer)
-						t = static_cast<int>(t * (parameter_infos[param_idx].range()))
-							/ (parameter_infos[param_idx].range());
-					return interpolate_style<float>(t, out);
-				}
-			}},
-			.style = {
-				{"cx", "0"},
-				{"cy", "0"},
-				{"r", to_string(dial_size) + "sp"},
-				{"a0", "-150grad"},
-				{"fill", "#43444b"},
-				{"stroke", "#b6bfcc"}, {"stroke-width", to_string(strk_width) + "sp"},
-				{"transform", "rotate(-0.25turn)"}
-			}
-		});
-		center_group->add_child<Circle>({
-			.visible = true, .inert = true,
-			.style = {
-				{"cx", "0"},
-				{"cy", "0"},
-				{"r", to_string(20*dial_size/24.f) + "sp"},
-				{"fill", center_fill},
-				{"stroke", "#b6bfcc"}, {"stroke-width", to_string(strk_width) + "sp"}
-			}
-		});
-		center_group->add_child<Rect>({
-			.visible = true, .inert = true,
-			.connections = {{
-				.param_idx = param_idx,
-				.style ="transform",
-				.in_range = {parameter_infos[param_idx].min, parameter_infos[param_idx].max},
-				.out_range = {},
-				.interpolate = [param_idx](float t, auto) {
-					if (parameter_infos[param_idx].integer)
-						t = static_cast<int>(t * (parameter_infos[param_idx].range()))
-							/ (parameter_infos[param_idx].range());
-					return "rotate(" + to_string(std::lerp(-150, 150, t)) + "grad)";
-				}
-			}},
-			.style = {
-				{"x", to_string(-dial_size/16.f) + "sp"},
-				{"width", to_string(dial_size/8.f) + "sp"},
-				{"y", to_string(-dial_size) + "sp"},
-				{"height", to_string(dial_size-strk_width/2.f) + "sp"},
-				{"r", "1sp"},
-				{"fill", "#b6bfcc"},
-				{"stroke", center_fill}, {"stroke-width", "2sp"}
-			}
-		});
-		g->add_child<Circle>({
-			.visible = false, .inert = false,
-			.btn_press_callback = [param_idx, this](UIElement* elem, auto e){dial_btn_press_cb(param_idx, elem, e);},
-			.motion_callback = [param_idx, this](UIElement* elem, auto e){dial_btn_motion_cb(param_idx, elem, e);},
-			.style = {
-				{"cx", to_string(cx).substr(0,3) + "sp"},
-				{"cy", to_string(cy).substr(0,3) + "sp"},
-				{"r", to_string(1.4*dial_size).substr(0,2) + "sp"}
-			}
-		});
+			const std::string val_s = ss.str();
 
-		if (!param_name.empty()) {
-			center_group->add_child<Text>({
-				.visible = true, .inert = true,
-				.style = {
-					{"x", "-100sp"}, {"width", "200sp"},
-					{"y", to_string(1.2f*dial_size + 12) + "sp"},
-					{"font-family", "Roboto-Light"},
-					{"font-size", to_string(font_size) + "sp"},
-					{"text", param_name}, {"text-align", "center"}, {"fill", "#b6bfcc"}
-				}
-			});
-		}
+			return val_s + info.units;
+		};
+
+		g->add_child<Dial>({
+			.visible = true, .inert = false,
+			.btn_press_callback = [=, this](UIElement* elem, const auto& e){
+				dial_btn_press_cb(info.param_id, elem, e);
+
+				auto* dial = dynamic_cast<Dial*>(elem);
+				if (!info.label.empty())
+					dial->style.insert_or_assign("label", val_to_str(info.param_id));
+			},
+			.btn_release_callback = [=](UIElement* elem, auto){
+				auto* dial = dynamic_cast<Dial*>(elem);
+				dial->style.insert_or_assign("label", info.label);
+			},
+			.motion_callback = [=, this](UIElement* elem, const auto& e){
+				dial_btn_motion_cb(info.param_id, elem, e);
+
+				auto* dial = dynamic_cast<Dial*>(elem);
+				if (!info.label.empty())
+					dial->style.insert_or_assign("label", val_to_str(info.param_id));
+			},
+			.connections = {dial_linear(info.param_id)},
+			.style = {
+				{"cx", to_string(info.cx) + "sp"}, {"cy", to_string(info.cy) + "sp"},
+				{"r", to_string(info.radius) + "sp"},
+				{"center-fill", info.fill},
+				{"font-size", info.font_size},
+				{"label", info.label}
+			}
+		});
 	}
 
 	void UI::View::attach_delay_mod(

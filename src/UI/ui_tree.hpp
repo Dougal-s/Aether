@@ -168,11 +168,12 @@ public:
 	}
 
 	const Root* root() const { return m_root; }
+
+	Style style;
+
 protected:
 
 	// Variables
-	Style style;
-
 	Frame m_viewbox;
 	Root* m_root;
 
@@ -413,6 +414,67 @@ private:
 
 	std::optional<float> calculate_defined_width(Frame viewbox);
 	std::array<float, 2> calculate_render_corner(Frame viewbox);
+};
+
+class Dial : public Circle {
+	static std::string m_to_string(float num) noexcept {
+		std::ostringstream ss;
+		ss.imbue(std::locale::classic());
+		ss << num;
+		return ss.str();
+	}
+public:
+	Dial(Root* root, CreateInfo create_info) noexcept :
+		Circle(root, create_info),
+		ring(root, {.visible = true, .inert = true, .style = {
+			{"cx", "0"}, {"cy", "0"}, {"r", m_to_string(dial_size) + '%'},
+			{"a0", "-150grad"}, {"a1", "150grad"},
+			{"fill", "#1b1d23"},
+			{"transform", "rotate(-0.25turn)"}
+		}}),
+		ring_value(root, {.visible = true, .inert = true, .style = {
+			{"cx", "0"}, {"cy", "0"}, {"r", m_to_string(dial_size) + '%'},
+			{"a0", "-150grad"},
+			{"fill", "#43444b"},
+			{"stroke", "#b6bfcc"}, {"stroke-width", m_to_string(strk_width) + '%'},
+			{"transform", "rotate(-0.25turn)"}
+		}}),
+		center_cover(root, {.visible = true, .inert = true, .style = {
+			{"cx", "0"}, {"cy", "0"}, {"r", m_to_string(20*dial_size/24) + '%'},
+			{"stroke", "#b6bfcc"}, {"stroke-width", m_to_string(strk_width) + '%'}
+		}}),
+		thumb(root, {.visible = true, .inert = true, .style = {
+			{"x", m_to_string(-dial_size / 16.f) + '%'},
+			{"y", m_to_string(-dial_size) + '%'},
+			{"width" , m_to_string(dial_size / 8.f)   + '%'},
+			{"height", m_to_string(dial_size - strk_width/2.f) + '%'},
+			{"r", "1sp"},
+			{"fill", "#b6bfcc"},
+			{"stroke-width", "2sp"}
+		}}),
+		label(root, {.visible = true, .inert = true, .style = {
+			{"x", "-100sp"}, {"width", "200sp"},
+			{"font-family", "Roboto-Light"},
+			{"text-align", "center"}, {"fill", "#b6bfcc"}
+		}})
+	{}
+protected:
+	/*
+		Virtual functions
+	*/
+	virtual void calculate_layout_impl(Frame viewbox) override;
+	virtual void draw_impl() const override;
+	virtual UIElement* element_at_impl(float x, float y) override;
+
+private:
+	// sizes in percent of the radius
+	static constexpr float dial_size = 100;
+	static constexpr float strk_width = 100.f/24.f;
+
+	Arc ring, ring_value;
+	Circle center_cover;
+	Rect thumb;
+	Text label;
 };
 
 

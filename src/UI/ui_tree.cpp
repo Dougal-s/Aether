@@ -855,6 +855,52 @@ std::array<float, 2> Text::calculate_render_corner(Frame viewbox) {
 	return {viewbox.x() + *left, viewbox.y() + *top};
 }
 
+// Dial
+
+void Dial::calculate_layout_impl(Frame viewbox) {
+	Circle::calculate_layout_impl(viewbox);
+	const Frame dial_viewbox = {cx(), cy(), cx() + r(), cy() + r()};
+
+	const auto center_fill = get_style("center-fill", "dial has undefined property 'center-fill'");
+	center_cover.style.insert_or_assign("fill", center_fill);
+	thumb.style.insert_or_assign("stroke", center_fill);
+
+	const auto val = strtof(get_style("value", "dial has undefined value"));
+	ring_value.style.insert_or_assign("a1", m_to_string(std::lerp(-150.f, 150.f, val)) + "grad");
+	thumb.style.insert_or_assign("transform", "rotate(" + m_to_string(std::lerp(-150.f, 150.f, val)) + "grad)");
+
+	const auto font_size = get_style("font-size", "dial label has undefined font size");
+	label.style.insert_or_assign("font-size", font_size);
+
+	if (auto it = style.find("label"); it && it->second != "")
+		label.style.insert_or_assign("text", it->second);
+	else
+		label.style.insert_or_assign("text", "");
+
+	label.style.insert_or_assign("y", m_to_string(1.2f*r() + 12) + "sp");
+
+	ring.calculate_layout(dial_viewbox);
+	ring_value.calculate_layout(dial_viewbox);
+	center_cover.calculate_layout(dial_viewbox);
+	thumb.calculate_layout(dial_viewbox);
+	label.calculate_layout(dial_viewbox);
+}
+
+void Dial::draw_impl() const {
+	ring.draw();
+	ring_value.draw();
+	center_cover.draw();
+	thumb.draw();
+	label.draw();
+}
+
+UIElement* Dial::element_at_impl(float x, float y) {
+	const float dx = x-cx();
+	const float dy = y-cy();
+	const float hitbox_radius = 1.4f*r();
+	return dx*dx + dy*dy < hitbox_radius*hitbox_radius ? this : nullptr;
+}
+
 // UI Root
 
 Root::Root(
