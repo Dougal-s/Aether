@@ -14,7 +14,7 @@ Aether is an algorithmic reverb LV2 plugin based on [Cloudseed](https://github.c
 	* [Additional Options](#additional-options)
 
 ## Downloads
-Binaries from the latest stable release can be found under [releases](https://github.com/Dougal-s/Aether/releases), while development binaries can be found under the [actions tab](https://github.com/Dougal-s/Aether/actions/workflows/build.yml?query=branch%3Amaster).
+Binaries from the master branch can be found under the [actions tab](https://github.com/Dougal-s/Aether/actions/workflows/build.yml?query=branch%3Amaster).
 
 ## Building
 
