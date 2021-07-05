@@ -350,7 +350,7 @@ namespace Aether {
 			m_l_early_diffuser.set_mod_depth(mod_depth);
 			m_r_early_diffuser.set_mod_depth(mod_depth);
 		} {
-			float rate = params.early_diffusion_mod_rate*m_rate;
+			float rate = params.early_diffusion_mod_rate/m_rate;
 			m_l_early_diffuser.set_mod_rate(rate);
 			m_r_early_diffuser.set_mod_rate(rate);
 		} {
