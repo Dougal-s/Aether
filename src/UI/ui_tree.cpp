@@ -185,7 +185,9 @@ UIElement::UIElement(Root* root, CreateInfo create_info) noexcept :
 	m_inert{create_info.inert},
 	m_btn_prs_cb{create_info.btn_press_callback},
 	m_btn_rls_cb{create_info.btn_release_callback},
-	m_motion_cb{create_info.motion_callback}
+	m_motion_cb{create_info.motion_callback},
+	m_scroll_cb{create_info.scroll_callback},
+	m_hover_release_cb{create_info.hover_release_callback}
 {}
 
 void UIElement::calculate_layout(Frame viewbox) {

@@ -90,6 +90,7 @@ namespace Aether {
 		pugl::Status onEvent(const pugl::ButtonPressEvent& event) noexcept;
 		pugl::Status onEvent(const pugl::ButtonReleaseEvent& event) noexcept;
 		pugl::Status onEvent(const pugl::MotionEvent& event) noexcept;
+		pugl::Status onEvent(const pugl::ScrollEvent& event) noexcept;
 
 		template <PuglEventType T, class Base>
 		static pugl::Status onEvent(const pugl::Event<T, Base>&) noexcept {
@@ -114,6 +115,7 @@ namespace Aether {
 
 		// member variables
 		UIElement* m_active = nullptr;
+		UIElement* m_hover = nullptr;
 
 		struct MouseCallbackInfo {
 			float x;
@@ -154,14 +156,18 @@ namespace Aether {
 
 		void dial_btn_press_cb(
 			size_t param_idx,
-			UIElement* elem,
 			const pugl::ButtonPressEvent& e,
 			float sensitivity = 1.f
 		);
 		void dial_btn_motion_cb(
 			size_t param_idx,
-			UIElement* elem,
 			const pugl::MotionEvent& e,
+			float sensitivity = 1.f,
+			float curvature = 1.f
+		);
+		void dial_scroll_cb(
+			size_t param_idx,
+			const pugl::ScrollEvent& e,
 			float sensitivity = 1.f,
 			float curvature = 1.f
 		);
@@ -582,8 +588,9 @@ namespace Aether {
 
 				seeds->add_child<Text>({
 					.visible = true, .inert = false,
-					.btn_press_callback = [&](UIElement* elem, auto e){dial_btn_press_cb(47, elem, e, 0.1f);},
-					.motion_callback = [&](UIElement* elem, auto e){dial_btn_motion_cb(47, elem, e, 0.1f);},
+					.btn_press_callback = [&](UIElement*, auto e){dial_btn_press_cb(47, e, 0.1f);},
+					.motion_callback = [&](UIElement*, auto e){dial_btn_motion_cb(47, e, 0.1f);},
+					.scroll_callback = [&](UIElement*, auto e){dial_scroll_cb(47, e, 0.1f);},
 					.connections = {
 						{
 							.param_idx = 47,
@@ -602,8 +609,9 @@ namespace Aether {
 
 				seeds->add_child<Text>({
 					.visible = true, .inert = false,
-					.btn_press_callback = [&](UIElement* elem, auto e){dial_btn_press_cb(48, elem, e, 0.1f);},
-					.motion_callback = [&](UIElement* elem, auto e){dial_btn_motion_cb(48, elem, e, 0.1f);},
+					.btn_press_callback = [&](UIElement*, auto e){dial_btn_press_cb(48, e, 0.1f);},
+					.motion_callback = [&](UIElement*, auto e){dial_btn_motion_cb(48, e, 0.1f);},
+					.scroll_callback = [&](UIElement*, auto e){dial_scroll_cb(48, e, 0.1f);},
 					.connections = {
 						{
 							.param_idx = 48,
@@ -622,8 +630,9 @@ namespace Aether {
 
 				seeds->add_child<Text>({
 					.visible = true, .inert = false,
-					.btn_press_callback = [&](UIElement* elem, auto e){dial_btn_press_cb(49, elem, e, 0.1f);},
-					.motion_callback = [&](UIElement* elem, auto e){dial_btn_motion_cb(49, elem, e, 0.1f);},
+					.btn_press_callback = [&](UIElement*, auto e){dial_btn_press_cb(49, e, 0.1f);},
+					.motion_callback = [&](UIElement*, auto e){dial_btn_motion_cb(49, e, 0.1f);},
+					.scroll_callback = [&](UIElement*, auto e){dial_scroll_cb(49, e, 0.1f);},
 					.connections = {
 						{
 							.param_idx = 49,
@@ -642,8 +651,9 @@ namespace Aether {
 
 				seeds->add_child<Text>({
 					.visible = true, .inert = false,
-					.btn_press_callback = [&](UIElement* elem, auto e){dial_btn_press_cb(50, elem, e, 0.1f);},
-					.motion_callback = [&](UIElement* elem, auto e){dial_btn_motion_cb(50, elem, e, 0.1f);},
+					.btn_press_callback = [&](UIElement*, auto e){dial_btn_press_cb(50, e, 0.1f);},
+					.motion_callback = [&](UIElement*, auto e){dial_btn_motion_cb(50, e, 0.1f);},
+					.scroll_callback = [&](UIElement*, auto e){dial_scroll_cb(50, e, 0.1f);},
 					.connections = {
 						{
 							.param_idx = 50,
@@ -1288,8 +1298,9 @@ namespace Aether {
 				});
 				diffusion->add_child<Rect>({
 					.visible = false, .inert = false,
-					.btn_press_callback = [this](UIElement* elem, auto e){dial_btn_press_cb(33, elem, e);},
-					.motion_callback = [this](UIElement* elem, auto e){dial_btn_motion_cb(33, elem, e);},
+					.btn_press_callback = [this](UIElement*, auto e){dial_btn_press_cb(33, e);},
+					.motion_callback = [this](UIElement*, auto e){dial_btn_motion_cb(33, e);},
+					.scroll_callback = [this](UIElement*, auto e){dial_scroll_cb(33, e);},
 					.style = {
 						{"x", "230sp"}, {"y", "5sp"},
 						{"width", "40sp"}, {"height", "40sp"}
@@ -1424,15 +1435,44 @@ namespace Aether {
 	}
 
 	pugl::Status UI::View::onEvent(const pugl::ButtonReleaseEvent& event) noexcept {
-		if (m_active)
+		if (m_active) {
 			m_active->btn_release(event);
+
+			// update hovered element
+			auto hover = ui_tree.root().element_at(event.x, event.y);
+			if (m_hover != hover) {
+				if (m_hover)
+					m_hover->hover_release();
+				m_hover = hover;
+			}
+		}
 		m_active = nullptr;
 		return pugl::Status::success;
 	}
 
 	pugl::Status UI::View::onEvent(const pugl::MotionEvent& event) noexcept {
-		if (m_active)
+		if (m_active) {
 			m_active->motion(event);
+		} else {
+			// dont update hovered element while the mouse button is held down
+			auto hover = ui_tree.root().element_at(event.x, event.y);
+			if (m_hover != hover) {
+				if (m_hover)
+					m_hover->hover_release();
+				m_hover = hover;
+
+				mouse_callback_info.x = 0;
+				mouse_callback_info.y = 0;
+			}
+		}
+
+		return pugl::Status::success;
+	}
+
+	pugl::Status UI::View::onEvent(const pugl::ScrollEvent& event) noexcept {
+		// ignore scroll events while the mouse button it being held down
+		if (!m_active && m_hover)
+			m_hover->scroll(event);
 		return pugl::Status::success;
 	}
 
@@ -1560,7 +1600,6 @@ namespace Aether {
 
 	void UI::View::dial_btn_press_cb(
 		size_t param_idx,
-		UIElement*,
 		const pugl::ButtonPressEvent& e,
 		float
 	) {
@@ -1576,7 +1615,6 @@ namespace Aether {
 
 	void UI::View::dial_btn_motion_cb(
 		size_t param_idx,
-		UIElement*,
 		const pugl::MotionEvent& e,
 		float sensitivity,
 		float curvature
@@ -1622,6 +1660,58 @@ namespace Aether {
 			mouse_callback_info.x = e.x;
 			mouse_callback_info.y = e.y;
 		}
+	}
+
+	void UI::View::dial_scroll_cb(
+		size_t param_id,
+		const pugl::ScrollEvent& e,
+		float sensitivity,
+		float curvature
+	) {
+		float new_value = get_parameter(param_id);
+		if (parameter_infos[param_id].integer) {
+			float param_sensitivity = std::exp2(std::ceil(std::log2(0.05f*parameter_infos[param_id].range())));
+			sensitivity *= param_sensitivity * (e.state & pugl::Mod::PUGL_MOD_CTRL ? 0.25f : 1.f);
+
+			float dval = mouse_callback_info.y + sensitivity * static_cast<float>(e.dx+e.dy);
+			float dv = std::trunc(dval);
+
+			new_value += dv;
+
+			new_value = std::clamp(
+				new_value,
+				parameter_infos[param_id].min,
+				parameter_infos[param_id].max
+			);
+
+			mouse_callback_info.y = std::clamp(
+				dval-dv,
+				parameter_infos[param_id].min-new_value,
+				parameter_infos[param_id].max-new_value
+			);
+		} else {
+			sensitivity *= 0.05f*(e.state & pugl::Mod::PUGL_MOD_CTRL ? 0.1f : 1.f);
+			float dval = sensitivity*static_cast<float>(e.dx + e.dy);
+
+			if (curvature == 1.f) {
+				new_value += parameter_infos[param_id].range()*dval;
+			} else {
+				float normalized = (new_value - parameter_infos[param_id].min)/parameter_infos[param_id].range();
+				normalized = std::log1p(normalized*(curvature - 1)) / std::log(curvature);
+				normalized += dval;
+				normalized = (std::pow(curvature, normalized) - 1 ) / (curvature - 1);
+				new_value = parameter_infos[param_id].range()*normalized + parameter_infos[param_id].min;
+			}
+
+			new_value = std::clamp(
+				new_value,
+				parameter_infos[param_id].min,
+				parameter_infos[param_id].max
+			);
+		}
+
+		update_dsp_param(param_id, new_value);
+		parameter_update(param_id, new_value);
 	}
 
 
@@ -1747,6 +1837,9 @@ namespace Aether {
 				mouse_callback_info.x = e.x;
 				mouse_callback_info.y = e.y;
 			},
+			.scroll_callback = [mixer_ctrl_idx, this](UIElement*, const pugl::ScrollEvent& e) {
+				dial_scroll_cb(mixer_ctrl_idx, e);
+			},
 			.style = {
 				{"x", "0"}, {"y", "0"}, {"width", "100%"}, {"height", "100%"}
 			}
@@ -1779,8 +1872,6 @@ namespace Aether {
 		Group* g,
 		DialInfo info
 	) {
-		using namespace std::placeholders;
-
 		const auto val_to_str = [=, this](size_t param_id) {
 			const float val = info.to_display_val(get_parameter(param_id));
 			std::ostringstream ss;
@@ -1804,22 +1895,29 @@ namespace Aether {
 		g->add_child<Dial>({
 			.visible = true, .inert = false,
 			.btn_press_callback = [=, this](UIElement* elem, const auto& e){
-				dial_btn_press_cb(info.param_id, elem, e);
+				dial_btn_press_cb(info.param_id, e);
 
 				auto* dial = dynamic_cast<Dial*>(elem);
 				if (!info.label.empty())
 					dial->style.insert_or_assign("label", val_to_str(info.param_id));
-			},
-			.btn_release_callback = [=](UIElement* elem, auto){
-				auto* dial = dynamic_cast<Dial*>(elem);
-				dial->style.insert_or_assign("label", info.label);
 			},
 			.motion_callback = [=, this](UIElement* elem, const auto& e){
-				dial_btn_motion_cb(info.param_id, elem, e, 1.f, info.curvature);
+				dial_btn_motion_cb(info.param_id, e, 1.f, info.curvature);
 
 				auto* dial = dynamic_cast<Dial*>(elem);
 				if (!info.label.empty())
 					dial->style.insert_or_assign("label", val_to_str(info.param_id));
+			},
+			.scroll_callback = [=, this](UIElement* elem, const auto& e) {
+				dial_scroll_cb(info.param_id, e, 1.f, info.curvature);
+
+				auto* dial = dynamic_cast<Dial*>(elem);
+				if (!info.label.empty())
+					dial->style.insert_or_assign("label", val_to_str(info.param_id));
+			},
+			.hover_release_callback = [=](UIElement* elem) {
+				auto* dial = dynamic_cast<Dial*>(elem);
+				dial->style.insert_or_assign("label", info.label);
 			},
 			.connections = {
 				info.curvature == 1.f ?

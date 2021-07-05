@@ -83,6 +83,8 @@ public:
 	using ButtonPressCallback = std::function<void (UIElement*, const pugl::ButtonPressEvent&)>;
 	using ButtonReleaseCallback = std::function<void (UIElement*, const pugl::ButtonReleaseEvent&)>;
 	using MotionCallback = std::function<void (UIElement*, const pugl::MotionEvent&)>;
+	using ScrollCallback = std::function<void (UIElement*, const pugl::ScrollEvent&)>;
+	using HoverReleaseCallback = std::function<void (UIElement*)>;
 
 	struct Connection {
 		size_t param_idx;
@@ -106,6 +108,8 @@ public:
 		ButtonPressCallback btn_press_callback = nullptr;
 		ButtonReleaseCallback btn_release_callback = nullptr;
 		MotionCallback motion_callback = nullptr;
+		ScrollCallback scroll_callback = nullptr;
+		HoverReleaseCallback hover_release_callback = nullptr;
 		std::vector<Connection> connections = {};
 		std::unordered_map<std::string, std::string> style;
 	};
@@ -153,6 +157,8 @@ public:
 	void set_btn_press_callback(ButtonPressCallback cb) noexcept { m_btn_prs_cb = cb; }
 	void set_btn_release_callback(ButtonReleaseCallback cb) noexcept { m_btn_rls_cb = cb; }
 	void set_motion_callback(MotionCallback cb) noexcept { m_motion_cb = cb; }
+	void set_scroll_callback(ScrollCallback cb) noexcept { m_scroll_cb = cb; }
+	void set_hover_release_callback(HoverReleaseCallback cb) noexcept { m_hover_release_cb = cb; }
 
 	/*
 		trigger mouse events
@@ -165,6 +171,12 @@ public:
 	}
 	virtual void motion(const pugl::MotionEvent& e) {
 		if (m_motion_cb) m_motion_cb(this, e);
+	}
+	virtual void scroll(const pugl::ScrollEvent& e) {
+		if (m_scroll_cb) m_scroll_cb(this, e);
+	}
+	virtual void hover_release() {
+		if (m_hover_release_cb) m_hover_release_cb(this);
 	}
 
 	const Root* root() const { return m_root; }
@@ -217,6 +229,8 @@ private:
 	ButtonPressCallback m_btn_prs_cb;
 	ButtonReleaseCallback m_btn_rls_cb;
 	MotionCallback m_motion_cb;
+	ScrollCallback m_scroll_cb;
+	HoverReleaseCallback m_hover_release_cb;
 
 	/*
 
