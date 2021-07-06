@@ -43,8 +43,21 @@ namespace Aether {
 
 		param_smooth_named.early_tap_mix = 50.f;
 		param_smooth_named.early_tap_decay = 25.f;
+		param_smooth_named.early_tap_length = 4000.f;
 
+		param_smooth_named.early_diffusion_delay = 5000.f;
+		param_smooth_named.early_diffusion_mod_depth = 1000.f;
+		param_smooth_named.early_diffusion_feedback = 500.f;
+
+		param_smooth_named.late_delay = 5000.f;
+		param_smooth_named.late_delay_mod_depth = 1000.f;
 		param_smooth_named.late_delay_line_feedback = 50.f;
+
+		param_smooth_named.late_diffusion_delay = 5000.f;
+		param_smooth_named.late_diffusion_mod_depth = 2000.f;
+		param_smooth_named.late_diffusion_feedback = 500.f;
+
+		param_smooth_named.seed_crossmix = 5000.f;
 
 		for (float& smooth : param_smooth) {
 			constexpr float pi = constants::pi_v<float>;
