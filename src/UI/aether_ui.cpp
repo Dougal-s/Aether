@@ -1428,7 +1428,7 @@ namespace Aether {
 		Mouse Events
 	*/
 	pugl::Status UI::View::onEvent(const pugl::ButtonPressEvent& event) noexcept {
-		m_active = ui_tree.root().element_at(event.x, event.y);
+		m_active = m_hover;
 		if (m_active)
 			m_active->btn_press(event);
 		return pugl::Status::success;
