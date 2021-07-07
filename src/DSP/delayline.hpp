@@ -114,9 +114,18 @@ public:
 			line.diffuser.set_seed_crossmix(crossmix);
 	}
 
+	void set_delay_lines(uint32_t lines) {
+		if (m_lines < lines)
+			for (uint32_t i = m_lines; i < lines; ++i)
+				m_delay_lines[i].clear();
+		m_lines = lines;
+		m_gain_target = 0.3f+0.3f*max_lines/static_cast<float>(7+m_lines);
+	}
+
 	// delay line
 	void set_delay(float delay) {
 		if (m_delay == delay) return;
+		m_gain_smoothing = std::exp(-2*constants::pi_v<float> / delay);
 		m_delay = delay;
 		generate_delay();
 	}
@@ -190,14 +199,14 @@ public:
 
 	float push(
 		float sample,
-		uint32_t lines,
 		Delayline::PushInfo push_info
 	) noexcept {
 		double output = 0;
-		for (uint32_t i = 0; i < lines; ++i)
+		for (uint32_t i = 0; i < m_lines; ++i)
 			output += m_delay_lines[i].push(static_cast<double>(sample), push_info);
 
-		return static_cast<float>(output) * (0.3f+0.3f*max_lines/static_cast<float>(7+lines));
+		m_gain = m_gain - m_gain_smoothing*(m_gain-m_gain_target);
+		return m_gain*static_cast<float>(output);
 	}
 
 	static constexpr uint32_t max_lines = 12;
@@ -210,6 +219,12 @@ private:
 	std::array<Delayline, max_lines> m_delay_lines;
 	std::array<float, 3*max_lines> m_rand = {};
 
+	// gain compensation for the number of delay lines
+	float m_gain_target = 1.f;
+	float m_gain_smoothing = 1.f;
+	float m_gain = 1.f;
+
+	uint32_t m_lines = 0;
 	float m_delay = 0.f;
 	float m_mod_depth = 0.f;
 	float m_mod_rate = 0.f;

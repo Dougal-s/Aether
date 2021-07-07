@@ -198,8 +198,6 @@ namespace Aether {
 			float late_left = early_left;
 			float late_right = early_right;
 			{
-				uint32_t lines = static_cast<uint32_t>(params.late_delay_lines);
-
 				Delayline::PushInfo push_info = {
 					.order = static_cast<Delayline::Order>(params.late_order),
 					.diffuser_info = {
@@ -214,8 +212,8 @@ namespace Aether {
 					}
 				};
 
-				late_left = m_l_late_rev.push(late_left, lines, push_info);
-				late_right = m_l_late_rev.push(late_right, lines, push_info);
+				late_left = m_l_late_rev.push(late_left, push_info);
+				late_right = m_l_late_rev.push(late_right, push_info);
 				ports.audio_out_left[sample] += late_level*late_left;
 				ports.audio_out_right[sample] += late_level*late_right;
 			}
@@ -381,6 +379,10 @@ namespace Aether {
 			float crossmix = params.seed_crossmix/200.f;
 			m_l_late_rev.set_seed_crossmix(1.f-crossmix);
 			m_r_late_rev.set_seed_crossmix(0.f+crossmix);
+		} {
+			uint32_t lines = static_cast<uint32_t>(params.late_delay_lines);
+			m_l_late_rev.set_delay_lines(lines);
+			m_r_late_rev.set_delay_lines(lines);
 		}
 
 		{ // Modulated Delay
