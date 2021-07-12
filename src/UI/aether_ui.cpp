@@ -563,7 +563,7 @@ namespace Aether {
 				.visible = true, .inert = false,
 				.style = {
 					{"left","10sp"}, {"width","1175sp"},
-					{"bottom","360sp"}, {"height","20sp"}
+					{"bottom","355sp"}, {"height","30sp"}
 				}
 			});
 
@@ -571,26 +571,24 @@ namespace Aether {
 				auto seeds = global_settings->add_child<Group>({
 					.visible = true, .inert = false,
 					.style = {
-						{"left","615sp"}, {"right","200sp"},
-						{"y","2.5sp"}, {"height","15sp"}
+						{"left","615sp"}, {"right","190sp"},
+						{"y","0"}, {"height","100%"}
 					}
 				});
 
 				seeds->add_child<Text>({
 					.visible = true, .inert = true,
 					.style = {
-						{"x", "0"}, {"y", "100%"},
+						{"x", "0"}, {"y", "50%"},
 						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
+						{"vertical-align", "middle"},
 						{"fill", "#c1c1c1"},
 						{"text", "Seeds"}
 					}
 				});
 
 				seeds->add_child<Text>({
-					.visible = true, .inert = false,
-					.btn_press_callback = [&](UIElement*, auto e){dial_btn_press_cb(47, e, 0.1f);},
-					.motion_callback = [&](UIElement*, auto e){dial_btn_motion_cb(47, e, 0.1f);},
-					.scroll_callback = [&](UIElement*, auto e){dial_scroll_cb(47, e, 0.1f);},
+					.visible = true, .inert = true,
 					.connections = {
 						{
 							.param_idx = 47,
@@ -601,17 +599,22 @@ namespace Aether {
 						}
 					},
 					.style = {
-						{"x", "60sp"}, {"y", "100%"}, {"width", "75sp"},
+						{"x", "60sp"}, {"y", "50%"}, {"width", "75sp"},
 						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
+						{"vertical-align", "middle"},
 						{"text-align", "right"}, {"fill", "#c1c1c1"}
 					}
 				});
+				seeds->add_child<Rect>({
+					.visible = false, .inert = false,
+					.btn_press_callback = [&](UIElement*, auto e){dial_btn_press_cb(47, e, 0.1f);},
+					.motion_callback = [&](UIElement*, auto e){dial_btn_motion_cb(47, e, 0.1f);},
+					.scroll_callback = [&](UIElement*, auto e){dial_scroll_cb(47, e, 0.1f);},
+					.style = { {"x", "70sp"}, {"y", "0"}, {"width", "75sp"}, {"height", "100%"} }
+				});
 
 				seeds->add_child<Text>({
-					.visible = true, .inert = false,
-					.btn_press_callback = [&](UIElement*, auto e){dial_btn_press_cb(48, e, 0.1f);},
-					.motion_callback = [&](UIElement*, auto e){dial_btn_motion_cb(48, e, 0.1f);},
-					.scroll_callback = [&](UIElement*, auto e){dial_scroll_cb(48, e, 0.1f);},
+					.visible = true, .inert = true,
 					.connections = {
 						{
 							.param_idx = 48,
@@ -622,17 +625,22 @@ namespace Aether {
 						}
 					},
 					.style = {
-						{"x", "135sp"}, {"y", "100%"}, {"width", "75sp"},
+						{"x", "135sp"}, {"y", "50%"}, {"width", "75sp"},
 						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
+						{"vertical-align", "middle"},
 						{"text-align", "right"}, {"fill", "#c1c1c1"}
 					}
 				});
+				seeds->add_child<Rect>({
+					.visible = false, .inert = false,
+					.btn_press_callback = [&](UIElement*, auto e){dial_btn_press_cb(48, e, 0.1f);},
+					.motion_callback = [&](UIElement*, auto e){dial_btn_motion_cb(48, e, 0.1f);},
+					.scroll_callback = [&](UIElement*, auto e){dial_scroll_cb(48, e, 0.1f);},
+					.style = { {"x", "145sp"}, {"y", "0"}, {"width", "75sp"}, {"height", "100%"} }
+				});
 
 				seeds->add_child<Text>({
-					.visible = true, .inert = false,
-					.btn_press_callback = [&](UIElement*, auto e){dial_btn_press_cb(49, e, 0.1f);},
-					.motion_callback = [&](UIElement*, auto e){dial_btn_motion_cb(49, e, 0.1f);},
-					.scroll_callback = [&](UIElement*, auto e){dial_scroll_cb(49, e, 0.1f);},
+					.visible = true, .inert = true,
 					.connections = {
 						{
 							.param_idx = 49,
@@ -643,17 +651,22 @@ namespace Aether {
 						}
 					},
 					.style = {
-						{"x", "210sp"}, {"y", "100%"}, {"width", "75sp"},
+						{"x", "210sp"}, {"y", "50%"}, {"width", "75sp"},
 						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
+						{"vertical-align", "middle"},
 						{"text-align", "right"}, {"fill", "#c1c1c1"}
 					}
 				});
+				seeds->add_child<Rect>({
+					.visible = false, .inert = false,
+					.btn_press_callback = [&](UIElement*, auto e){dial_btn_press_cb(49, e, 0.1f);},
+					.motion_callback = [&](UIElement*, auto e){dial_btn_motion_cb(49, e, 0.1f);},
+					.scroll_callback = [&](UIElement*, auto e){dial_scroll_cb(49, e, 0.1f);},
+					.style = { {"x", "220sp"}, {"y", "0"}, {"width", "75sp"}, {"height", "100%"} }
+				});
 
 				seeds->add_child<Text>({
-					.visible = true, .inert = false,
-					.btn_press_callback = [&](UIElement*, auto e){dial_btn_press_cb(50, e, 0.1f);},
-					.motion_callback = [&](UIElement*, auto e){dial_btn_motion_cb(50, e, 0.1f);},
-					.scroll_callback = [&](UIElement*, auto e){dial_scroll_cb(50, e, 0.1f);},
+					.visible = true, .inert = true,
 					.connections = {
 						{
 							.param_idx = 50,
@@ -664,10 +677,18 @@ namespace Aether {
 						}
 					},
 					.style = {
-						{"x", "285sp"}, {"y", "100%"}, {"width", "75sp"},
+						{"x", "285sp"}, {"y", "50%"}, {"width", "75sp"},
 						{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
+						{"vertical-align", "middle"},
 						{"text-align", "right"}, {"fill", "#c1c1c1"}
 					}
+				});
+				seeds->add_child<Rect>({
+					.visible = false, .inert = false,
+					.btn_press_callback = [&](UIElement*, auto e){dial_btn_press_cb(50, e, 0.1f);},
+					.motion_callback = [&](UIElement*, auto e){dial_btn_motion_cb(50, e, 0.1f);},
+					.scroll_callback = [&](UIElement*, auto e){dial_scroll_cb(50, e, 0.1f);},
+					.style = { {"x", "295sp"}, {"y", "0"}, {"width", "75sp"}, {"height", "100%"} }
 				});
 			}
 
@@ -694,8 +715,9 @@ namespace Aether {
 					}
 				},
 				.style = {
-					{"x", "1035sp"}, {"bottom", "0"},
+					{"x", "1035sp"}, {"y", "50%"},
 					{"font-family", "Roboto-Light"}, {"font-size", "18.6666667sp"},
+					{"vertical-align", "middle"},
 					{"text", "Interpolate"}
 				}
 			});
