@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 // Lv2
 #include <lv2/atom/util.h>
@@ -7,6 +8,7 @@
 #include "aether_dsp.hpp"
 #include "../common/parameters.hpp"
 #include "../common/utils.hpp"
+#include "../common/constants.hpp"
 
 namespace {
 	float dBtoGain(float db) noexcept {

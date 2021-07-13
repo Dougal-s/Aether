@@ -1,7 +1,5 @@
-#include <cstddef>
-#include <vector>
+#include <cstdint>
 #include <filesystem>
-#include <unordered_map>
 
 // Pugl
 #include <pugl/pugl.hpp>

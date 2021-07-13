@@ -1,9 +1,14 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
+#include <cstddef>
+#include <new>
+#include <optional>
 #include <unordered_map>
 #include <utility>
 #include <string>
+#include <string_view>
 
 constexpr size_t hash(const char* input) {
 	size_t out = 0.f;

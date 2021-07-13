@@ -1,6 +1,7 @@
-#include <cmath>
+#include <cassert>
 #include <complex>
-#include <numeric>
+#include <cstddef>
+#include <cstdint>
 
 #include "../../common/constants.hpp"
 #include "../../common/bit_ops.hpp"

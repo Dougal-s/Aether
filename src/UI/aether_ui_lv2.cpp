@@ -1,9 +1,13 @@
+#include <cstdint>
 #include <iostream>
-#include <string>
+#include <filesystem>
 #include <memory>
+#include <string>
 
 // LV2
+#include <lv2/core/lv2.h>
 #include <lv2/ui/ui.h>
+#include <lv2/urid/urid.h>
 
 #include "aether_ui.hpp"
 

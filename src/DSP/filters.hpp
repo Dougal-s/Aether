@@ -2,6 +2,7 @@
 #define FILTERS_HPP
 
 #include <cmath>
+#include <tuple>
 
 #include "../common/constants.hpp"
 

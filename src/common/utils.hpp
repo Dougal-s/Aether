@@ -1,3 +1,6 @@
+#include <array>
+#include <cstddef>
+#include <string_view>
 
 // concatenate multiple string views
 template <const std::string_view&... strings>

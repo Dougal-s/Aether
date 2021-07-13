@@ -1,12 +1,11 @@
 #ifndef DIFFUSER_HPP
 #define DIFFUSER_HPP
 
-#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
-#include <complex>
 #include <cstddef>
+#include <cstdint>
 #include <random>
 #include <utility>
 

@@ -1,8 +1,6 @@
 #ifndef PARAMETERS_HPP
 #define PARAMETERS_HPP
 
-#include <array>
-
 struct ParameterInfo {
 	float min;
 	float max;

@@ -2,6 +2,8 @@
 #include <string>
 #include <stdexcept>
 
+#include <glad/glad.h>
+
 #include "gl_helper.hpp"
 
 /**

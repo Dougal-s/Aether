@@ -1,9 +1,17 @@
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <limits>
+#include <locale>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -22,7 +30,6 @@
 
 struct Root;
 struct DrawingContext;
-class Group;
 
 template <class T>
 struct ParseResult {

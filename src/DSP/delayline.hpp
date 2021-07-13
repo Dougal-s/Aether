@@ -1,8 +1,18 @@
 #ifndef DELAYLINE_HPP
 #define DELAYLINE_HPP
 
+#include <array>
+#include <cassert>
+#include <cstdint>
+#include <random>
+
 #include "delay.hpp"
+#include "diffuser.hpp"
 #include "filters.hpp"
+
+#include "utils/random.hpp"
+
+#include "../common/constants.hpp"
 
 class Delayline {
 public:

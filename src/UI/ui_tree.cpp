@@ -1,7 +1,8 @@
 #include <cmath>
-#include <cstring>
+#include <cstdlib>
+#include <cctype>
 #include <numeric>
-#include <iostream>
+#include <stdexcept>
 
 // Glad
 #include <glad/glad.h>
