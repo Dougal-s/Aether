@@ -12,6 +12,7 @@ Aether is an algorithmic reverb LV2 plugin based on [Cloudseed](https://github.c
 	* [Dependencies](#dependencies)
 	* [Compiling](#compiling)
 	* [Additional Options](#additional-options)
+	* [Installing](#installing)
 
 ## Downloads
 Binaries from the master branch can be found under the [actions tab](https://github.com/Dougal-s/Aether/actions/workflows/build.yml?query=branch%3Amaster).
@@ -75,3 +76,7 @@ make -j4
 | BUILD_TESTS | Build unit tests. The tests can be run using `make test` and individual tests can be found in `builds/tests/tests`. | `on` / `off` |
 | BUILD_BENCHMARKS | Build benchmarks. The benchmarks can be run using `make test` and individual benchmarks can be found in `builds/tests/benchmarks`. | `on` / `off` |
 | CMAKE_BUILD_TYPE | Debug adds runtime checks and debug information. Release enables additional optimizations. Can also be set using the `--config` flag when running cmake.  | `debug` / `release` |
+
+### Installing
+
+The build process will create an lv2 plugin bundle called `aether.lv2` in the build directory, which can be copied to `~/.lv2`, where it can be picked up by an lv2 plugin host.
