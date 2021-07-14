@@ -39,9 +39,6 @@ target_compile_options(aether_dsp PRIVATE
 )
 target_compile_definitions(aether_dsp PRIVATE "$<$<CONFIG:RELEASE>:NDEBUG>")
 
-set_target_properties(aether_dsp PROPERTIES CXX_VISIBILITY_PRESET hidden)
-set_target_properties(aether_dsp PROPERTIES PREFIX "")
-
 add_library(aether_ui MODULE
 	src/UI/aether_ui.cpp
 	src/UI/aether_ui_lv2.cpp
@@ -61,9 +58,6 @@ target_compile_options(aether_ui PRIVATE
 )
 target_compile_definitions(aether_ui PRIVATE "$<$<CONFIG:RELEASE>:NDEBUG>")
 
-set_target_properties(aether_ui PROPERTIES CXX_VISIBILITY_PRESET hidden)
-set_target_properties(aether_ui PROPERTIES PREFIX "")
-
 include(TargetGlad)
 target_link_libraries(aether_ui PRIVATE glad)
 include(TargetPugl)
@@ -71,10 +65,18 @@ target_link_libraries(aether_ui PRIVATE pugl)
 include(TargetNanoVG)
 target_link_libraries(aether_ui PRIVATE nanovg)
 
-configure_file(resources/manifest.ttl.in ../aether.lv2/manifest.ttl)
-configure_file(resources/aether.ttl.in ../aether.lv2/aether.ttl)
-add_custom_command(TARGET aether_dsp POST_BUILD COMMAND cp aether_dsp.so ../aether.lv2/)
-add_custom_command(TARGET aether_ui POST_BUILD COMMAND cp aether_ui.so ../aether.lv2/)
+set_target_properties(aether_dsp aether_ui
+	PROPERTIES
+	CXX_VISIBILITY_PRESET hidden
+	LIBRARY_OUTPUT_DIRECTORY aether.lv2
+	PREFIX "")
+
+# create Aether.lv2
+add_custom_target(copy_fonts ALL
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/fonts aether.lv2/fonts)
+
+configure_file(resources/manifest.ttl.in aether.lv2/manifest.ttl)
+configure_file(resources/aether.ttl.in aether.lv2/aether.ttl)
 
 # Tests
 option(BUILD_TESTS "Build tests" OFF)
