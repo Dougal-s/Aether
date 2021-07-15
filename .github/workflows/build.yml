@@ -39,8 +39,7 @@ jobs:
         cmake --build . --config $BUILD_TYPE
 
     - name: Create Archive
-      working-directory: ${{github.workspace}}/build
-      run: tar -cJf ${{ env.ARCHIVE_NAME }} aether.lv2
+      run: tar -cJf ${{ env.ARCHIVE_NAME }} -C build aether.lv2
 
     - uses: actions/upload-artifact@v2
       with:
@@ -84,8 +83,7 @@ jobs:
         cmake --build . --config $BUILD_TYPE
 
     - name: Create Archive
-      working-directory: ${{github.workspace}}/build
-      run: tar -cJf ${{ env.ARCHIVE_NAME }} aether.lv2
+      run: tar -cJf ${{ env.ARCHIVE_NAME }} -C build aether.lv2
 
     - uses: actions/upload-artifact@v2
       with:
