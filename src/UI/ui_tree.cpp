@@ -880,7 +880,8 @@ void Dial::calculate_layout_impl(Frame viewbox) {
 	else
 		label.style.insert_or_assign("text", "");
 
-	label.style.insert_or_assign("y", m_to_string(1.2f*r() + 12) + "sp");
+	const float radius_sp = 1230.f * r() / (100*m_root->vw);
+	label.style.insert_or_assign("y", m_to_string(1.2f*radius_sp + 12) + "sp");
 
 	ring.calculate_layout(dial_viewbox);
 	ring_value.calculate_layout(dial_viewbox);
