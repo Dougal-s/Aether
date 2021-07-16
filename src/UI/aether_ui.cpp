@@ -296,7 +296,6 @@ namespace Aether {
 					if (elem->element_at(e.x, e.y)) {
 						float new_val = get_parameter(63) > 0.f ? 0.f : 1.f;
 						parameter_update(63, new_val);
-						update_dsp_param(63, new_val);
 					}
 				},
 				.style = {
@@ -331,7 +330,6 @@ namespace Aether {
 					if (elem->element_at(e.x, e.y)) {
 						float new_val = get_parameter(64) > 0.f ? 0.f : 1.f;
 						parameter_update(64, new_val);
-						update_dsp_param(64, new_val);
 					}
 				},
 				.style = {
