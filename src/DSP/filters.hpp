@@ -112,16 +112,19 @@ public:
 		Biquad(rate,0,1, gen(rate, static_cast<FpType>(0),static_cast<FpType>(1)), gen) {}
 
 	void set_sample_rate(FpType rate) {
+		if (m_rate == rate) return;
 		m_rate = rate;
 		std::tie(a1, a2, b0, b1, b2) = m_gen(m_rate, m_cutoff, m_gain);
 	}
 
 	void set_cutoff(FpType cutoff) {
+		if (m_cutoff == cutoff) return;
 		m_cutoff = cutoff;
 		std::tie(a1, a2, b0, b1, b2) = m_gen(m_rate, m_cutoff, m_gain);
 	}
 
 	void set_gain(FpType gain) {
+		if (m_gain == gain) return;
 		m_gain = gain;
 		std::tie(a1, a2, b0, b1, b2) = m_gen(m_rate, m_cutoff, m_gain);
 	}

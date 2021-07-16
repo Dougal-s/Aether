@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+* Some dsp performance improvements!
+
 ### Fixed
 * Fixed broken text positioning when resized.
 
