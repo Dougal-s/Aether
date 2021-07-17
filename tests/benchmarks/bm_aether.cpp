@@ -40,14 +40,14 @@ struct Ports {
 	float late_diffusion_mod_depth = 0.f;
 	float late_diffusion_mod_rate = 0.f;
 	float late_diffusion_feedback = 0.f;
-	float late_low_shelf_enabled = 0.f;
-	float late_low_shelf_cutoff = 0.f;
-	float late_low_shelf_gain = 0.f;
-	float late_high_shelf_enabled = 0.f;
-	float late_high_shelf_cutoff = 0.f;
-	float late_high_shelf_gain = 0.f;
-	float late_high_cut_enabled = 0.f;
-	float late_high_cut_cutoff = 0.f;
+	float late_low_shelf_enabled = 1.f;
+	float late_low_shelf_cutoff = 1000.f;
+	float late_low_shelf_gain = -3.f;
+	float late_high_shelf_enabled = 1.f;
+	float late_high_shelf_cutoff = 1000.f;
+	float late_high_shelf_gain = -2.f;
+	float late_high_cut_enabled = 1.f;
+	float late_high_cut_cutoff = 1000.f;
 	float seed_crossmix = 0.f;
 	float tap_seed = 10.f;
 	float early_diffusion_seed = 10.f;
@@ -131,7 +131,7 @@ static void bm_aether_zeroes(benchmark::State& state) {
 	// the changes to finish
 	for (size_t i = 0; i < dsp.param_ports.size(); ++i)
 		dsp.params_arr[i] = *dsp.param_ports[i];
-	dsp.process(buffer_size);
+	dsp.process(1);
 
 	for (auto _ : state)
 		dsp.process(buffer_size);
@@ -165,7 +165,7 @@ static void bm_aether_white_noise(benchmark::State& state) {
 	// process parameter changes
 	for (size_t i = 0; i < dsp.param_ports.size(); ++i)
 		dsp.params_arr[i] = *dsp.param_ports[i];
-	dsp.process(buffer_size);
+	dsp.process(1);
 
 	for (auto _ : state)
 		dsp.process(buffer_size);
@@ -174,7 +174,7 @@ static void bm_aether_white_noise(benchmark::State& state) {
 	delete[] out_buf;
 }
 
-BENCHMARK(bm_aether_zeroes)->Unit(benchmark::kMillisecond);
-BENCHMARK(bm_aether_white_noise)->Unit(benchmark::kMillisecond);
+BENCHMARK(bm_aether_zeroes)->Unit(benchmark::kMicrosecond);
+BENCHMARK(bm_aether_white_noise)->Unit(benchmark::kMicrosecond);
 
 BENCHMARK_MAIN();
