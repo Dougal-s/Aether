@@ -1985,6 +1985,8 @@ namespace Aether {
 				"in vec2 position;"
 				"out vec4 color;"
 
+				"uniform vec2 dimensions_pixels;"
+
 				"uniform float delay;"
 				"uniform float feedback;"
 				"uniform float rate;"
@@ -2012,7 +2014,8 @@ namespace Aether {
 				"void main() {"
 				"	float section_width = BAR_WIDTH +"
 				"		0.1f+0.3f*(delay-DELAY_MIN)/DELAY_RANGE;"
-				"	float dx = mod(position.x, section_width);"
+					// distance from the center of the bar
+				"	float dx = mod(position.x, section_width) - BAR_WIDTH/2;"
 				"	int section = int(position.x/section_width);"
 
 				"	float height = pow(feedback, section)+0.01f;"
@@ -2022,11 +2025,12 @@ namespace Aether {
 				"	float rate_normalised = 2.f*pi*(rate-RATE_MIN)/RATE_RANGE;"
 				"	float depth_normalised = 0.06f*(depth-DEPTH_MIN)/DEPTH_RANGE;"
 				"	float offset = depth_normalised*(0.5f-0.5f*cos(rate_normalised*section));"
+				"	dx -= offset;"
 
-				"	color = vec4(0.f, 0.f, 0.f, 0.f);"
-				"	if (offset < dx && dx < BAR_WIDTH+offset)"
-				"		if (position.y < height)"
-				"			color = vec4(0.549f, 0.18f, 0.18f, 1.f);"
+				"	color = vec4(0.549f, 0.18f, 0.18f, 0.f);"
+				"	float delta = 0.75/dimensions_pixels.x;"
+				"	if (position.y < height)"
+				"		color.a = 1-smoothstep(BAR_WIDTH/2-delta, BAR_WIDTH/2+delta, abs(dx));"
 				"}",
 			.uniform_infos = {
 				{"feedback", feedback_idx},
@@ -2234,7 +2238,7 @@ namespace Aether {
 				.connections = {{
 					.param_idx = infos[i].idxs[0],
 					.style ="fill",
-					.in_range = {0.f, 0.f},
+					.in_range = {0.f, 1.f},
 					.out_range = {},
 					.interpolate = [](float t, auto) -> std::string {
 						return (t > 0.f) ? "#c1c1c1" : "#1b1d23";

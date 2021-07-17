@@ -640,6 +640,7 @@ void ShaderRect::draw_impl() const {
 	m_shader.use();
 	m_shader.set_vec_float("corner", rect[0], rect[1]);
 	m_shader.set_vec_float("dimensions", rect[2], rect[3]);
+	m_shader.set_vec_float("dimensions_pixels", width(), height());
 
 	for (const auto& uniform : m_uniforms) {
 		m_shader.set_float(uniform.name, m_root->parameters[uniform.param_idx]);

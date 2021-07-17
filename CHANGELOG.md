@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Changed
 * Some dsp performance improvements!
+* Antialias delay visual.
 
 ### Fixed
 * Fixed broken text positioning when resized.
