@@ -46,83 +46,89 @@ namespace Aether {
 			float* audio_out_right;
 		};
 
+		template <class T>
 		struct Parameters {
-			float mix;
+			T mix;
 
 			// mixer
-			float dry_level;
-			float predelay_level;
-			float early_level;
-			float late_level;
+			T dry_level;
+			T predelay_level;
+			T early_level;
+			T late_level;
 
 			// Global
-			float interpolate;
+			T interpolate;
 
 			// predelay
-			float width;
-			float predelay;
+			T width;
+			T predelay;
 
 			// early
 			// filtering
-			float early_low_cut_enabled;
-			float early_low_cut_cutoff;
-			float early_high_cut_enabled;
-			float early_high_cut_cutoff;
+			T early_low_cut_enabled;
+			T early_low_cut_cutoff;
+			T early_high_cut_enabled;
+			T early_high_cut_cutoff;
 			// multitap delay
-			float early_taps;
-			float early_tap_length;
-			float early_tap_mix;
-			float early_tap_decay;
+			T early_taps;
+			T early_tap_length;
+			T early_tap_mix;
+			T early_tap_decay;
 			// diffusion
-			float early_diffusion_stages;
-			float early_diffusion_delay;
-			float early_diffusion_mod_depth;
-			float early_diffusion_mod_rate;
-			float early_diffusion_feedback;
+			T early_diffusion_stages;
+			T early_diffusion_delay;
+			T early_diffusion_mod_depth;
+			T early_diffusion_mod_rate;
+			T early_diffusion_feedback;
 
 			// late
-			float late_order;
-			float late_delay_lines;
+			T late_order;
+			T late_delay_lines;
 			// delay line
-			float late_delay;
-			float late_delay_mod_depth;
-			float late_delay_mod_rate;
-			float late_delay_line_feedback;
+			T late_delay;
+			T late_delay_mod_depth;
+			T late_delay_mod_rate;
+			T late_delay_line_feedback;
 			// diffusion
-			float late_diffusion_stages;
-			float late_diffusion_delay;
-			float late_diffusion_mod_depth;
-			float late_diffusion_mod_rate;
-			float late_diffusion_feedback;
+			T late_diffusion_stages;
+			T late_diffusion_delay;
+			T late_diffusion_mod_depth;
+			T late_diffusion_mod_rate;
+			T late_diffusion_feedback;
 			// Filter
-			float late_low_shelf_enabled;
-			float late_low_shelf_cutoff;
-			float late_low_shelf_gain;
-			float late_high_shelf_enabled;
-			float late_high_shelf_cutoff;
-			float late_high_shelf_gain;
-			float late_high_cut_enabled;
-			float late_high_cut_cutoff;
+			T late_low_shelf_enabled;
+			T late_low_shelf_cutoff;
+			T late_low_shelf_gain;
+			T late_high_shelf_enabled;
+			T late_high_shelf_cutoff;
+			T late_high_shelf_gain;
+			T late_high_cut_enabled;
+			T late_high_cut_cutoff;
 
 			// Seed
-			float seed_crossmix;
-			float tap_seed;
-			float early_diffusion_seed;
-			float delay_seed;
-			float late_diffusion_seed;
+			T seed_crossmix;
+			T tap_seed;
+			T early_diffusion_seed;
+			T delay_seed;
+			T late_diffusion_seed;
 		};
 
 		Ports ports = {};
 
 		std::array<const float*, 45> param_ports = {};
 		union {
-			Parameters param_smooth_named;
+			Parameters<float> param_smooth_named;
 			std::array<float, 45> param_smooth = {};
 		};
 
 		union {
-			Parameters params;
-			std::array<float, 45> params_arr;
+			Parameters<float> params;
+			std::array<float, 45> params_arr = {};
+		};
+
+		union {
+			Parameters<bool> params_modified;
+			std::array<bool, 45> params_modified_arr = {};
 		};
 
 		/*
@@ -200,6 +206,9 @@ namespace Aether {
 			const float* r_samples
 		) noexcept;
 
+		// Updates params & params_modified then calls apply_parameters
 		void update_parameters();
+		// Applies changes in params & params_modified to internal state
+		void apply_parameters();
 	};
 }

@@ -160,7 +160,6 @@ inline float MultitapDelay::push(float sample, uint32_t taps, float length) {
 }
 
 inline void MultitapDelay::set_seed(uint32_t seed) noexcept {
-	if (m_seed == seed) return;
 	m_seed = seed;
 
 	Random::generate(m_rand_vals, m_seed, m_crossmix);
@@ -169,7 +168,6 @@ inline void MultitapDelay::set_seed(uint32_t seed) noexcept {
 }
 
 inline void MultitapDelay::set_seed_crossmix(float crossmix) noexcept {
-	if (m_crossmix == crossmix) return;
 	m_crossmix = crossmix;
 
 	Random::generate(m_rand_vals, m_seed, m_crossmix);
@@ -178,7 +176,6 @@ inline void MultitapDelay::set_seed_crossmix(float crossmix) noexcept {
 }
 
 inline void MultitapDelay::set_decay(float decay) noexcept {
-	if (m_decay == decay) return;
 	m_decay = decay;
 
 	generate_tap_gains();

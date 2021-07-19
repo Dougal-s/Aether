@@ -21,12 +21,8 @@
 template <class FpType>
 class Lowpass6dB {
 public:
-	Lowpass6dB(FpType rate, FpType cutoff = 0) :
-		m_rate{rate},
-		m_cutoff{cutoff},
-		a{2*constants::pi_v<FpType>*cutoff/rate}
-	{
-		a = a/(a+1);
+	Lowpass6dB(FpType rate, FpType cutoff = 0) : m_rate{rate}, a{} {
+		set_cutoff(cutoff);
 	}
 
 	FpType push(FpType sample) noexcept {
@@ -37,11 +33,7 @@ public:
 	void clear() noexcept { y = 0; }
 
 	void set_cutoff(FpType cutoff) noexcept {
-		if (cutoff == m_cutoff)
-			return;
-		m_cutoff = cutoff;
-
-		FpType w = 2*constants::pi_v<FpType>*m_cutoff/m_rate;
+		FpType w = 2*constants::pi_v<FpType>*cutoff/m_rate;
 		a = w/(1+w);
 
 		if (a == 0)
@@ -50,7 +42,6 @@ public:
 
 private:
 	const FpType m_rate;
-	FpType m_cutoff;
 	FpType y = 0;
 	FpType a;
 };
@@ -112,19 +103,16 @@ public:
 		Biquad(rate,0,1, gen(rate, static_cast<FpType>(0),static_cast<FpType>(1)), gen) {}
 
 	void set_sample_rate(FpType rate) {
-		if (m_rate == rate) return;
 		m_rate = rate;
 		std::tie(a1, a2, b0, b1, b2) = m_gen(m_rate, m_cutoff, m_gain);
 	}
 
 	void set_cutoff(FpType cutoff) {
-		if (m_cutoff == cutoff) return;
 		m_cutoff = cutoff;
 		std::tie(a1, a2, b0, b1, b2) = m_gen(m_rate, m_cutoff, m_gain);
 	}
 
 	void set_gain(FpType gain) {
-		if (m_gain == gain) return;
 		m_gain = gain;
 		std::tie(a1, a2, b0, b1, b2) = m_gen(m_rate, m_cutoff, m_gain);
 	}

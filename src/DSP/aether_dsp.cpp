@@ -33,6 +33,11 @@ namespace Aether {
 		for (size_t i = 6; float& param : params_arr)
 			param = parameter_infos[i++].dflt;
 
+		for (bool& modified : params_modified_arr)
+			modified = true;
+
+		apply_parameters();
+
 		param_smooth_named.mix = 50.f;
 
 		param_smooth_named.dry_level = 50.f;
@@ -320,130 +325,165 @@ namespace Aether {
 
 	void DSP::update_parameters() {
 		for (size_t p = 0; p < param_ports.size(); ++p) {
-			float new_val = std::clamp(
+			const float target = std::clamp(
 				*param_ports[p],
 				parameter_infos[p+6].min,
 				parameter_infos[p+6].max
 			);
 
-			params_arr[p] = std::lerp(new_val, params_arr[p], param_smooth[p]);
+			const float new_value = std::lerp(target, params_arr[p], param_smooth[p]);
+
+			params_modified_arr[p] = (new_value != params_arr[p]);
+			params_arr[p] = new_value;
 		}
 
+		apply_parameters();
+	}
+
+	void DSP::apply_parameters() {
 		// Early Reflections
-		{ // Filters
+
+		// Filters
+		if (params_modified.early_low_cut_cutoff) {
 			float cutoff = params.early_low_cut_cutoff;
 			m_l_early_filters.highpass.set_cutoff(cutoff);
 			m_r_early_filters.highpass.set_cutoff(cutoff);
-		} {
+		}
+		if (params_modified.early_high_cut_cutoff) {
 			float cutoff = params.early_high_cut_cutoff;
 			m_l_early_filters.lowpass.set_cutoff(cutoff);
 			m_r_early_filters.lowpass.set_cutoff(cutoff);
 		}
 
-		{ // Multitap Delay
+		// Multitap Delay
+		if (params_modified.early_tap_decay) {
 			float decay = params.early_tap_decay;
 			m_l_early_multitap.set_decay(decay);
 			m_r_early_multitap.set_decay(decay);
-		} {
+		}
+		if (params_modified.seed_crossmix) {
 			float crossmix = params.seed_crossmix/200.f;
 			m_l_early_multitap.set_seed_crossmix(1.f-crossmix);
 			m_r_early_multitap.set_seed_crossmix(0.f+crossmix);
-		} {
+		}
+		if (params_modified.tap_seed) {
 			uint32_t seed = static_cast<uint32_t>(params.tap_seed);
 			m_l_early_multitap.set_seed(seed);
 			m_r_early_multitap.set_seed(seed);
 		}
 
-		{ // Diffuser
+		// Diffuser
+		if (params_modified.early_diffusion_delay) {
 			float delay = m_rate*params.early_diffusion_delay/1000.f;
 			m_l_early_diffuser.set_delay(delay);
 			m_r_early_diffuser.set_delay(delay);
-		} {
+		}
+		if (params_modified.early_diffusion_mod_depth) {
 			float mod_depth = m_rate*params.early_diffusion_mod_depth/1000.f;
 			m_l_early_diffuser.set_mod_depth(mod_depth);
 			m_r_early_diffuser.set_mod_depth(mod_depth);
-		} {
+		}
+		if (params_modified.early_diffusion_mod_rate) {
 			float rate = params.early_diffusion_mod_rate/m_rate;
 			m_l_early_diffuser.set_mod_rate(rate);
 			m_r_early_diffuser.set_mod_rate(rate);
-		} {
+		}
+		if (params_modified.seed_crossmix) {
 			float crossmix = params.seed_crossmix/200.f;
 			m_l_early_diffuser.set_seed_crossmix(1.f-crossmix);
 			m_r_early_diffuser.set_seed_crossmix(0.f+crossmix);
-		} {
+		}
+		if (params_modified.early_diffusion_seed) {
 			uint32_t seed = static_cast<uint32_t>(params.early_diffusion_seed);
 			m_l_early_diffuser.set_seed(seed);
 			m_r_early_diffuser.set_seed(seed);
 		}
 
 		// Late Reverberations
-		{ // General
+
+		// General
+		if (params_modified.seed_crossmix) {
 			float crossmix = params.seed_crossmix/200.f;
 			m_l_late_rev.set_seed_crossmix(1.f-crossmix);
 			m_r_late_rev.set_seed_crossmix(0.f+crossmix);
-		} {
+		}
+		if (params_modified.late_delay_lines) {
 			uint32_t lines = static_cast<uint32_t>(params.late_delay_lines);
 			m_l_late_rev.set_delay_lines(lines);
 			m_r_late_rev.set_delay_lines(lines);
 		}
 
-		{ // Modulated Delay
+		// Modulated Delay
+		if (params_modified.late_delay) {
 			float delay = m_rate*params.late_delay/1000.f;
 			m_l_late_rev.set_delay(delay);
 			m_r_late_rev.set_delay(delay);
-		} {
+		}
+		if (params_modified.late_delay_mod_depth) {
 			float mod_depth = m_rate*params.late_delay_mod_depth/1000.f;
 			m_l_late_rev.set_delay_mod_depth(mod_depth);
 			m_r_late_rev.set_delay_mod_depth(mod_depth);
-		} {
+		}
+		if (params_modified.late_delay_mod_rate) {
 			float mod_rate = params.late_delay_mod_rate/m_rate;
 			m_l_late_rev.set_delay_mod_rate(mod_rate);
 			m_r_late_rev.set_delay_mod_rate(mod_rate);
-		} {
+		}
+		if (params_modified.late_delay_line_feedback) {
 			float feedback = params.late_delay_line_feedback;
 			m_l_late_rev.set_delay_feedback(feedback);
 			m_r_late_rev.set_delay_feedback(feedback);
-		} {
+		}
+		if (params_modified.delay_seed) {
 			uint32_t seed = static_cast<uint32_t>(params.delay_seed);
 			m_l_late_rev.set_delay_seed(seed);
 			m_r_late_rev.set_delay_seed(seed);
 		}
 
-		{ // Diffuser
+		// Diffuser
+		if (params_modified.late_diffusion_delay) {
 			float delay = m_rate*params.late_diffusion_delay/1000.f;
 			m_l_late_rev.set_diffusion_delay(delay);
 			m_r_late_rev.set_diffusion_delay(delay);
-		} {
+		}
+		if (params_modified.late_diffusion_mod_depth) {
 			float depth = m_rate*params.late_diffusion_mod_depth/1000.f;
 			m_l_late_rev.set_diffusion_mod_depth(depth);
 			m_r_late_rev.set_diffusion_mod_depth(depth);
-		} {
+		}
+		if (params_modified.late_diffusion_mod_rate) {
 			float rate = params.late_diffusion_mod_rate/m_rate;
 			m_l_late_rev.set_diffusion_mod_rate(rate);
 			m_r_late_rev.set_diffusion_mod_rate(rate);
-		} {
+		}
+		if (params_modified.late_diffusion_seed) {
 			uint32_t seed = static_cast<uint32_t>(params.late_diffusion_seed);
 			m_l_late_rev.set_diffusion_seed(seed);
 			m_r_late_rev.set_diffusion_seed(seed);
 		}
 
-		{ // Filters
+		// Filters
+		if (params_modified.late_low_shelf_cutoff) {
 			float cutoff = params.late_low_shelf_cutoff;
 			m_l_late_rev.set_low_shelf_cutoff(cutoff);
 			m_r_late_rev.set_low_shelf_cutoff(cutoff);
-		} {
+		}
+		if (params_modified.late_low_shelf_gain) {
 			float gain = dBtoGain(params.late_low_shelf_gain);
 			m_l_late_rev.set_low_shelf_gain(gain);
 			m_r_late_rev.set_low_shelf_gain(gain);
-		} {
+		}
+		if (params_modified.late_high_shelf_cutoff) {
 			float cutoff = params.late_high_shelf_cutoff;
 			m_l_late_rev.set_high_shelf_cutoff(cutoff);
 			m_r_late_rev.set_high_shelf_cutoff(cutoff);
-		} {
+		}
+		if (params_modified.late_high_shelf_gain) {
 			float gain = dBtoGain(params.late_high_shelf_gain);
 			m_l_late_rev.set_high_shelf_gain(gain);
 			m_r_late_rev.set_high_shelf_gain(gain);
-		} {
+		}
+		if (params_modified.late_high_cut_cutoff) {
 			float cutoff = params.late_high_cut_cutoff;
 			m_l_late_rev.set_high_cut_cutoff(cutoff);
 			m_r_late_rev.set_high_cut_cutoff(cutoff);

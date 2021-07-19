@@ -180,7 +180,6 @@ private:
 
 template <class FpType>
 inline void AllpassDiffuser<FpType>::set_seed(uint32_t seed) noexcept {
-	if (m_seed == seed) return;
 	m_seed = seed;
 
 	Random::generate(m_rand_vals, m_seed, m_crossmix);
@@ -190,7 +189,6 @@ inline void AllpassDiffuser<FpType>::set_seed(uint32_t seed) noexcept {
 
 template <class FpType>
 inline void AllpassDiffuser<FpType>::set_seed_crossmix(float crossmix) noexcept {
-	if (m_crossmix == crossmix) return;
 	m_crossmix = crossmix;
 
 	Random::generate(m_rand_vals, m_seed, m_crossmix);
@@ -200,7 +198,6 @@ inline void AllpassDiffuser<FpType>::set_seed_crossmix(float crossmix) noexcept 
 
 template <class FpType>
 inline void AllpassDiffuser<FpType>::set_delay(float delay) noexcept {
-	if (m_delay == delay) return;
 	m_delay = delay;
 
 	generate_delay();
@@ -208,7 +205,6 @@ inline void AllpassDiffuser<FpType>::set_delay(float delay) noexcept {
 
 template <class FpType>
 inline void AllpassDiffuser<FpType>::set_mod_depth(float mod_depth) noexcept {
-	if (m_mod_depth == mod_depth) return;
 	m_mod_depth = mod_depth;
 
 	generate_mod_depth();
@@ -216,7 +212,6 @@ inline void AllpassDiffuser<FpType>::set_mod_depth(float mod_depth) noexcept {
 
 template <class FpType>
 inline void AllpassDiffuser<FpType>::set_mod_rate(float mod_rate) noexcept {
-	if (m_mod_rate == mod_rate) return;
 	m_mod_rate = mod_rate;
 
 	generate_mod_rate();
