@@ -32,7 +32,7 @@ struct Ports {
 	float late_order = 0.f;
 	float late_delay_lines = 8.f;
 	float late_delay = 500.f;
-	float late_delay_mod_depth = 0.f;
+	float late_delay_mod_depth = 1.f;
 	float late_delay_mod_rate = 0.f;
 	float late_delay_line_feedback = 0.f;
 	float late_diffusion_stages = 0.f;
