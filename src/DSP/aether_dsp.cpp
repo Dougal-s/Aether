@@ -331,7 +331,7 @@ namespace Aether {
 				parameter_infos[p+6].max
 			);
 
-			const float new_value = std::lerp(target, params_arr[p], param_smooth[p]);
+			const float new_value = target - param_smooth[p] * (target - params_arr[p]);
 
 			params_modified_arr[p] = (new_value != params_arr[p]);
 			params_arr[p] = new_value;
