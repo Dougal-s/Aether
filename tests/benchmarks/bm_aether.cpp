@@ -13,7 +13,7 @@ struct Ports {
 	float predelay_level = 0.f;
 	float early_level = 0.f;
 	float late_level = 0.f;
-	float interpolate = 0.f;
+	float interpolate = 1.f;
 	float width = 100.f;
 	float predelay = 0.f;
 	float early_low_cut_enabled = 0.f;
