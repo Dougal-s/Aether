@@ -73,7 +73,7 @@ public:
 		m_lfo.next();
 
 		uint32_t delay_floor = static_cast<uint32_t>(std::floor(delay));
-		FpType t = delay - static_cast<float>(delay_floor);
+		FpType t = static_cast<FpType>(delay - static_cast<float>(delay_floor));
 
 		size_t idx1 = m_buf.end - delay_floor
 			+ (m_buf.end < delay_floor ? m_buf.size : 0);
