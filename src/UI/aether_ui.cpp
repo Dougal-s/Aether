@@ -49,6 +49,20 @@ namespace {
 		return 20*std::log10(gain);
 	}
 
+	float dial_scroll_log(float curvature, float val, float dval) {
+		float normalized = std::log1p(val*(curvature - 1)) / std::log(curvature);
+		normalized += dval;
+		return (std::pow(curvature, normalized) - 1 ) / (curvature - 1);
+	}
+
+	float level_meter_scale(float a) noexcept {
+		return std::sqrt(a);
+	}
+
+	float inv_level_meter_scale(float a) noexcept {
+		return a*a;
+	}
+
 #ifndef NDEBUG
 	void GLAPIENTRY opengl_err_callback(
 		[[maybe_unused]] GLenum source,
@@ -176,7 +190,7 @@ namespace Aether {
 			size_t param_idx,
 			const pugl::ScrollEvent& e,
 			float sensitivity = 1.f,
-			float curvature = 1.f
+			std::function<float (float, float)> rescale_add = [](float val, float delta) { return val+delta; }
 		);
 
 		void attach_level_meter(Group* g, size_t l_vol_idx, size_t r_vol_idx, size_t mixer_ctrl_idx);
@@ -1608,7 +1622,7 @@ namespace Aether {
 
 	void UI::View::add_peaks(size_t, const float* peaks) {
 		for (size_t i = 0; i < peak_infos.peaks.size(); ++i)
-			peak_infos.peaks[i] = peaks[i];
+			peak_infos.peaks[i] = level_meter_scale(peaks[i]);
 	}
 
 	void UI::View::update_peaks() {
@@ -1693,7 +1707,7 @@ namespace Aether {
 		size_t param_id,
 		const pugl::ScrollEvent& e,
 		float sensitivity,
-		float curvature
+		std::function<float (float, float)> rescale_add
 	) {
 		float new_value = get_parameter(param_id);
 		if (parameter_infos[param_id].integer) {
@@ -1720,15 +1734,9 @@ namespace Aether {
 			sensitivity *= 0.05f*(e.state & pugl::Mod::PUGL_MOD_CTRL ? 0.1f : 1.f);
 			float dval = sensitivity*static_cast<float>(e.dx + e.dy);
 
-			if (curvature == 1.f) {
-				new_value += parameter_infos[param_id].range()*dval;
-			} else {
-				float normalized = (new_value - parameter_infos[param_id].min)/parameter_infos[param_id].range();
-				normalized = std::log1p(normalized*(curvature - 1)) / std::log(curvature);
-				normalized += dval;
-				normalized = (std::pow(curvature, normalized) - 1 ) / (curvature - 1);
-				new_value = parameter_infos[param_id].range()*normalized + parameter_infos[param_id].min;
-			}
+			float normalized = (new_value - parameter_infos[param_id].min)/parameter_infos[param_id].range();
+			normalized = rescale_add(normalized, dval);
+			new_value = parameter_infos[param_id].range()*normalized + parameter_infos[param_id].min;
 
 			new_value = std::clamp(
 				new_value,
@@ -1790,7 +1798,10 @@ namespace Aether {
 					.param_idx = l_vol_idx,
 					.style ="height",
 					.in_range = {0.f, 1.3f},
-					.out_range = {"0%", "100%"}
+					.out_range = {},
+					.interpolate = [=](float t, auto) {
+						return to_string(100*level_meter_scale(t)) + "%";
+					}
 				}
 			},
 			.style = {
@@ -1810,7 +1821,10 @@ namespace Aether {
 					.param_idx = r_vol_idx,
 					.style ="height",
 					.in_range = {0.f, 1.3f},
-					.out_range = {"0%", "100%"}
+					.out_range = {},
+					.interpolate = [=](float t, auto) {
+						return to_string(100*level_meter_scale(t)) + "%";
+					}
 				}
 			},
 			.style = {
@@ -1824,7 +1838,11 @@ namespace Aether {
 				.param_idx = mixer_ctrl_idx,
 				.style ="y",
 				.in_range = {0.f, 100.f},
-				.out_range = {"100%", "0%"}
+				.out_range = {},
+				.interpolate = [=](float t, auto) {
+					float adjusted = 1.f-level_meter_scale(t);
+					return to_string(100*adjusted) + "%";
+				}
 			}},
 			.style = {
 				{"x", "100%"},
@@ -1832,6 +1850,12 @@ namespace Aether {
 				{"path", "M 0 5 L -8.66025404 0 L 0 -5 Z"}
 			}
 		});
+
+		const auto rescale_add = [=](float val, float dval) {
+			float rescaled = level_meter_scale(val);
+			float new_rescaled = std::clamp(rescaled + dval, 0.f, 1.f);
+			return inv_level_meter_scale(new_rescaled);
+		};
 
 		// control surface
 		g->add_child<Rect>({
@@ -1846,7 +1870,7 @@ namespace Aether {
 					return;
 				}
 			},
-			.motion_callback = [mixer_ctrl_idx, this](UIElement* elem, const pugl::MotionEvent& e) {
+			.motion_callback = [=, this](UIElement* elem, const pugl::MotionEvent& e) {
 				if (e.state & pugl::Mod::PUGL_MOD_SHIFT) {
 					update_dsp_param(mixer_ctrl_idx, parameter_infos[mixer_ctrl_idx].dflt);
 					parameter_update(mixer_ctrl_idx, parameter_infos[mixer_ctrl_idx].dflt);
@@ -1856,7 +1880,9 @@ namespace Aether {
 				float sensitivity = (e.state & pugl::Mod::PUGL_MOD_CTRL) ? 0.1f : 1.f;
 				auto bounds = dynamic_cast<Rect*>(elem)->bounds();
 				float dy = sensitivity*(mouse_callback_info.y - static_cast<float>(e.y))/bounds.height();
-				float new_value = std::clamp(get_parameter(mixer_ctrl_idx) + 100*dy, 0.f, 100.f);
+
+				float old_value = get_parameter(mixer_ctrl_idx)/100.f;
+				float new_value = 100.f*rescale_add(old_value, dy);
 
 				update_dsp_param(mixer_ctrl_idx, new_value);
 				parameter_update(mixer_ctrl_idx, new_value);
@@ -1864,8 +1890,8 @@ namespace Aether {
 				mouse_callback_info.x = e.x;
 				mouse_callback_info.y = e.y;
 			},
-			.scroll_callback = [mixer_ctrl_idx, this](UIElement*, const pugl::ScrollEvent& e) {
-				dial_scroll_cb(mixer_ctrl_idx, e);
+			.scroll_callback = [=, this](UIElement*, const pugl::ScrollEvent& e) {
+				dial_scroll_cb(mixer_ctrl_idx, e, 1.f, rescale_add);
 			},
 			.style = {
 				{"x", "0"}, {"y", "0"}, {"width", "100%"}, {"height", "100%"}
@@ -1936,7 +1962,10 @@ namespace Aether {
 					dial->style.insert_or_assign("label", val_to_str(info.param_id));
 			},
 			.scroll_callback = [=, this](UIElement* elem, const auto& e) {
-				dial_scroll_cb(info.param_id, e, 1.f, info.curvature);
+				if (info.curvature == 1)
+					dial_scroll_cb(info.param_id, e, 1.f);
+				else
+					dial_scroll_cb(info.param_id, e, 1.f, std::bind_front(dial_scroll_log, info.curvature));
 
 				auto* dial = dynamic_cast<Dial*>(elem);
 				if (!info.label.empty())

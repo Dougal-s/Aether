@@ -4,6 +4,7 @@
 ### Changed
 * Some dsp performance improvements!
 * Antialias delay visual.
+* Changed level meter scaling.
 
 ### Fixed
 * Fixed broken text positioning when resized.
