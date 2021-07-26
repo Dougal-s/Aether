@@ -1,6 +1,7 @@
 #ifndef DIFFUSER_HPP
 #define DIFFUSER_HPP
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
@@ -12,6 +13,8 @@
 #include "utils/random.hpp"
 #include "utils/ringbuffer.hpp"
 #include "utils/lfo.hpp"
+
+#include "../common/constants.hpp"
 
 /*
 	Schroeder Allpass filter
@@ -140,7 +143,6 @@ public:
 	struct PushInfo {
 		uint32_t stages;
 		float feedback;
-		bool saturate;
 		bool interpolate;
 	};
 

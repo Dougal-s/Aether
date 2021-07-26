@@ -1962,10 +1962,11 @@ namespace Aether {
 					dial->style.insert_or_assign("label", val_to_str(info.param_id));
 			},
 			.scroll_callback = [=, this](UIElement* elem, const auto& e) {
+				using namespace std::placeholders;
 				if (info.curvature == 1)
 					dial_scroll_cb(info.param_id, e, 1.f);
 				else
-					dial_scroll_cb(info.param_id, e, 1.f, std::bind_front(dial_scroll_log, info.curvature));
+					dial_scroll_cb(info.param_id, e, 1.f, std::bind(dial_scroll_log, info.curvature, _1, _2));
 
 				auto* dial = dynamic_cast<Dial*>(elem);
 				if (!info.label.empty())
