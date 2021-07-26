@@ -574,8 +574,8 @@ struct Root final : public Group {
 
 	// frequency magnitudes
 	std::array<std::array<float, 2000>, 2> audio = {};
-	// 51 parameters + 12 audio peaks + 2 ui parameters
-	std::array<float, 65> parameters = {};
+	// 53 parameters + 12 audio peaks + 2 ui parameters
+	std::array<float, 67> parameters = {};
 
 	mutable DrawingContext* ctx;
 

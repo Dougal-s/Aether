@@ -166,6 +166,10 @@ public:
 	}
 
 	// diffusion
+	void set_diffusion_drive(float drive) {
+		for (auto& line : m_delay_lines)
+			line.diffuser.set_drive(drive);
+	}
 	void set_diffusion_delay(float delay) {
 		for (auto& line : m_delay_lines)
 			line.diffuser.set_delay(delay);

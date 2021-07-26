@@ -111,24 +111,28 @@ namespace Aether {
 			T early_diffusion_seed;
 			T delay_seed;
 			T late_diffusion_seed;
+
+			// Distortion
+			T early_diffusion_drive;
+			T late_diffusion_drive;
 		};
 
 		Ports ports = {};
 
-		std::array<const float*, 45> param_ports = {};
+		std::array<const float*, 47> param_ports = {};
 		union {
 			Parameters<float> param_smooth_named;
-			std::array<float, 45> param_smooth = {};
+			std::array<float, 47> param_smooth = {};
 		};
 
 		union {
 			Parameters<float> params;
-			std::array<float, 45> params_arr = {};
+			std::array<float, 47> params_arr = {};
 		};
 
 		union {
 			Parameters<bool> params_modified;
-			std::array<bool, 45> params_modified_arr = {};
+			std::array<bool, 47> params_modified_arr = {};
 		};
 
 		/*

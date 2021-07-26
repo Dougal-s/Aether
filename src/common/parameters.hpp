@@ -67,7 +67,10 @@ static constexpr ParameterInfo parameter_infos[] = {
 	{1,99999,1, true},
 	{1,99999,1, true},
 	{1,99999,1, true},
-	{1,99999,1, true} // 50
+	{1,99999,1, true}, // 50
+
+	{-12,12,-12, false}, // Distortion
+	{-12,12,-12, false} // 52
 };
 
 #endif

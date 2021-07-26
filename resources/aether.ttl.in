@@ -568,6 +568,38 @@
 		lv2:default 1;
 		lv2:minimum 1;
 		lv2:maximum 99999
+	];
+
+	lv2:port [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 51;
+		lv2:portProperty lv2:connectionOptional;
+		lv2:symbol "early_diffusion_drive";
+		lv2:name "Early Diffusion Saturation Drive";
+		rdfs:comment "Intensity of the saturation in the early diffusion allpass filter feedback loops";
+		lv2:default -12.0;
+		lv2:minimum -12.0;
+		lv2:maximum 12.0;
+		lv2:scalePoint [
+			rdfs:label "Off";
+			rdf:value -12.0
+		];
+		units:unit units:db
+	], [
+		a lv2:InputPort, lv2:ControlPort;
+		lv2:index 52;
+		lv2:portProperty lv2:connectionOptional;
+		lv2:symbol "late_diffusion_drive";
+		lv2:name "Late Diffusion Saturation Drive";
+		rdfs:comment "Intensity of the saturation in the early diffusion allpass filter feedback loops";
+		lv2:default -12.0;
+		lv2:minimum -12.0;
+		lv2:maximum 12.0;
+		rdfs:scalePoints [
+			rdfs:label "Off";
+			rdf:value -12.0
+		];
+		units:unit units:db
 	].
 
 <http://github.com/Dougal-s/Aether#ui>

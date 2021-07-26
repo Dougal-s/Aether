@@ -326,7 +326,7 @@ namespace Aether {
 	void DSP::update_parameters() {
 		for (size_t p = 0; p < param_ports.size(); ++p) {
 			const float target = std::clamp(
-				*param_ports[p],
+				param_ports[p] ? *param_ports[p] : parameter_infos[p+6].dflt,
 				parameter_infos[p+6].min,
 				parameter_infos[p+6].max
 			);
@@ -373,6 +373,14 @@ namespace Aether {
 		}
 
 		// Diffuser
+		if (params_modified.early_diffusion_drive) {
+			float drive =
+				params.early_diffusion_drive == -12 ?
+					0 :
+					dBtoGain(params.early_diffusion_drive);
+			m_l_early_diffuser.set_drive(drive);
+			m_r_early_diffuser.set_drive(drive);
+		}
 		if (params_modified.early_diffusion_delay) {
 			float delay = m_rate*params.early_diffusion_delay/1000.f;
 			m_l_early_diffuser.set_delay(delay);
@@ -441,6 +449,14 @@ namespace Aether {
 		}
 
 		// Diffuser
+		if (params_modified.late_diffusion_drive) {
+			float drive =
+				params.late_diffusion_drive == -12 ?
+					0 :
+					dBtoGain(params.late_diffusion_drive);
+			m_l_late_rev.set_diffusion_drive(drive);
+			m_r_late_rev.set_diffusion_drive(drive);
+		}
 		if (params_modified.late_diffusion_delay) {
 			float delay = m_rate*params.late_diffusion_delay/1000.f;
 			m_l_late_rev.set_diffusion_delay(delay);

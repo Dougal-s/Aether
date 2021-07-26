@@ -54,7 +54,10 @@ struct Ports {
 	float delay_seed = 10.f;
 	float late_diffusion_seed = 10.f;
 
-	std::array<const float*, 45> get_addresses() const noexcept {
+	float early_diffusion_drive = 10.f;
+	float late_diffusion_drive = 10.f;
+
+	std::array<const float*, 47> get_addresses() const noexcept {
 		return {
 			&mix,
 			&dry_level,
@@ -100,7 +103,9 @@ struct Ports {
 			&tap_seed,
 			&early_diffusion_seed,
 			&delay_seed,
-			&late_diffusion_seed
+			&late_diffusion_seed,
+			&early_diffusion_drive,
+			&late_diffusion_drive
 		};
 	}
 };

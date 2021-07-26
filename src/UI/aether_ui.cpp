@@ -261,8 +261,8 @@ namespace Aether {
 		setHint(pugl::ViewHint::contextVersionMajor, 3);
 		setHint(pugl::ViewHint::contextVersionMinor, 3);
 
-		parameter_update(63, 1.f);
-		parameter_update(64, 1.f);
+		parameter_update(65, 1.f);
+		parameter_update(66, 1.f);
 
 		// Border
 		ui_tree.root().add_child<Rect>({
@@ -287,7 +287,7 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.connections = {
 					{
-						.param_idx = 63,
+						.param_idx = 65,
 						.style ="fill",
 						.in_range = {0.f, 1.f},
 						.out_range = {}, // unused
@@ -308,8 +308,8 @@ namespace Aether {
 				.visible = false, .inert = false,
 				.btn_release_callback = [this](UIElement* elem, auto e){
 					if (elem->element_at(e.x, e.y)) {
-						float new_val = get_parameter(63) > 0.f ? 0.f : 1.f;
-						parameter_update(63, new_val);
+						float new_val = get_parameter(65) > 0.f ? 0.f : 1.f;
+						parameter_update(65, new_val);
 					}
 				},
 				.style = {
@@ -321,7 +321,7 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.connections = {
 					{
-						.param_idx = 64,
+						.param_idx = 66,
 						.style ="fill",
 						.in_range = {0.f, 1.f},
 						.out_range = {}, // unused
@@ -342,8 +342,8 @@ namespace Aether {
 				.visible = false, .inert = false,
 				.btn_release_callback = [this](UIElement* elem, auto e){
 					if (elem->element_at(e.x, e.y)) {
-						float new_val = get_parameter(64) > 0.f ? 0.f : 1.f;
-						parameter_update(64, new_val);
+						float new_val = get_parameter(66) > 0.f ? 0.f : 1.f;
+						parameter_update(66, new_val);
 					}
 				},
 				.style = {
@@ -365,7 +365,7 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.connections = {
 					{
-						.param_idx = 63,
+						.param_idx = 65,
 						.style ="stroke",
 						.in_range = {0.f, 1.f},
 						.out_range = {},
@@ -374,7 +374,7 @@ namespace Aether {
 								: "linear-gradient(0 100% #E4777C00 0 60% #E4777C80)";
 						}
 					}, {
-						.param_idx = 63,
+						.param_idx = 65,
 						.style ="fill",
 						.in_range = {0.f, 1.f},
 						.out_range = {},
@@ -396,7 +396,7 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.connections = {
 					{
-						.param_idx = 64,
+						.param_idx = 66,
 						.style ="stroke",
 						.in_range = {0.f, 1.f},
 						.out_range = {},
@@ -405,7 +405,7 @@ namespace Aether {
 								: "linear-gradient(0 100% #80A5BF00 0 60% #80A5BF80)";
 						}
 					}, {
-						.param_idx = 64,
+						.param_idx = 66,
 						.style ="fill",
 						.in_range = {0.f, 1.f},
 						.out_range = {},
@@ -481,13 +481,13 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.connections = {
 					{
-						.param_idx = 51,
+						.param_idx = 53,
 						.style ="fill",
 						.in_range = {0.f, 1.3f},
 						.out_range = {"", ""}, // unused
 						.interpolate = color_interpolate
 					}, {
-						.param_idx = 51,
+						.param_idx = 53,
 						.style ="height",
 						.in_range = {0.f, 1.3f},
 						.out_range = {"0%", "100%"}
@@ -502,13 +502,13 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.connections = {
 					{
-						.param_idx = 52,
+						.param_idx = 53,
 						.style ="fill",
 						.in_range = {0.f, 1.3f},
 						.out_range = {"", ""}, // unused
 						.interpolate = color_interpolate
 					}, {
-						.param_idx = 52,
+						.param_idx = 53,
 						.style ="height",
 						.in_range = {0.f, 1.3f},
 						.out_range = {"0%", "100%"}
@@ -523,13 +523,13 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.connections = {
 					{
-						.param_idx = 61,
+						.param_idx = 63,
 						.style ="fill",
 						.in_range = {0.f, 1.3f},
 						.out_range = {"", ""}, // unused
 						.interpolate = color_interpolate
 					}, {
-						.param_idx = 61,
+						.param_idx = 63,
 						.style ="height",
 						.in_range = {0.f, 1.3f},
 						.out_range = {"0%", "100%"}
@@ -544,13 +544,13 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.connections = {
 					{
-						.param_idx = 62,
+						.param_idx = 64,
 						.style ="fill",
 						.in_range = {0.f, 1.3f},
 						.out_range = {"", ""}, // unused
 						.interpolate = color_interpolate
 					}, {
-						.param_idx = 62,
+						.param_idx = 64,
 						.style ="height",
 						.in_range = {0.f, 1.3f},
 						.out_range = {"0%", "100%"}
@@ -783,7 +783,7 @@ namespace Aether {
 				}
 			});
 
-			attach_level_meter(level, 53, 54, 7);
+			attach_level_meter(level, 55, 56, 7);
 
 			// Shadow
 			dry->add_child<Rect>({
@@ -829,7 +829,7 @@ namespace Aether {
 				}
 			});
 
-			attach_level_meter(level, 55, 56, 8);
+			attach_level_meter(level, 57, 58, 8);
 
 			// Width/Predelay
 
@@ -892,7 +892,7 @@ namespace Aether {
 				}
 			});
 
-			attach_level_meter(level, 57, 58, 9);
+			attach_level_meter(level, 59, 60, 9);
 
 			// Multitap diffuser
 			attach_dial(early, {
@@ -1165,7 +1165,7 @@ namespace Aether {
 				}
 			});
 
-			attach_level_meter(level, 59, 60, 10);
+			attach_level_meter(level, 61, 62, 10);
 
 			// Delaylines/Crossmix
 
@@ -1594,7 +1594,7 @@ namespace Aether {
 		};
 
 
-		if (get_parameter(63) > 0.f && get_parameter(64) > 0.f) {
+		if (get_parameter(65) > 0.f && get_parameter(66) > 0.f) {
 			for (size_t stream = 0; stream < SampleInfo::n_streams; ++stream) {
 				process_samples(stream, 0);
 				process_samples(stream, 1);
@@ -1604,12 +1604,12 @@ namespace Aether {
 				}
 				update_channel(0, stream);
 			}
-		} else if (get_parameter(63) > 0.f) {
+		} else if (get_parameter(65) > 0.f) {
 			process_samples(0, 0);
 			process_samples(0, 1);
 			update_channel(0, 0);
 			update_channel(1, 1);
-		} else if (get_parameter(64) > 0.f) {
+		} else if (get_parameter(66) > 0.f) {
 			process_samples(1, 0);
 			process_samples(1, 1);
 			update_channel(0, 0);
@@ -1630,11 +1630,11 @@ namespace Aether {
 		// time since last frame in seconds
 		const float dt = 0.000001f*duration_cast<microseconds>(steady_clock::now()-last_frame).count();
 		for (size_t i = 0; i < peak_infos.peaks.size(); ++i) {
-			float old_value = get_parameter(51+i);
+			float old_value = get_parameter(53+i);
 			if (old_value < peak_infos.peaks[i])
-				parameter_update(51+i, std::lerp(old_value, peak_infos.peaks[i], std::min(8.f*dt, 1.f)));
+				parameter_update(53+i, std::lerp(old_value, peak_infos.peaks[i], std::min(8.f*dt, 1.f)));
 			else
-				parameter_update(51+i, std::lerp(old_value, peak_infos.peaks[i], std::min(2.f*dt, 1.f)));
+				parameter_update(53+i, std::lerp(old_value, peak_infos.peaks[i], std::min(2.f*dt, 1.f)));
 
 		}
 	}

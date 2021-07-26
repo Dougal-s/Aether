@@ -27,6 +27,10 @@ public:
 	ModulatedAllpass& operator=(ModulatedAllpass&& other) noexcept;
 	ModulatedAllpass& operator=(const ModulatedAllpass&) = delete;
 
+	void set_drive(float drive) noexcept {
+		m_target_drive = drive;
+	}
+
 	void set_delay(float delay) noexcept {
 		assert(delay >= 1.f);
 		m_delay = delay;
@@ -39,7 +43,7 @@ public:
 
 	void set_mod_rate(float mod_rate) noexcept { m_lfo.set_rate(mod_rate); }
 
-	FpType push(FpType sample, bool interpolate, float feedback) noexcept;
+	FpType push(FpType sample, float feedback, bool interpolate) noexcept;
 
 	void clear() noexcept { m_buf.clear(); }
 
@@ -51,6 +55,9 @@ public:
 private:
 	Ringbuffer<FpType> m_buf = {};
 
+	float m_drive_smoothing = 0.f;
+	float m_target_drive = 0.f;
+	float m_drive = 1.f;
 	float m_delay = 1.f;
 	float m_mod_depth = 0.f;
 
@@ -61,6 +68,7 @@ private:
 template <class FpType>
 inline ModulatedAllpass<FpType>::ModulatedAllpass(float rate, float mod_phase) :
 	m_buf{static_cast<size_t>((delay_bounds.second+mod_bounds.second) * rate)},
+	m_drive_smoothing{std::exp(-2*constants::pi_v<float> / (0.0001f*100 * rate))},
 	m_lfo{mod_phase} {}
 
 template <class FpType>
@@ -75,20 +83,31 @@ inline ModulatedAllpass<FpType>& ModulatedAllpass<FpType>::operator=(
 	ModulatedAllpass&& other
 ) noexcept {
 	std::swap(m_buf, other.m_buf);
+	std::swap(m_drive_smoothing, other.m_drive_smoothing);
+	std::swap(m_target_drive, other.m_target_drive);
+	std::swap(m_drive, other.m_drive);
 	std::swap(m_delay, other.m_delay);
-	std::swap(m_delay, other.m_mod_depth);
+	std::swap(m_mod_depth, other.m_mod_depth);
 	std::swap(m_lfo, other.m_lfo);
 	return *this;
 }
 
 template <class FpType>
+FpType soft_clip(FpType x, FpType drive) noexcept {
+	x = std::clamp<FpType>(x*drive, -1, 1);
+	return (x-x*x*x/3)/drive;
+}
+
+template <class FpType>
 inline FpType ModulatedAllpass<FpType>::push(
 	FpType sample,
-	bool interpolate,
-	float feedback
+	float feedback,
+	bool interpolate
 ) noexcept {
 	assert(static_cast<size_t>(m_delay + m_mod_depth) <= m_buf.size);
 	assert(m_delay - m_mod_depth >= 1.f);
+
+	m_drive = m_target_drive - m_drive_smoothing * (m_target_drive - m_drive);
 
 	float delay = m_delay + m_mod_depth*m_lfo.depth() - 1.f;
 	m_lfo.next();
@@ -100,7 +119,11 @@ inline FpType ModulatedAllpass<FpType>::push(
 	FpType delayed = interpolate ?
 		std::lerp(m_buf.buf[idx1], m_buf.buf[idx2], t) : m_buf.buf[idx1];
 
-	m_buf.push(sample + delayed*static_cast<FpType>(feedback));
+	FpType buffer_input = sample + delayed*static_cast<FpType>(feedback);
+	if (m_drive > 0.0001f)
+		buffer_input = soft_clip(buffer_input, static_cast<FpType>(m_drive));
+
+	m_buf.push(buffer_input);
 
 	return delayed - m_buf.buf[m_buf.end]*static_cast<FpType>(feedback);
 }
@@ -117,6 +140,7 @@ public:
 	struct PushInfo {
 		uint32_t stages;
 		float feedback;
+		bool saturate;
 		bool interpolate;
 	};
 
@@ -136,13 +160,14 @@ public:
 
 	void set_seed(uint32_t seed) noexcept;
 	void set_seed_crossmix(float crossmix) noexcept;
+	void set_drive(float drive) noexcept;
 	void set_delay(float delay) noexcept;
 	void set_mod_depth(float mod_depth) noexcept;
 	void set_mod_rate(float mod_rate) noexcept;
 
 	FpType push(FpType sample, PushInfo info) noexcept {
 		for (uint32_t i = 0; i < info.stages; ++i)
-			sample = m_filters[i].push(sample, info.interpolate, info.feedback);
+			sample = m_filters[i].push(sample, info.feedback, info.interpolate);
 		return sample;
 	}
 
@@ -194,6 +219,12 @@ inline void AllpassDiffuser<FpType>::set_seed_crossmix(float crossmix) noexcept 
 	Random::generate(m_rand_vals, m_seed, m_crossmix);
 	generate_delay();
 	generate_mod_rate();
+}
+
+template <class FpType>
+inline void AllpassDiffuser<FpType>::set_drive(float drive) noexcept {
+	for (auto& filter : m_filters)
+		filter.set_drive(drive);
 }
 
 template <class FpType>
