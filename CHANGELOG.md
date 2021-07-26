@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [v1.2.0]
 ### Added
 * Added saturation control to the allpass diffuser. (Currently only accessible through the plugin host)
 
