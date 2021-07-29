@@ -55,6 +55,12 @@ namespace {
 		return (std::pow(curvature, normalized) - 1 ) / (curvature - 1);
 	}
 
+	float dial_scroll_atan(float curvature, float val, float dval) {
+		float normalized = std::atan(val*curvature) / std::atan(curvature);
+		normalized = std::clamp(normalized+dval, -1.f, 1.f);
+		return std::tan(normalized*std::atan(curvature)) / curvature;
+	}
+
 	float level_meter_scale(float a) noexcept {
 		return std::sqrt(a);
 	}
@@ -184,7 +190,7 @@ namespace Aether {
 			size_t param_idx,
 			const pugl::MotionEvent& e,
 			float sensitivity = 1.f,
-			float curvature = 1.f
+			std::function<float (float, float)> rescale_add = [](float val, float delta) { return val+delta; }
 		);
 		void dial_scroll_cb(
 			size_t param_idx,
@@ -205,6 +211,7 @@ namespace Aether {
 			std::string fill;
 			std::string font_size = "16sp";
 			std::function<float (float)> to_display_val = [](float x){return x;};
+			enum class CurvatureType { log, atan } curvature_type = CurvatureType::log;
 			float curvature = 1.f;
 			bool logarithmic = false;
 		};
@@ -1250,7 +1257,7 @@ namespace Aether {
 					.label = "RATE", .units = "Hz",
 					.radius = 20, .cx = 186, .cy = 30,
 					.fill = "#1b1d23", .font_size = "15sp",
-					.curvature = 5.f,
+					.curvature = 10.f,
 					.logarithmic = true
 				});
 				attach_dial(delay, {
@@ -1258,7 +1265,8 @@ namespace Aether {
 					.label = "DEPTH", .units = "ms",
 					.radius = 20, .cx = 186, .cy = 100,
 					.fill = "#1b1d23", .font_size = "15sp",
-					.curvature = 5.f,
+					.curvature_type = DialInfo::CurvatureType::atan,
+					.curvature = 20.f,
 					.logarithmic = true
 				});
 
@@ -1658,7 +1666,7 @@ namespace Aether {
 		size_t param_idx,
 		const pugl::MotionEvent& e,
 		float sensitivity,
-		float curvature
+		std::function<float (float, float)> rescale_add
 	) {
 		if (e.state & pugl::Mod::PUGL_MOD_SHIFT) {
 			update_dsp_param(param_idx, parameter_infos[param_idx].dflt);
@@ -1673,15 +1681,9 @@ namespace Aether {
 		float dval = dx + dy;
 
 		float new_value = get_parameter(param_idx);
-		if (curvature == 1.f) {
-			new_value += parameter_infos[param_idx].range()*sensitivity*dval;
-		} else {
-			float normalized = (new_value - parameter_infos[param_idx].min)/parameter_infos[param_idx].range();
-			normalized = std::log1p(normalized*(curvature - 1)) / std::log(curvature);
-			normalized += sensitivity*dval;
-			normalized = (std::pow(curvature, normalized) - 1 ) / (curvature - 1);
-			new_value = parameter_infos[param_idx].range()*normalized + parameter_infos[param_idx].min;
-		}
+		float normalized = (new_value - parameter_infos[param_idx].min)/parameter_infos[param_idx].range();
+		normalized = rescale_add(normalized, sensitivity*dval);
+		new_value = parameter_infos[param_idx].range()*normalized + parameter_infos[param_idx].min;
 
 		if (parameter_infos[param_idx].integer) {
 			float dv = std::trunc(new_value - get_parameter(param_idx));
@@ -1908,6 +1910,19 @@ namespace Aether {
 		};
 	}
 
+	UIElement::Connection dial_atan(size_t param_idx, float curvature) {
+		return {
+			.param_idx = param_idx,
+			.style ="value",
+			.in_range = {parameter_infos[param_idx].min, parameter_infos[param_idx].max},
+			.out_range = {"0", "1"},
+			.interpolate = [=](float t, auto out) {
+				t = std::atan(t*curvature) / std::atan(curvature);
+				return interpolate_style<float>(t, out);
+			}
+		};
+	}
+
 	UIElement::Connection dial_logarithmic(size_t param_idx, float curvature) {
 		return {
 			.param_idx = param_idx,
@@ -1945,6 +1960,21 @@ namespace Aether {
 			return val_s + info.units;
 		};
 
+		const auto rescale_fn = [=]() -> std::function<float (float, float)> {
+			using namespace std::placeholders;
+			switch (info.curvature_type) {
+				case DialInfo::CurvatureType::log:
+					if (info.curvature == 1)
+						return [](float x, float dx){ return x+dx; };
+					else
+						return std::bind(dial_scroll_log, info.curvature, _1, _2);
+					break;
+				case DialInfo::CurvatureType::atan:
+					return std::bind(dial_scroll_atan, info.curvature, _1, _2);
+					break;
+			}
+			return {};
+		}();
 		g->add_child<Dial>({
 			.visible = true, .inert = false,
 			.btn_press_callback = [=, this](UIElement* elem, const auto& e){
@@ -1955,18 +1985,14 @@ namespace Aether {
 					dial->style.insert_or_assign("label", val_to_str(info.param_id));
 			},
 			.motion_callback = [=, this](UIElement* elem, const auto& e){
-				dial_btn_motion_cb(info.param_id, e, 1.f, info.curvature);
+				dial_btn_motion_cb(info.param_id, e, 1.f, rescale_fn);
 
 				auto* dial = dynamic_cast<Dial*>(elem);
 				if (!info.label.empty())
 					dial->style.insert_or_assign("label", val_to_str(info.param_id));
 			},
 			.scroll_callback = [=, this](UIElement* elem, const auto& e) {
-				using namespace std::placeholders;
-				if (info.curvature == 1)
-					dial_scroll_cb(info.param_id, e, 1.f);
-				else
-					dial_scroll_cb(info.param_id, e, 1.f, std::bind(dial_scroll_log, info.curvature, _1, _2));
+				dial_scroll_cb(info.param_id, e, 1.f, rescale_fn);
 
 				auto* dial = dynamic_cast<Dial*>(elem);
 				if (!info.label.empty())
@@ -1977,9 +2003,11 @@ namespace Aether {
 				dial->style.insert_or_assign("label", info.label);
 			},
 			.connections = {
-				info.curvature == 1.f ?
-					dial_linear(info.param_id) :
-					dial_logarithmic(info.param_id, info.curvature)
+				info.curvature_type == DialInfo::CurvatureType::log ?
+					(info.curvature == 1.f ?
+						dial_linear(info.param_id) :
+						dial_logarithmic(info.param_id, info.curvature)) :
+					dial_atan(info.param_id, info.curvature)
 			},
 			.style = {
 				{"cx", to_string(info.cx) + "sp"}, {"cy", to_string(info.cy) + "sp"},
