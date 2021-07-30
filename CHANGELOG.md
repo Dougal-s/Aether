@@ -8,6 +8,7 @@
 * Some dsp performance improvements!
 * Antialias delay visual.
 * Changed level meter scaling.
+* Tweaked defaults and scaling for delay line modulation depth and rate.
 
 ### Fixed
 * Fixed broken text positioning when resized.
