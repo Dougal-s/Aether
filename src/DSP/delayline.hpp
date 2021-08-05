@@ -112,7 +112,6 @@ public:
 
 	// General
 	void set_seed_crossmix(float crossmix) {
-		if (m_crossmix == crossmix) return;
 		m_crossmix = crossmix;
 
 		Random::generate(m_rand, m_delay_seed, m_crossmix);
@@ -134,29 +133,24 @@ public:
 
 	// delay line
 	void set_delay(float delay) {
-		if (m_delay == delay) return;
 		m_gain_smoothing = std::exp(-2*constants::pi_v<float> / delay);
 		m_delay = delay;
 		generate_delay();
 	}
 
 	void set_delay_mod_depth(float mod_depth) {
-		if (m_mod_depth == mod_depth) return;
 		m_mod_depth = mod_depth;
 		generate_mod_depth();
 	}
 	void set_delay_mod_rate(float mod_rate) {
-		if (m_mod_rate == mod_rate) return;
 		m_mod_rate = mod_rate;
 		generate_mod_rate();
 	}
 	void set_delay_feedback(float feedback) {
-		if (m_feedback == feedback) return;
 		m_feedback = feedback;
 		generate_feedback();
 	}
 	void set_delay_seed(uint32_t seed) {
-		if (m_delay_seed == seed) return;
 		m_delay_seed = seed;
 
 		Random::generate(m_rand, m_delay_seed, m_crossmix);
