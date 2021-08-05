@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+### Fixed
+* Fixed incorrect allpass filter rate calculation.
+
 ## [v1.2.0]
 ### Added
 * Added saturation control to the allpass diffuser. (Currently only accessible through the plugin host)

@@ -1001,7 +1001,7 @@ namespace Aether {
 					.radius = 20, .cx = 185, .cy = 200,
 					.fill = "#1b1d23",
 					.font_size = "15sp",
-					.curvature = 5.f,
+					.curvature = 10.f,
 					.logarithmic = true
 				});
 				attach_dial(diffusion, {
@@ -1377,7 +1377,7 @@ namespace Aether {
 					.label = "RATE", .units = "Hz",
 					.radius = 20, .cx = 186, .cy = 30,
 					.fill = "#1b1d23", .font_size = "15sp",
-					.curvature = 5.f,
+					.curvature = 10.f,
 					.logarithmic = true
 				});
 				attach_dial(diffusion, {

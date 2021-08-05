@@ -211,6 +211,7 @@ inline void AllpassDiffuser<FpType>::set_seed(uint32_t seed) noexcept {
 
 	Random::generate(m_rand_vals, m_seed, m_crossmix);
 	generate_delay();
+	generate_mod_depth();
 	generate_mod_rate();
 }
 
@@ -220,6 +221,7 @@ inline void AllpassDiffuser<FpType>::set_seed_crossmix(float crossmix) noexcept 
 
 	Random::generate(m_rand_vals, m_seed, m_crossmix);
 	generate_delay();
+	generate_mod_depth();
 	generate_mod_rate();
 }
 
@@ -272,7 +274,7 @@ template <class FpType>
 inline void AllpassDiffuser<FpType>::generate_mod_rate() noexcept {
 	for (size_t filter = 0; filter < m_filters.size(); ++filter) {
 		m_filters[filter].set_mod_rate(
-			m_mod_rate * (0.85f + 0.3f*m_rand_vals[2*max_stages+filter]) / m_rate
+			m_mod_rate * (0.85f + 0.3f*m_rand_vals[2*max_stages+filter])
 		);
 	}
 }
