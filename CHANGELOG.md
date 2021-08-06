@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Fixed
 * Fixed incorrect allpass filter rate calculation.
+* Fixed input meters.
 
 ## [v1.2.0]
 ### Added

@@ -509,13 +509,13 @@ namespace Aether {
 				.visible = true, .inert = true,
 				.connections = {
 					{
-						.param_idx = 53,
+						.param_idx = 54,
 						.style ="fill",
 						.in_range = {0.f, 1.3f},
 						.out_range = {"", ""}, // unused
 						.interpolate = color_interpolate
 					}, {
-						.param_idx = 53,
+						.param_idx = 54,
 						.style ="height",
 						.in_range = {0.f, 1.3f},
 						.out_range = {"0%", "100%"}
