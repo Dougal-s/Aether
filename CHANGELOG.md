@@ -4,6 +4,7 @@
 ### Fixed
 * Fixed incorrect allpass filter rate calculation.
 * Fixed input meters.
+* Fixed late reverberations stereo issues.
 
 ## [v1.2.0]
 ### Added

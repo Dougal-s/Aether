@@ -220,7 +220,7 @@ namespace Aether {
 				};
 
 				late_left = m_l_late_rev.push(late_left, push_info);
-				late_right = m_l_late_rev.push(late_right, push_info);
+				late_right = m_r_late_rev.push(late_right, push_info);
 				ports.audio_out_left[sample] += late_level*late_left;
 				ports.audio_out_right[sample] += late_level*late_right;
 			}
