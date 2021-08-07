@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+* Added user manual.
+
 ### Fixed
 * Fixed incorrect allpass filter rate calculation.
 * Fixed input meters.

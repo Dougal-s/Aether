@@ -6,6 +6,11 @@
 
 Aether is an algorithmic reverb LV2 plugin based on [Cloudseed](https://github.com/ValdemarOrn/CloudSeed).
 
+For a quick overview of the user interface and controls, please refer to the [user manual](usermanual/USERMANUAL.md).
+
+For a more technical overview of the plugin architecture, please refer to:
+https://github.com/ValdemarOrn/CloudSeed/tree/master/Documentation
+
 ## Contents
 * [Downloads](#Downloads)
 * [Building](#Building)
