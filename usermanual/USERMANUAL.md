@@ -7,15 +7,15 @@ https://github.com/ValdemarOrn/CloudSeed/tree/master/Documentation
 
 ## Contents
 
-1. [Main Signal Path](#main-signal-path)
-	1.1. [Dry & Predelay](#dry-&-predelay)
-	1.2. [Early Reflections](#early-reflections)
-	1.3. [Late Reverberations](#late-reverberations)
+1. [Main Signal Path](#main-signal-path)  
+	1.1. [Dry & Predelay](#dry--predelay)  
+	1.2. [Early Reflections](#early-reflections)  
+	1.3. [Late Reverberations](#late-reverberations)  
 2. [Seeds](#seeds)
-3. [Misc Controls](#misc-controls)
-	3.1. [Interpolate](#interpolate)
-	3.2. [Dry/Wet](#dry/wet)
-	3.3. [Saturation](#saturation)
+3. [Misc Controls](#misc-controls)  
+	3.1. [Interpolate](#interpolate)  
+	3.2. [Dry/Wet](#drywet)  
+	3.3. [Saturation](#saturation)  
 5. [Spectrum  Analyser](#spectrum-analyser)
 6. [Control Behaviour](#control-behaviour)
 
@@ -24,7 +24,6 @@ https://github.com/ValdemarOrn/CloudSeed/tree/master/Documentation
 ### Dry & Predelay
 
 <img src="dry-predelay.png" height="250px">
-<br><br>
 
 * **Dry level** - Level of the unprocessed dry signal sent to the plugin output.
 
@@ -36,7 +35,6 @@ https://github.com/ValdemarOrn/CloudSeed/tree/master/Documentation
 ### Early Reflections
 
 <img align="middle" src="early-reflections.png" height="250px">
-<br><br>
 
 Signal Path: Filters -> Multitap Delay -> Allpass Diffuser
 
@@ -71,7 +69,6 @@ The allpass diffuser is made up of up to 8 allpass filters in series, each with 
 ### Late Reverberations
 
 <img align="middle" src="late-reverberations.png" height="250px">
-<br><br>
 
 The late reverberations are composed of up to 12 delay lines per stereo channel, each made up of a feedback loop containing a modulated delay, allpass diffuser, and a set of filters.
 
@@ -138,7 +135,6 @@ From left to right:
 ## Spectrum Analyser
 
 <img src="spectrum-analyser.png" height="150px">
-<br><br>
 
 * **IN** - Toggles the input spectrum visibility
 * **OUT** - Toggles the output spectrum visibility
