@@ -267,6 +267,7 @@
 	], [
 		a lv2:InputPort, lv2:ControlPort;
 		lv2:index 22;
+		lv2:portProperty props:causesArtifacts;
 		lv2:symbol "early_diffusion_stages";
 		lv2:name "Early Diffusion Stages";
 		rdfs:comment "The number of series allpass filters in the early reflections diffusion block";
@@ -382,6 +383,7 @@
 	], [
 		a lv2:InputPort, lv2:ControlPort;
 		lv2:index 33;
+		lv2:portProperty props:causesArtifacts;
 		lv2:symbol "late_diffusion_stages";
 		lv2:name "Late Diffusion Stages";
 		rdfs:comment "The number of series allpass filters in the late diffusion block";
