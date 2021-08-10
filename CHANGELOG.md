@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [v1.2.1] - 2021-08-10
 ### Added
 * Added user manual.
 
@@ -14,7 +14,7 @@
 * Fixed input meters.
 * Fixed late reverberations stereo issues.
 
-## [v1.2.0]
+## [v1.2.0] - 2021-08-02
 ### Added
 * Added saturation control to the allpass diffuser. (Currently only accessible through the plugin host)
 
