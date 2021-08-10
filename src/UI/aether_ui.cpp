@@ -49,6 +49,10 @@ namespace {
 		return 20*std::log10(gain);
 	}
 
+	float dB_to_gain(float db) noexcept {
+		return std::pow(10.f, db/20.f);
+	}
+
 	float dial_scroll_log(float curvature, float val, float dval) {
 		float normalized = std::log1p(val*(curvature - 1)) / std::log(curvature);
 		normalized += dval;
@@ -1576,10 +1580,12 @@ namespace Aether {
 		const float dt = 0.000001f*duration_cast<microseconds>(steady_clock::now()-last_frame).count();
 
 		constexpr float freq_max = 22000;
-
-		ui_tree.root().audio_bin_size_hz = sample_infos.samples[0].size() ?
+		constexpr float freq_min = 15;
+		const float bin_size = sample_infos.samples[0].size() ?
 			static_cast<float>(sample_infos.sample_rate)/sample_infos.samples[0].size()
 			: freq_max;
+
+		ui_tree.root().audio_bin_size_hz = bin_size;
 
 		const auto process_samples = [&](size_t stream, size_t channel) {
 			auto& input = sample_infos.samples[stream*2+channel];
@@ -1589,6 +1595,14 @@ namespace Aether {
 			sample_infos.spectrum[channel] = input;
 			fft::window_function(sample_infos.spectrum[channel]);
 			fft::magnitudes(sample_infos.spectrum[channel]);
+
+			// add 3dB/Oct slope
+			const float middle_freq = freq_min * std::pow(freq_max/freq_min, 0.5f);
+			for (size_t i = 1; i < input.size()/2; ++i) {
+				const float freq = i * bin_size;
+				const float doct = std::log2(freq/middle_freq);
+				sample_infos.spectrum[channel][i] *= std::pow(dB_to_gain(3), doct);
+			}
 		};
 
 		const auto update_channel = [&](size_t in, size_t out) {
@@ -1597,7 +1611,7 @@ namespace Aether {
 
 			if (input.size() == 0) return;
 
-			output.resize(std::ceil(freq_max/ui_tree.root().audio_bin_size_hz) + 1);
+			output.resize(std::ceil(freq_max/bin_size) + 1);
 
 			const size_t size = std::min(input.size()/2-1, output.size());
 

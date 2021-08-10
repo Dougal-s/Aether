@@ -5,8 +5,9 @@
 * Added user manual.
 
 ### Changed
-* Fixed range of the frequency spectrum to 15 Hz - 22000 Hz
-* Changed frequency spectrum range to -60dB - 0dB
+* Fixed range of the frequency spectrum to 15 Hz - 22000 Hz.
+* Changed frequency spectrum range to -60dB - 0dB.
+* Added 3dB/Oct slope to frequency spectrum.
 
 ### Fixed
 * Fixed incorrect allpass filter rate calculation.
