@@ -6,6 +6,7 @@
 
 ### Changed
 * Fixed range of the frequency spectrum to 15 Hz - 22000 Hz
+* Changed frequency spectrum range to -60dB - 0dB
 
 ### Fixed
 * Fixed incorrect allpass filter rate calculation.

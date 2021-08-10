@@ -658,7 +658,7 @@ void Spectrum::draw_impl() const {
 
 	const auto gain_to_y = [](float gain) {
 		const float db = 20.f*std::log10(gain);
-		return 1.f-std::clamp(db+60, 0.f, 63.f)/63.f;
+		return 1.f-std::clamp(db+60, 0.f, 60.f)/60.f;
 	};
 
 	constexpr float freq_lower = 15;
