@@ -573,7 +573,8 @@ struct Root final : public Group {
 	std::filesystem::path bundle_path;
 
 	// frequency magnitudes
-	std::array<std::array<float, 2000>, 2> audio = {};
+	std::array<std::vector<float>, 2> audio = {std::vector<float>(2, 0.f), std::vector<float>(2, 0.f)};
+	float audio_bin_size_hz = 22000;
 	// 53 parameters + 12 audio peaks + 2 ui parameters
 	std::array<float, 67> parameters = {};
 

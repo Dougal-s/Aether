@@ -20,7 +20,9 @@ namespace fft {
 			e *= coef.imag()*coef.imag();
 			sum += coef.imag()*coef.imag();
 		}
-		for (float& e : container) e /= sum;
+
+		// normalize so as not to reduce the volume
+		for (float& e : container) e *= container.size() / sum;
 	}
 
 	/*
@@ -51,6 +53,8 @@ namespace fft {
 	/*
 		performs bit reverse fft inplace
 		requires the input buffer size to be a power of 2
+
+		https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm#Data_reordering,_bit_reversal,_and_in-place_algorithms
 	*/
 	template <class Iterator>
 	void fft(Iterator first, Iterator last) {
@@ -81,6 +85,23 @@ namespace fft {
 	void magnitudes(Container& container) {
 		assert(bits::has_single_bit(container.size()));
 
+		// Let x be the input of size N,
+		// e be the even indexed elements of x,
+		// o be the odd indexed elements of x,
+		// and X, E, O be their respective DFTs
+
+		// X can be reexpressed using the formula:
+		// X[n] = E[n] + e^(2pi*i*n/N) * O[n]      [1]
+
+		// Since e and o are both real sequences,
+		// we can compute their DFTs using the
+		// DFT of the sequence y = e + io, using:
+		// E[n] = 1/2 * (Y[k] + Y*[N/2 - k])
+		// O[n] = -i/2 * (Y[k] - Y*[N/2 - k])      [2]
+
+		// [1]: https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm#The_radix-2_DIT_case
+		// [2]: https://en.wikipedia.org/wiki/Discrete_Fourier_transform#Real_and_imaginary_part
+
 		std::complex<float>* first = reinterpret_cast<std::complex<float>*>(container.data());
 		const size_t size = container.size()/2;
 
@@ -90,25 +111,27 @@ namespace fft {
 
 		const auto wm = std::exp(std::complex<float>(0.f, -2.f*constants::pi_v<float> / container.size()));
 		auto w = wm;
-		for (size_t r = 1; r < size / 2; ++r, w *= wm) {
-			const auto i_r = first[r];
-			const auto i_smr = first[size - r];
+		for (size_t i = 1; i <= size/2; ++i) {
+			const auto at_i = first[i];
+			const auto at_smi = first[size-i];
 
 			{
-				const auto F = 0.5f * (i_r + std::conj(i_smr));
-				const auto G = std::complex<float>(0, 0.5f) * (std::conj(i_smr) - i_r);
+				const auto even = 0.5f * (at_i + std::conj(at_smi));
+				const auto odd = std::complex<float>(0.f, -0.5f) * (at_i - std::conj(at_smi));
 
-				container[r] = 2.f*std::abs(F + w * G);
+				container[i] = std::abs(even + w * odd) / container.size();
 			}
 
 			{
-				const auto F = 0.5f * (i_smr + std::conj(i_r));
-				const auto G = std::complex<float>(0, 0.5f) * (std::conj(i_r) - i_smr);
+				const auto even = 0.5f * (at_smi + std::conj(at_i));
+				const auto odd = std::complex<float>(0.f, -0.5f) * (at_smi - std::conj(at_i));
 
-				container[container.size() - r] = 2.f*std::abs(F + w * G);
+				container[container.size() - i] = std::abs(even - std::conj(w) * odd) / container.size();
 			}
+
+			w *= wm;
 		}
 
-		std::copy(container.end()-size/2+1, container.end(), container.begin()+size/2);
+		std::copy(container.end()-size/2, container.end(), container.begin()+size/2);
 	}
 }

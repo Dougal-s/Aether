@@ -4,6 +4,9 @@
 ### Added
 * Added user manual.
 
+### Changed
+* Fixed range of the frequency spectrum to 15 Hz - 22000 Hz
+
 ### Fixed
 * Fixed incorrect allpass filter rate calculation.
 * Fixed input meters.

@@ -1575,6 +1575,12 @@ namespace Aether {
 		// time since last frame in seconds
 		const float dt = 0.000001f*duration_cast<microseconds>(steady_clock::now()-last_frame).count();
 
+		constexpr float freq_max = 22000;
+
+		ui_tree.root().audio_bin_size_hz = sample_infos.samples[0].size() ?
+			static_cast<float>(sample_infos.sample_rate)/sample_infos.samples[0].size()
+			: freq_max;
+
 		const auto process_samples = [&](size_t stream, size_t channel) {
 			auto& input = sample_infos.samples[stream*2+channel];
 
@@ -1587,16 +1593,19 @@ namespace Aether {
 
 		const auto update_channel = [&](size_t in, size_t out) {
 			auto& output = ui_tree.root().audio[out];
+			const auto& input = sample_infos.spectrum[in];
 
-			if (sample_infos.spectrum[in].size() == 0) return;
+			if (input.size() == 0) return;
 
-			const size_t size = std::min(sample_infos.spectrum[in].size()/2-1, output.size());
+			output.resize(std::ceil(freq_max/ui_tree.root().audio_bin_size_hz) + 1);
+
+			const size_t size = std::min(input.size()/2-1, output.size());
 
 			for (size_t i = 0; i < size; ++i) {
-				if (output[i] < sample_infos.spectrum[in][i+1])
-					output[i] = std::lerp(output[i], sample_infos.spectrum[in][i+1], std::min(16.f*dt, 1.f));
+				if (output[i] < input[i])
+					output[i] = std::lerp(output[i], input[i], std::min(16.f*dt, 1.f));
 				else
-					output[i] = std::lerp(output[i], sample_infos.spectrum[in][i+1], std::min(8.f*dt, 1.f));
+					output[i] = std::lerp(output[i], input[i], std::min(8.f*dt, 1.f));
 			}
 			std::fill(output.begin()+size, output.end(), 0.f);
 		};
