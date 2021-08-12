@@ -77,8 +77,8 @@ The late reverberations are composed of up to 12 delay lines per stereo channel,
 * **Order** - The ordering of components in the late reverberations signal path.
 * **Late Reverberations Level** - Level of the late reverberations signal sent to the plugin output.
 
-Signal Path:
-  Order Pre: ... -> Modulated Delay -> Output -> Allpass Diffuser -> Filters -> ...
+Signal Path:  
+  Order Pre: ... -> Modulated Delay -> Output -> Allpass Diffuser -> Filters -> ...  
   Order Post: ... -> Allpass Diffuser -> Output -> Modulated Delay -> Filters -> ...
 
 #### Modulated Delay
