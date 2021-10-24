@@ -117,7 +117,7 @@ jobs:
         mkdir build
         cd build
         cmake -G "Visual Studio 16 2019" .. -DLV2_INCLUDE_PATH="lv2"
-        msbuild Aether.sln -m:2 -property:Configuration=release
+        cmake --build . --config=release
 
     - name: Create Archive
       run: Compress-Archive -Path build\aether.lv2 -DestinationPath ${{ env.ARCHIVE_NAME }}
