@@ -111,13 +111,12 @@ jobs:
     - name: Set Archive Name
       run: echo "ARCHIVE_NAME=Aether-windows.zip" >> "$GITHUB_ENV"
 
-    - name: Create Build Environment
-      run: cmake -E make_directory ${{github.workspace}}\build
-
     - name: Build Plugin
-      working-directory: ${{github.workspace}}\build
+      shell: bash
       run: |
-        cmake -G "Visual Studio 16 2019" ${{github.workspace}} -DLV2_INCLUDE_PATH="lv2"
+        mkdir build
+        cd build
+        cmake -G "Visual Studio 16 2019" .. -DLV2_INCLUDE_PATH="lv2"
         msbuild Aether.sln -m:2 -property:Configuration=release
 
     - name: Create Archive
