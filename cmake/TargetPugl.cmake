@@ -2,10 +2,12 @@ set(PUGL_SOURCE_DIR "${CMAKE_SOURCE_DIR}/extern/pugl")
 
 add_library(pugl STATIC "${PUGL_SOURCE_DIR}/src/implementation.c")
 
-target_compile_options(pugl PRIVATE -O3 -DNDEBUG)
+target_compile_definitions(pugl PUBLIC PUGL_INTERNAL PUGL_STATIC)
 
-target_include_directories(pugl SYSTEM PUBLIC "${PUGL_SOURCE_DIR}/include")
-target_include_directories(pugl SYSTEM PUBLIC "${PUGL_SOURCE_DIR}/bindings/cxx/include")
+target_include_directories(pugl SYSTEM PUBLIC
+	"${PUGL_SOURCE_DIR}/include"
+	"${PUGL_SOURCE_DIR}/bindings/cxx/include"
+)
 
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
@@ -21,6 +23,7 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	target_link_libraries(pugl OpenGL::GLX)
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	target_sources(pugl PRIVATE "${PUGL_SOURCE_DIR}/src/win.c" "${PUGL_SOURCE_DIR}/src/win_gl.c")
+	target_compile_definitions(pugl PRIVATE WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS)
 else()
 	message(FATAL_ERROR "Unrecognized Platform!")
 endif()
