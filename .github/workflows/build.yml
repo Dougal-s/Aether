@@ -120,7 +120,7 @@ jobs:
         cmake --build . --config=release
 
     - name: Create Archive
-      run: Compress-Archive -Path build\aether.lv2 -DestinationPath ${{ env.ARCHIVE_NAME }}
+      run: 7z a ${{ env.ARCHIVE_NAME }} build\aether.lv2
 
     - uses: actions/upload-artifact@v2
       with:
