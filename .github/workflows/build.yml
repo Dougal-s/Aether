@@ -120,7 +120,8 @@ jobs:
         cmake --build . --config=release
 
     - name: Create Archive
-      run: 7z a ${{ env.ARCHIVE_NAME }} build/aether.lv2
+      working-directory: ${{github.workspace}}/build
+      run: 7z a ../${{ env.ARCHIVE_NAME }} aether.lv2
 
     - uses: actions/upload-artifact@v2
       with:
