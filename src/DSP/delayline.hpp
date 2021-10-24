@@ -238,7 +238,7 @@ private:
 	float m_mod_rate = 0.f;
 	float m_feedback = 0.f;
 
-	uint32_t m_delay_seed = 0.f;
+	uint32_t m_delay_seed = 0;
 	float m_crossmix = 0.f;
 
 	void generate_delay() {

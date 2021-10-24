@@ -1,8 +1,6 @@
 macro(create_test TEST_NAME)
 	add_executable(test_${TEST_NAME} ${ARGN})
 
-	target_compile_options(test_${TEST_NAME} PRIVATE -O3)
-
 	target_include_directories(test_${TEST_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 	target_link_libraries(test_${TEST_NAME} gtest gtest_main)
 	add_test(${TEST_NAME}_test test_${TEST_NAME})

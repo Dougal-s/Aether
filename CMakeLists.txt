@@ -14,6 +14,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	set(UI_TYPE "X11UI")
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
 	set(UI_TYPE "WindowsUI")
 else()
 	message(FATAL_ERROR "Unrecognized Platform!")
@@ -31,14 +32,6 @@ add_library(aether_dsp MODULE
 	src/DSP/utils/ringbuffer.hpp
 )
 
-target_compile_options(aether_dsp PRIVATE
-	-Wall -Wextra -Wpedantic -Wshadow -Weffc++ -Wstrict-aliasing
-	-Wunreachable-code -Wdouble-promotion -Werror -Wconversion -Wsign-conversion
-	"$<$<CONFIG:DEBUG>:-O0;-ggdb>"
-	"$<$<CONFIG:RELEASE>:-O3>"
-)
-target_compile_definitions(aether_dsp PRIVATE "$<$<CONFIG:RELEASE>:NDEBUG>")
-
 add_library(aether_ui MODULE
 	src/UI/aether_ui.cpp
 	src/UI/aether_ui_lv2.cpp
@@ -50,14 +43,6 @@ add_library(aether_ui MODULE
 	src/common/parameters.hpp
 )
 
-target_compile_options(aether_ui PRIVATE
-	-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing
-	-Wunreachable-code -Wdouble-promotion -Werror
-	"$<$<CONFIG:DEBUG>:-O0;-ggdb>"
-	"$<$<CONFIG:RELEASE>:-O3>"
-)
-target_compile_definitions(aether_ui PRIVATE "$<$<CONFIG:RELEASE>:NDEBUG>")
-
 include(TargetGlad)
 target_link_libraries(aether_ui PRIVATE glad)
 include(TargetPugl)
@@ -68,12 +53,37 @@ target_link_libraries(aether_ui PRIVATE nanovg)
 set_target_properties(aether_dsp aether_ui
 	PROPERTIES
 	CXX_VISIBILITY_PRESET hidden
-	LIBRARY_OUTPUT_DIRECTORY aether.lv2
 	PREFIX "")
+
+if (DEFINED LV2_INCLUDE_PATH)
+	target_include_directories(aether_dsp SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
+	target_include_directories(aether_ui SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
+endif()
+
+if (MSVC)
+	target_compile_options(aether_dsp PRIVATE "$<$<CONFIG:DEBUG>:/W4>")
+	target_compile_options(aether_ui PRIVATE "$<$<CONFIG:DEBUG>:/W4>")
+else()
+	target_compile_options(aether_dsp PRIVATE
+		-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wunreachable-code -Wdouble-promotion
+		-Weffc++ -Wconversion -Wsign-conversion
+		"$<$<CONFIG:DEBUG>:-Og;-ggdb;-Werror>"
+	)
+	target_compile_options(aether_ui PRIVATE
+		-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wunreachable-code -Wdouble-promotion
+		"$<$<CONFIG:DEBUG>:-Og;-ggdb;-Werror>"
+	)
+endif()
+
 
 # create Aether.lv2
 add_custom_target(copy_fonts ALL
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/fonts aether.lv2/fonts)
+add_custom_target(copy_binaries ALL
+	${CMAKE_COMMAND} -E copy "$<TARGET_FILE:aether_dsp>" aether.lv2/
+	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:aether_ui>" aether.lv2/
+	DEPENDS aether_dsp aether_ui
+)
 
 configure_file(resources/manifest.ttl.in aether.lv2/manifest.ttl)
 configure_file(resources/aether.ttl.in aether.lv2/aether.ttl)

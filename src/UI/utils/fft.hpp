@@ -42,7 +42,7 @@ namespace fft {
 	void bitReverseShuffle(Iterator first, Iterator last) {
 		const size_t size = last-first;
 		assert(bits::has_single_bit(size));
-		uint8_t numBits = bits::countr_zero(size);
+		auto numBits = static_cast<uint8_t>(bits::countr_zero(size));
 
 		for (size_t i = 0; i < size; ++i) {
 			size_t j = reverseBits(i, numBits);

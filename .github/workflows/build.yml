@@ -93,3 +93,37 @@ jobs:
     - name: Test
       working-directory: ${{github.workspace}}/build
       run: ctest -C $BUILD_TYPE
+
+  build-windows:
+    runs-on: windows-2019
+
+    outputs:
+        artifact-name: ${{ env.ARCHIVE_NAME }}
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Install Dependencies
+      run: git clone https://gitlab.com/lv2/lv2.git
+
+    - name: Set Archive Name
+      run: echo "ARCHIVE_NAME=Aether-windows.zip" >> "$GITHUB_ENV"
+
+    - name: Build Plugin
+      shell: bash
+      run: |
+        mkdir build
+        cd build
+        cmake -G "Visual Studio 16 2019" .. -DLV2_INCLUDE_PATH="lv2"
+        cmake --build . --config=release
+
+    - name: Create Archive
+      working-directory: ${{github.workspace}}/build
+      run: 7z a ../${{ env.ARCHIVE_NAME }} aether.lv2
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.ARCHIVE_NAME }}
+        path: ${{ env.ARCHIVE_NAME }}

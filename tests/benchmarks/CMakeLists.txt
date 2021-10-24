@@ -1,7 +1,12 @@
 macro(create_benchmark BENCHMARK_NAME)
 	add_executable(bm_${BENCHMARK_NAME} ${ARGN})
 
-	target_compile_options(bm_${BENCHMARK_NAME} PRIVATE -O3)
+	if (MSVC)
+		target_compile_options(bm_${BENCHMARK_NAME} PRIVATE /O2)
+	else()
+		target_compile_options(bm_${BENCHMARK_NAME} PRIVATE -O3)
+	endif()
+
 	target_compile_definitions(bm_${BENCHMARK_NAME} PRIVATE NDEBUG)
 
 	target_include_directories(bm_${BENCHMARK_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src)

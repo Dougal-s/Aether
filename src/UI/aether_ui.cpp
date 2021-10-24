@@ -91,8 +91,8 @@ namespace {
 	}
 #endif
 
-	void attach_panel_topbar(Group* g) {
-		g->add_child<Rect>({
+	void attach_panel_topbar(Aether::Group* g) {
+		g->add_child<Aether::Rect>({
 			.visible = true, .inert = true,
 			.style = {
 				{"x", "0"}, {"y", "0"}, {"r", "5sp 5sp 0 0"},
@@ -2399,8 +2399,8 @@ namespace Aether {
 			eq->add_child<Circle>({
 				.visible = false, .inert = false,
 				.btn_press_callback = [idxs = infos[i].idxs, this](UIElement*, const auto& e) {
-					mouse_callback_info.x = e.x;
-					mouse_callback_info.y = e.y;
+					mouse_callback_info.x = static_cast<float>(e.x);
+					mouse_callback_info.y = static_cast<float>(e.y);
 
 					if (e.state & pugl::Mod::PUGL_MOD_SHIFT) {
 						update_dsp_param(idxs[1], parameter_infos[idxs[1]].dflt);
