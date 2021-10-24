@@ -117,7 +117,7 @@ jobs:
     - name: Build Plugin
       working-directory: ${{github.workspace}}\build
       run: |
-        cmake -G "Visual Studio 16 2019" .. -DLV2_INCLUDE_PATH="lv2"
+        cmake -G "Visual Studio 16 2019" ${{github.workspace}} -DLV2_INCLUDE_PATH="lv2"
         msbuild Aether.sln -m:2 -property:Configuration=release
 
     - name: Create Archive
