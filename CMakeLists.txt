@@ -66,6 +66,11 @@ set_target_properties(aether_dsp aether_ui
 	CXX_VISIBILITY_PRESET hidden
 	PREFIX "")
 
+if (DEFINED LV2_INCLUDE_PATH)
+	target_include_directories(aether_dsp SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
+	target_include_directories(aether_ui SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
+endif()
+
 if (MSVC)
 else()
 	target_compile_options(aether_dsp PRIVATE -Weffc++ -Wconversion -Wsign-conversion)
