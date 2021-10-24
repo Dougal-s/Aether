@@ -11,7 +11,7 @@
 #include <string_view>
 
 constexpr size_t hash(const char* input) {
-	size_t out = 0.f;
+	size_t out = 0;
 	while (*input) out = out*33 + *input++;
 	return out;
 }

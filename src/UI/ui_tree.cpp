@@ -15,6 +15,8 @@
 
 #include "ui_tree.hpp"
 
+using namespace Aether;
+
 namespace {
 
 	float strtof(std::string_view str) {
@@ -95,7 +97,7 @@ namespace {
 		if (units.starts_with("rad"))
 			return rad;
 		if (rad == 0) {
-			expr.seekg(-units.size(), std::ios::cur);
+			expr.seekg(-std::ssize(units), std::ios::cur);
 			return 0.f;
 		}
 
@@ -125,7 +127,7 @@ float Root::to_px(Frame viewbox, std::istringstream& expr) const {
 	if (units.starts_with("%"))
 		return distance/100.f * std::hypot(viewbox.width(), viewbox.height())/std::sqrt(2.f);
 	if (distance == 0) {
-		expr.seekg(-units.size(), std::ios::cur);
+		expr.seekg(-std::ssize(units), std::ios::cur);
 		return 0.f;
 	}
 
@@ -147,7 +149,7 @@ float Root::to_horizontal_px(Frame viewbox, std::istringstream& expr) const {
 	if (units.starts_with("%"))
 		return x * viewbox.width() / 100.f;
 	if (x == 0) {
-		expr.seekg(-units.size(), std::ios::cur);
+		expr.seekg(-std::ssize(units), std::ios::cur);
 		return 0.f;
 	}
 
@@ -169,7 +171,7 @@ float Root::to_vertical_px(Frame viewbox, std::istringstream& expr) const {
 	if (units.starts_with("%"))
 		return y * viewbox.height() / 100.f;
 	if (y == 0) {
-		expr.seekg(-units.size(), std::ios::cur);
+		expr.seekg(-std::ssize(units), std::ios::cur);
 		return 0.f;
 	}
 
@@ -718,13 +720,13 @@ Frame Text::bounds() const {
 	if (auto width = defined_width(); width) {
 		nvgTextBoxBounds(m_root->ctx->nvg_ctx,
 			m_render_corner[0], m_render_corner[1], *width,
-			text.begin(), text.end(),
+			text.data(), text.data() + text.size(),
 			reinterpret_cast<float*>(&bounds)
 		);
 	} else {
 		nvgTextBounds(m_root->ctx->nvg_ctx,
 			m_render_corner[0], m_render_corner[1],
-			text.begin(), text.end(),
+			text.data(), text.data() + text.size(),
 			reinterpret_cast<float*>(&bounds)
 		);
 	}
@@ -789,9 +791,16 @@ void Text::draw_impl() const {
 	set_text_styling();
 	const auto text = this->text();
 	if (auto width = defined_width(); width)
-		nvgTextBox(m_root->ctx->nvg_ctx, m_render_corner[0], m_render_corner[1], *width, text.begin(), text.end());
+		nvgTextBox(m_root->ctx->nvg_ctx,
+			m_render_corner[0], m_render_corner[1],
+			*width,
+			text.data(), text.data() + text.size()
+		);
 	else
-		nvgText(m_root->ctx->nvg_ctx, m_render_corner[0], m_render_corner[1], text.begin(), text.end());
+		nvgText(m_root->ctx->nvg_ctx,
+			m_render_corner[0], m_render_corner[1],
+			text.data(), text.data() + text.size()
+		);
 }
 
 UIElement* Text::element_at_impl(float x, float y) {
@@ -844,9 +853,19 @@ std::array<float, 2> Text::calculate_render_corner(Frame viewbox) {
 	// styling has already been set outside this function
 	const std::string_view text = this->text();
 	if (auto width = defined_width(); width)
-		nvgTextBoxBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, *width, text.begin(), text.end(), text_bounds);
+		nvgTextBoxBounds(m_root->ctx->nvg_ctx,
+			0.f, 0.f,
+			*width,
+			text.data(), text.data() + text.size(),
+			text_bounds
+		);
 	else
-		nvgTextBounds(m_root->ctx->nvg_ctx, 0.f, 0.f, text.begin(), text.end(), text_bounds);
+		nvgTextBounds(
+			m_root->ctx->nvg_ctx,
+			0.f, 0.f,
+			text.data(), text.data() + text.size(),
+			text_bounds
+		);
 
 	if (!left) {
 		float right;
@@ -941,8 +960,8 @@ Root::Root(
 int Root::get_font(std::string font_face) {
 	int font_id = nvgFindFont(ctx->nvg_ctx, font_face.data());
 	if (font_id == -1) {
-		const auto path = bundle_path / "fonts" / (font_face + ".ttf");
-		font_id = nvgCreateFont(ctx->nvg_ctx, font_face.data(), path.c_str());
+		const auto path = (bundle_path / "fonts" / (font_face + ".ttf")).string();
+		font_id = nvgCreateFont(ctx->nvg_ctx, font_face.c_str(), path.c_str());
 	}
 	return font_id;
 }
