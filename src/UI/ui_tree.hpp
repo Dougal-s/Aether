@@ -546,8 +546,8 @@ namespace Aether {
 		virtual UIElement* element_at_impl(float x, float y) override {
 			UIElement* element = Rect::element_at_impl(x, y);
 			if (element) {
-				for (size_t i = m_children.size()-1; i != -1; --i) {
-					UIElement* elem = m_children[i]->element_at(x, y);
+				for (size_t i = m_children.size(); i != 0; --i) {
+					UIElement* elem = m_children[i-1]->element_at(x, y);
 					if (elem) return elem;
 				}
 			}
