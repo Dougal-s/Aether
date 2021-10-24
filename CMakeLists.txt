@@ -20,17 +20,6 @@ else()
 	message(FATAL_ERROR "Unrecognized Platform!")
 endif()
 
-
-if (MSVC)
-	add_compile_options("$<$<CONFIG:DEBUG>:/W4>")
-else()
-	add_compile_options(
-		-Wall -Wextra -pedantic -Wshadow -Wstrict-aliasing -Wunreachable-code -Wdouble-promotion
-		"$<$<CONFIG:DEBUG>:-Og;-ggdb;-Werror>"
-	)
-endif()
-
-
 add_library(aether_dsp MODULE
 	src/DSP/aether_dsp_lv2.cpp
 	src/DSP/aether_dsp.cpp
@@ -72,8 +61,18 @@ if (DEFINED LV2_INCLUDE_PATH)
 endif()
 
 if (MSVC)
+	target_compile_options(aether_dsp PRIVATE "$<$<CONFIG:DEBUG>:/W4>")
+	target_compile_options(aether_ui PRIVATE "$<$<CONFIG:DEBUG>:/W4>")
 else()
-	target_compile_options(aether_dsp PRIVATE -Weffc++ -Wconversion -Wsign-conversion)
+	target_compile_options(aether_dsp PRIVATE
+		-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wunreachable-code -Wdouble-promotion
+		-Weffc++ -Wconversion -Wsign-conversion
+		"$<$<CONFIG:DEBUG>:-Og;-ggdb;-Werror>"
+	)
+	target_compile_options(aether_ui PRIVATE
+		-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wunreachable-code -Wdouble-promotion
+		"$<$<CONFIG:DEBUG>:-Og;-ggdb;-Werror>"
+	)
 endif()
 
 
