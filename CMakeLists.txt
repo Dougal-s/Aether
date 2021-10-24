@@ -64,7 +64,6 @@ target_link_libraries(aether_ui PRIVATE nanovg)
 set_target_properties(aether_dsp aether_ui
 	PROPERTIES
 	CXX_VISIBILITY_PRESET hidden
-	LIBRARY_OUTPUT_DIRECTORY aether.lv2
 	PREFIX "")
 
 if (MSVC)
@@ -76,6 +75,11 @@ endif()
 # create Aether.lv2
 add_custom_target(copy_fonts ALL
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/fonts aether.lv2/fonts)
+add_custom_target(copy_binaries ALL
+	${CMAKE_COMMAND} -E copy "$<TARGET_FILE:aether_dsp>" aether.lv2/
+	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:aether_ui>" aether.lv2/
+	DEPENDS aether_dsp aether_ui
+)
 
 configure_file(resources/manifest.ttl.in aether.lv2/manifest.ttl)
 configure_file(resources/aether.ttl.in aether.lv2/aether.ttl)
