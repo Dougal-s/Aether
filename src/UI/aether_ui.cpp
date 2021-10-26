@@ -258,7 +258,7 @@ namespace Aether {
 	{
 		setEventHandler(*this);
 		setWindowTitle("Aether");
-		setDefaultSize(1230, 700);
+		setFrame({0, 0, 1230, 700});
 		setMinSize(615, 350);
 		setAspectRatio(1, 1, 8, 3);
 
