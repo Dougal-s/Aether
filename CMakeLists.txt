@@ -20,6 +20,12 @@ else()
 	message(FATAL_ERROR "Unrecognized Platform!")
 endif()
 
+if (MSVC)
+	add_compile_options(/arch:SSE2)
+else()
+	add_compile_options(-msse2)
+endif()
+
 add_library(aether_dsp MODULE
 	src/DSP/aether_dsp_lv2.cpp
 	src/DSP/aether_dsp.cpp
