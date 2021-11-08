@@ -440,37 +440,31 @@ namespace Aether {
 	};
 
 	class Dial : public Circle {
-		static std::string m_to_string(float num) noexcept {
-			std::ostringstream ss;
-			ss.imbue(std::locale::classic());
-			ss << num;
-			return ss.str();
-		}
 	public:
 		Dial(Root* root, CreateInfo create_info) noexcept :
 			Circle(root, create_info),
 			ring(root, {.visible = true, .inert = true, .style = {
-				{"cx", "0"}, {"cy", "0"}, {"r", m_to_string(dial_size) + '%'},
+				{"cx", "0"}, {"cy", "0"}, {"r", std::to_string(dial_size) + '%'},
 				{"a0", "-150grad"}, {"a1", "150grad"},
 				{"fill", "#1b1d23"},
 				{"transform", "rotate(-0.25turn)"}
 			}}),
 			ring_value(root, {.visible = true, .inert = true, .style = {
-				{"cx", "0"}, {"cy", "0"}, {"r", m_to_string(dial_size) + '%'},
+				{"cx", "0"}, {"cy", "0"}, {"r", std::to_string(dial_size) + '%'},
 				{"a0", "-150grad"},
 				{"fill", "#43444b"},
-				{"stroke", "#b6bfcc"}, {"stroke-width", m_to_string(strk_width) + '%'},
+				{"stroke", "#b6bfcc"}, {"stroke-width", std::to_string(strk_width) + '%'},
 				{"transform", "rotate(-0.25turn)"}
 			}}),
 			center_cover(root, {.visible = true, .inert = true, .style = {
-				{"cx", "0"}, {"cy", "0"}, {"r", m_to_string(20*dial_size/24) + '%'},
-				{"stroke", "#b6bfcc"}, {"stroke-width", m_to_string(strk_width) + '%'}
+				{"cx", "0"}, {"cy", "0"}, {"r", std::to_string(20*dial_size/24) + '%'},
+				{"stroke", "#b6bfcc"}, {"stroke-width", std::to_string(strk_width) + '%'}
 			}}),
 			thumb(root, {.visible = true, .inert = true, .style = {
-				{"x", m_to_string(-dial_size / 16.f) + '%'},
-				{"y", m_to_string(-dial_size) + '%'},
-				{"width" , m_to_string(dial_size / 8.f)   + '%'},
-				{"height", m_to_string(dial_size - strk_width/2.f) + '%'},
+				{"x", std::to_string(-dial_size / 16.f) + '%'},
+				{"y", std::to_string(-dial_size) + '%'},
+				{"width" , std::to_string(dial_size / 8.f)   + '%'},
+				{"height", std::to_string(dial_size - strk_width/2.f) + '%'},
 				{"r", "1sp"},
 				{"fill", "#b6bfcc"},
 				{"stroke-width", "2sp"}

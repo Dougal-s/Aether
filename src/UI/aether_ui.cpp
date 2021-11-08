@@ -38,13 +38,6 @@
 
 namespace {
 
-	std::string to_string(float num) {
-		std::ostringstream ss;
-		ss.imbue(std::locale::classic());
-		ss << num;
-		return ss.str();
-	}
-
 	float gain_to_dB(float gain) noexcept {
 		return 20*std::log10(gain);
 	}
@@ -1336,8 +1329,8 @@ namespace Aether {
 						.style = "text",
 						.in_range = {parameter_infos[33].min, parameter_infos[33].max},
 						.out_range = {
-							to_string(parameter_infos[33].min),
-							to_string(parameter_infos[33].max)
+							std::to_string(parameter_infos[33].min),
+							std::to_string(parameter_infos[33].max)
 						},
 						.interpolate = interpolate_style<int>
 					}},
@@ -1827,7 +1820,7 @@ namespace Aether {
 					.in_range = {0.f, 1.3f},
 					.out_range = {},
 					.interpolate = [=](float t, auto) {
-						return to_string(100*level_meter_scale(t)) + "%";
+						return std::to_string(100*level_meter_scale(t)) + "%";
 					}
 				}
 			},
@@ -1850,7 +1843,7 @@ namespace Aether {
 					.in_range = {0.f, 1.3f},
 					.out_range = {},
 					.interpolate = [=](float t, auto) {
-						return to_string(100*level_meter_scale(t)) + "%";
+						return std::to_string(100*level_meter_scale(t)) + "%";
 					}
 				}
 			},
@@ -1868,7 +1861,7 @@ namespace Aether {
 				.out_range = {},
 				.interpolate = [=](float t, auto) {
 					float adjusted = 1.f-level_meter_scale(t);
-					return to_string(100*adjusted) + "%";
+					return std::to_string(100*adjusted) + "%";
 				}
 			}},
 			.style = {
@@ -2035,8 +2028,8 @@ namespace Aether {
 					dial_atan(info.param_id, info.curvature)
 			},
 			.style = {
-				{"cx", to_string(info.cx) + "sp"}, {"cy", to_string(info.cy) + "sp"},
-				{"r", to_string(info.radius) + "sp"},
+				{"cx", std::to_string(info.cx) + "sp"}, {"cy", std::to_string(info.cy) + "sp"},
+				{"r", std::to_string(info.radius) + "sp"},
 				{"center-fill", info.fill},
 				{"font-size", info.font_size},
 				{"label", info.label}
@@ -2057,8 +2050,8 @@ namespace Aether {
 			.base = {
 				.visible = true, .inert = true,
 				.style = {
-					{"x", to_string(x).substr(0,3) + "sp"},
-					{"y", to_string(y).substr(0,3) + "sp"},
+					{"x", std::to_string(x).substr(0,3) + "sp"},
+					{"y", std::to_string(y).substr(0,3) + "sp"},
 					{"width", "120sp"}, {"height", "50sp"}
 				},
 			},
@@ -2076,19 +2069,19 @@ namespace Aether {
 				"uniform float depth;\n"
 
 				"#define DELAY_MIN " +
-					to_string(parameter_infos[delay_idx].min) + "\n"
+					std::to_string(parameter_infos[delay_idx].min) + "\n"
 				"#define DELAY_RANGE " +
-					to_string(parameter_infos[delay_idx].range()) + "\n"
+					std::to_string(parameter_infos[delay_idx].range()) + "\n"
 
 				"#define RATE_MIN " +
-					to_string(parameter_infos[rate_idx].min) + "\n"
+					std::to_string(parameter_infos[rate_idx].min) + "\n"
 				"#define RATE_RANGE " +
-					to_string(parameter_infos[rate_idx].range()) + "\n"
+					std::to_string(parameter_infos[rate_idx].range()) + "\n"
 
 				"#define DEPTH_MIN " +
-					to_string(parameter_infos[depth_idx].min) + "\n"
+					std::to_string(parameter_infos[depth_idx].min) + "\n"
 				"#define DEPTH_RANGE " +
-					to_string(parameter_infos[depth_idx].range()) + "\n"
+					std::to_string(parameter_infos[depth_idx].range()) + "\n"
 
 				"#define BAR_WIDTH 0.04f\n"
 
@@ -2134,8 +2127,8 @@ namespace Aether {
 		auto eq = g->add_child<Group>({
 			.visible = true, .inert = false,
 			.style = {
-				{"x", to_string(x).substr(0,3) + "sp"}, {"width", "150sp"},
-				{"y", to_string(y).substr(0,3) + "sp"}, {"height", "130sp"}
+				{"x", std::to_string(x).substr(0,3) + "sp"}, {"width", "150sp"},
+				{"y", std::to_string(y).substr(0,3) + "sp"}, {"height", "130sp"}
 			}
 		});
 
@@ -2328,8 +2321,8 @@ namespace Aether {
 					}
 				}},
 				.style = {
-					{"x", to_string(i*(margin+box_size)).substr(0,3) + "sp"},
-					{"width", to_string(box_size).substr(0,4) + "sp"},
+					{"x", std::to_string(i*(margin+box_size)).substr(0,3) + "sp"},
+					{"width", std::to_string(box_size).substr(0,4) + "sp"},
 					{"bottom", "0sp"}, {"height", "20sp"}, {"r", "5sp"}
 				}
 			});
@@ -2345,8 +2338,8 @@ namespace Aether {
 					}
 				}},
 				.style = {
-					{"x", to_string(i*(margin+box_size)) + "sp"},
-					{"width", to_string(box_size) + "sp"},
+					{"x", std::to_string(i*(margin+box_size)) + "sp"},
+					{"width", std::to_string(box_size) + "sp"},
 					{"bottom", "0sp"}, {"line-height", "20sp"},
 					{"text-align", "center"}, {"vertical-align", "middle"},
 					{"font-family", "Roboto-Regular"}, {"font-size", "17.33333sp"},

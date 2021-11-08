@@ -901,8 +901,8 @@ void Dial::calculate_layout_impl(Frame viewbox) {
 	thumb.style.insert_or_assign("stroke", center_fill);
 
 	const auto val = strtof(get_style("value", "dial has undefined value"));
-	ring_value.style.insert_or_assign("a1", m_to_string(std::lerp(-150.f, 150.f, val)) + "grad");
-	thumb.style.insert_or_assign("transform", "rotate(" + m_to_string(std::lerp(-150.f, 150.f, val)) + "grad)");
+	ring_value.style.insert_or_assign("a1", std::to_string(std::lerp(-150.f, 150.f, val)) + "grad");
+	thumb.style.insert_or_assign("transform", "rotate(" + std::to_string(std::lerp(-150.f, 150.f, val)) + "grad)");
 
 	const auto font_size = get_style("font-size", "dial label has undefined font size");
 	label.style.insert_or_assign("font-size", font_size);
@@ -913,7 +913,7 @@ void Dial::calculate_layout_impl(Frame viewbox) {
 		label.style.insert_or_assign("text", "");
 
 	const float radius_sp = 1230.f * r() / (100*m_root->vw);
-	label.style.insert_or_assign("y", m_to_string(1.2f*radius_sp + 12) + "sp");
+	label.style.insert_or_assign("y", std::to_string(1.2f*radius_sp + 12) + "sp");
 
 	ring.calculate_layout(dial_viewbox);
 	ring_value.calculate_layout(dial_viewbox);
