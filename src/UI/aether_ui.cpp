@@ -1435,9 +1435,11 @@ namespace Aether {
 			return pugl::Status::failure;
 
 		#ifndef NDEBUG
-			glEnable(GL_DEBUG_OUTPUT);
-			glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 0, nullptr, GL_FALSE);
-			glDebugMessageCallback(opengl_err_callback, 0);
+			if (GLAD_GL_VERSION_4_3) {
+				glEnable(GL_DEBUG_OUTPUT);
+				glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 0, nullptr, GL_FALSE);
+				glDebugMessageCallback(opengl_err_callback, 0);
+			}
 		#endif
 
 		try {
