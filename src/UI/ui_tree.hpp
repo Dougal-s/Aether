@@ -127,6 +127,8 @@ namespace Aether {
 		UIElement(const UIElement& other) = delete;
 		virtual ~UIElement() = default;
 
+		virtual std::string name() const { return "Element"; }
+
 		UIElement& operator=(const UIElement& other) noexcept = delete;
 
 		/*
@@ -200,9 +202,9 @@ namespace Aether {
 
 		/*
 			attempt to find the value in style with key name
-			throws a runtime_error with string err if the key does not exist
+			throws a runtime_error if the key does not exist
 		*/
-		std::string_view get_style(const std::string& name, std::string err) const;
+		std::string_view get_style(const std::string& name) const;
 
 		/*
 			sets the current fill/stroke to be rendered using nvgFill/nvgStroke
@@ -255,6 +257,8 @@ namespace Aether {
 	public:
 		Circle(Root* root, CreateInfo create_info) noexcept :
 			UIElement(root, create_info) {}
+
+		virtual std::string name() const { return "Circle"; }
 	protected:
 
 		[[nodiscard]] float cx() const noexcept { return m_cx; }
@@ -276,6 +280,8 @@ namespace Aether {
 	public:
 		Arc(Root* root, CreateInfo create_info) noexcept :
 			Circle(root, create_info) {}
+
+		virtual std::string name() const { return "Arc"; }
 	protected:
 
 		[[nodiscard]] float a0() const noexcept { return m_a0; }
@@ -298,6 +304,8 @@ namespace Aether {
 		Path(Root* root, CreateInfo create_info) noexcept :
 			UIElement(root, create_info) {}
 
+		virtual std::string name() const { return "Path"; }
+
 		[[nodiscard]] std::string_view path() const;
 	protected:
 		/*
@@ -314,6 +322,8 @@ namespace Aether {
 	public:
 		Rect(Root* root, CreateInfo create_info) noexcept :
 			UIElement(root, create_info) {}
+
+		virtual std::string name() const { return "Rect"; }
 		/*
 			returns the position of the top left corner in pixels
 		*/
@@ -363,6 +373,8 @@ namespace Aether {
 			m_uniforms{create_info.uniform_infos}
 		{}
 
+		virtual std::string name() const { return "ShaderRect"; }
+
 	protected:
 
 		static constexpr const char* m_vert_shader_code = ""
@@ -396,6 +408,8 @@ namespace Aether {
 		Spectrum(Root* root, CreateInfo create_info) noexcept :
 			Rect(root, create_info)
 		{}
+
+		virtual std::string name() const { return "Spectrum"; }
 	protected:
 
 		/*
@@ -409,6 +423,8 @@ namespace Aether {
 	public:
 		Text(Root* root, CreateInfo create_info) noexcept :
 			Rect(root, create_info) {}
+
+		virtual std::string name() const { return "Text"; }
 	protected:
 
 		[[nodiscard]] std::string_view font_face() const;
@@ -475,6 +491,8 @@ namespace Aether {
 				{"text-align", "center"}, {"fill", "#b6bfcc"}
 			}})
 		{}
+
+		virtual std::string name() const { return "Dial"; }
 	protected:
 		/*
 			Virtual functions
@@ -501,6 +519,8 @@ namespace Aether {
 	public:
 		Group(Root* root, CreateInfo create_info) noexcept :
 			Rect(root, create_info) {}
+
+		virtual std::string name() const { return "Group"; }
 
 		/*
 			modifiers
@@ -562,6 +582,8 @@ namespace Aether {
 			std::filesystem::path bundle_path,
 			DrawingContext* ctx
 		);
+
+		virtual std::string name() const { return "Root"; }
 
 		float vh;
 		float vw;

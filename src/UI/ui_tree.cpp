@@ -33,13 +33,16 @@ namespace {
 		return hex_char - '0';
 	}
 
-	static NVGcolor parse_color(std::istringstream& expr) {
+	NVGcolor parse_color(std::istringstream& expr) {
 		expr.imbue(std::locale::classic());
 
 		char hash;
 		expr >> hash;
 		if (hash != '#')
-			throw std::invalid_argument("unrecognized color format!");
+			throw std::invalid_argument(
+				"encountered unrecognized color format on when parsing '"
+				+ expr.str() + "'"
+			);
 
 		std::string hexcode;
 		hexcode.reserve(8);
@@ -72,12 +75,12 @@ namespace {
 		return nvgRGBA(r, g, b, a);
 	}
 
-	static NVGcolor parse_color(std::string_view expr) {
+	NVGcolor parse_color(std::string_view expr) {
 		std::istringstream ss{std::string(expr)};
 		return parse_color(ss);
 	}
 
-	static float to_rad(std::istringstream& expr) {
+	float to_rad(std::istringstream& expr) {
 		expr.imbue(std::locale::classic());
 		float rad;
 		std::string units;
@@ -101,7 +104,7 @@ namespace {
 			return 0.f;
 		}
 
-		throw std::invalid_argument("unrecognized angle units used!");
+		throw std::invalid_argument("unrecognized angle units '" + units + "'");
 	}
 
 	static float to_rad(std::string_view expr) {
@@ -131,7 +134,7 @@ float Root::to_px(Frame viewbox, std::istringstream& expr) const {
 		return 0.f;
 	}
 
-	throw std::invalid_argument("unrecognized distance units used!");
+	throw std::invalid_argument(name() + ": unrecognized distance units '" + units + "'");
 }
 
 float Root::to_horizontal_px(Frame viewbox, std::istringstream& expr) const {
@@ -153,7 +156,7 @@ float Root::to_horizontal_px(Frame viewbox, std::istringstream& expr) const {
 		return 0.f;
 	}
 
-	throw std::invalid_argument("unrecognized horizontal units used!");
+	throw std::invalid_argument(name() + ": unrecognized horizontal distance units '" + units + "'");
 }
 
 float Root::to_vertical_px(Frame viewbox, std::istringstream& expr) const {
@@ -175,7 +178,7 @@ float Root::to_vertical_px(Frame viewbox, std::istringstream& expr) const {
 		return 0.f;
 	}
 
-	throw std::invalid_argument("unrecognized vertical units used!");
+	throw std::invalid_argument(name() + ": unrecognized vertical distance units '" + units + "'");
 }
 
 // UIElement
@@ -228,10 +231,10 @@ void UIElement::draw() const {
 	nvgRestore(m_root->ctx->nvg_ctx);
 }
 
-std::string_view UIElement::get_style(const std::string& name, std::string err) const {
-	if (auto it = style.find(name); it)
+std::string_view UIElement::get_style(const std::string& style_name) const {
+	if (auto it = style.find(style_name); it)
 		return it->second;
-	throw std::runtime_error(err);
+	throw std::runtime_error(name() + ": missing required style '" + style_name + "'");
 }
 
 bool UIElement::set_fill() const {
@@ -390,7 +393,7 @@ void UIElement::apply_transforms() const {
 	if (transform.starts_with("rotate"))
 		nvgRotate(m_root->ctx->nvg_ctx, to_rad(transform.data()+sizeof("rotate")));
 	else
-		throw std::runtime_error("unrecognized transform type");
+		throw std::runtime_error(name() + "unrecognized transform '" + std::string(transform) + "'");
 
 	nvgTranslate(m_root->ctx->nvg_ctx, -m_viewbox.x(), -m_viewbox.y());
 }
@@ -402,9 +405,9 @@ void UIElement::apply_transforms() const {
 // Circle
 
 void Circle::calculate_layout_impl(Frame viewbox) {
-	m_cx = viewbox.x() + m_root->to_horizontal_px(viewbox, get_style("cx", "circle has undefined center x position"));
-	m_cy = viewbox.y() + m_root->to_vertical_px(viewbox, get_style("cy", "circle has undefined center y position"));
-	m_r = m_root->to_px(viewbox, get_style("r", "circle has undefined radius"));
+	m_cx = viewbox.x() + m_root->to_horizontal_px(viewbox, get_style("cx"));
+	m_cy = viewbox.y() + m_root->to_vertical_px(viewbox, get_style("cy"));
+	m_r = m_root->to_px(viewbox, get_style("r"));
 }
 
 void Circle::draw_impl() const {
@@ -430,8 +433,8 @@ UIElement* Circle::element_at_impl(float x, float y) {
 // Arc
 
 void Arc::calculate_layout_impl(Frame viewbox) {
-	m_a0 = to_rad(get_style("a0", "arc has undefined start angle"));
-	m_a1 = to_rad(get_style("a1", "arc has undefined end angle"));
+	m_a0 = to_rad(get_style("a0"));
+	m_a1 = to_rad(get_style("a1"));
 	Circle::calculate_layout_impl(std::move(viewbox));
 }
 
@@ -451,18 +454,18 @@ UIElement* Arc::element_at_impl(float, float) {
 // Path
 
 std::string_view Path::path() const {
-	return get_style("path", "path has undefined path");
+	return get_style("path");
 }
 
 void Path::calculate_layout_impl(Frame viewbox) {
 	auto x = style.find("x");
 	if (!x) x = style.find("left");
-	if (!x) throw std::runtime_error("path has undefined x position");
+	if (!x) throw std::runtime_error(name() + ": undefined x position");
 	m_x = m_root->to_horizontal_px(viewbox, x->second) + viewbox.x();
 
 	auto y = style.find("y");
 	if (!y) y = style.find("top");
-	if (!y) throw std::runtime_error("path has undefined y position");
+	if (!y) throw std::runtime_error(name() + ": undefined y position");
 	m_y = m_root->to_vertical_px(viewbox, y->second) + viewbox.y();
 }
 
@@ -484,7 +487,8 @@ void Path::draw_impl() const {
 	std::istringstream path{std::string(this->path())};
 	path.imbue(std::locale::classic());
 	while ((path >> std::ws).good()) {
-		switch (path.get()) {
+		char command = path.get();
+		switch (command) {
 			case 'M': {
 				auto [x, y] = extract_nums.operator()<2>(path);
 				nvgMoveTo(m_root->ctx->nvg_ctx, x, y);
@@ -517,7 +521,7 @@ void Path::draw_impl() const {
 				break;
 
 			default:
-				throw std::runtime_error("unrecognized path symbol");
+				throw std::runtime_error(name() + ": unrecognized path command '" + command + "'");
 		}
 	}
 
@@ -580,24 +584,24 @@ void Rect::calculate_layout_impl(Frame viewbox) {
 		if (width && right)
 			left = *right - *width;
 		else
-			throw std::runtime_error("rectangle has undefined x position");
+			throw std::runtime_error(name() + ": undefined x position");
 	} else if (!right) {
 		if (width)
 			right = *left + *width;
 		else
-			throw std::runtime_error("rectangle has undefined width");
+			throw std::runtime_error(name() + ": undefined width");
 	}
 
 	if (!top) {
 		if (height && bottom)
 			top = *bottom - *height;
 		else
-			throw std::runtime_error("rectangle has undefined y position");
+			throw std::runtime_error(name() + ": undefined y position");
 	} else if (!bottom) {
 		if (height)
 			bottom = *top + *height;
 		else
-			throw std::runtime_error("rectangle has undefined height");
+			throw std::runtime_error(name() + ": undefined height");
 	}
 
 	m_bounds = {*left, *top, *right, *bottom};
@@ -707,11 +711,11 @@ void Spectrum::draw_impl() const {
 // Text
 
 std::string_view Text::font_face() const {
-	return get_style("font-family", "text has undefined font family");
+	return get_style("font-family");
 }
 
 std::string_view Text::text() const {
-	return get_style("text", "text has no text property");
+	return get_style("text");
 }
 
 Frame Text::bounds() const {
@@ -744,7 +748,10 @@ void Text::set_alignment() const {
 		else if (it->second == "right")
 			alignment |= NVG_ALIGN_RIGHT;
 		else
-			throw std::runtime_error("unrecognized alignment specified");
+			throw std::runtime_error(name()
+				+ ": unrecognized value '" + std::string(it->second)
+				+ "' for property 'text-align'"
+			);
 	}
 
 	if (auto it = style.find("vertical-align"); it) {
@@ -757,7 +764,10 @@ void Text::set_alignment() const {
 		else if (it->second == "baseline")
 			alignment |= NVG_ALIGN_BASELINE;
 		else
-			throw std::runtime_error("unrecognized alignment specified");
+			throw std::runtime_error(name()
+				+ ": unrecognized value '" + std::string(it->second)
+				+ "' for property 'vertical-align'"
+			);
 	}
 
 	if (alignment)
@@ -777,7 +787,7 @@ void Text::set_text_styling() const {
 
 void Text::calculate_layout_impl(Frame viewbox) {
 	{
-		const auto size_str = get_style("font-size", "text has undefined font size");
+		const auto size_str = get_style("font-size");
 		m_font_size = m_root->to_px(viewbox, size_str);
 	}
 
@@ -872,7 +882,7 @@ std::array<float, 2> Text::calculate_render_corner(Frame viewbox) {
 		if (auto it = style.find("right"); it)
 			right = m_root->to_horizontal_px(viewbox, it->second);
 		else
-			throw std::runtime_error("text x position undefined");
+			throw std::runtime_error(name() + ": undefined x position");
 
 		left = viewbox.width() - right - text_bounds[2];
 	}
@@ -882,7 +892,7 @@ std::array<float, 2> Text::calculate_render_corner(Frame viewbox) {
 		if (auto it = style.find("bottom"); it)
 			bottom = m_root->to_vertical_px(viewbox, it->second);
 		else
-			throw std::runtime_error("text x position undefined");
+			throw std::runtime_error(name() + ": undefined y position");
 
 		top = viewbox.height() - bottom - text_bounds[3];
 	}
@@ -896,15 +906,15 @@ void Dial::calculate_layout_impl(Frame viewbox) {
 	Circle::calculate_layout_impl(viewbox);
 	const Frame dial_viewbox = {cx(), cy(), cx() + r(), cy() + r()};
 
-	const auto center_fill = get_style("center-fill", "dial has undefined property 'center-fill'");
+	const auto center_fill = get_style("center-fill");
 	center_cover.style.insert_or_assign("fill", center_fill);
 	thumb.style.insert_or_assign("stroke", center_fill);
 
-	const auto val = strtof(get_style("value", "dial has undefined value"));
+	const auto val = strtof(get_style("value"));
 	ring_value.style.insert_or_assign("a1", std::to_string(std::lerp(-150.f, 150.f, val)) + "grad");
 	thumb.style.insert_or_assign("transform", "rotate(" + std::to_string(std::lerp(-150.f, 150.f, val)) + "grad)");
 
-	const auto font_size = get_style("font-size", "dial label has undefined font size");
+	const auto font_size = get_style("font-size");
 	label.style.insert_or_assign("font-size", font_size);
 
 	if (auto it = style.find("label"); it && it->second != "")
