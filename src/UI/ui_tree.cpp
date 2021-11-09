@@ -100,7 +100,7 @@ namespace {
 		if (units.starts_with("rad"))
 			return rad;
 		if (rad == 0) {
-			expr.seekg(-units.size(), std::ios::cur);
+			expr.seekg(-static_cast<int>(units.size()), std::ios::cur);
 			return 0.f;
 		}
 
@@ -130,7 +130,7 @@ float Root::to_px(Frame viewbox, std::istringstream& expr) const {
 	if (units.starts_with("%"))
 		return distance/100.f * std::hypot(viewbox.width(), viewbox.height())/std::sqrt(2.f);
 	if (distance == 0) {
-		expr.seekg(-units.size(), std::ios::cur);
+		expr.seekg(-static_cast<int>(units.size()), std::ios::cur);
 		return 0.f;
 	}
 
@@ -152,7 +152,7 @@ float Root::to_horizontal_px(Frame viewbox, std::istringstream& expr) const {
 	if (units.starts_with("%"))
 		return x * viewbox.width() / 100.f;
 	if (x == 0) {
-		expr.seekg(-units.size(), std::ios::cur);
+		expr.seekg(-static_cast<int>(units.size()), std::ios::cur);
 		return 0.f;
 	}
 
@@ -174,7 +174,7 @@ float Root::to_vertical_px(Frame viewbox, std::istringstream& expr) const {
 	if (units.starts_with("%"))
 		return y * viewbox.height() / 100.f;
 	if (y == 0) {
-		expr.seekg(-units.size(), std::ios::cur);
+		expr.seekg(-static_cast<int>(units.size()), std::ios::cur);
 		return 0.f;
 	}
 
