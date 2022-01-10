@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <complex>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -415,7 +416,10 @@ namespace Aether {
 		/*
 			Virtual functions
 		*/
+		virtual void calculate_layout_impl(Frame viewbox) override;
 		virtual void draw_impl() const override;
+	private:
+		std::vector<std::complex<float>> m_points;
 	};
 
 

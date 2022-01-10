@@ -391,7 +391,7 @@ namespace Aether {
 				.style = {
 					{"x","0"}, {"width","100%"},
 					{"y","0"}, {"height","100%"},
-					{"stroke-width", "2sp"},
+					{"stroke-width", "2sp"}, {"stroke-linejoin", "round"},
 					{"channel", "0"}
 				}
 			});
@@ -422,7 +422,7 @@ namespace Aether {
 				.style = {
 					{"x","0"}, {"width","100%"},
 					{"y","0"}, {"height","100%"},
-					{"stroke-width", "2sp"},
+					{"stroke-width", "2sp"}, {"stroke-linejoin", "round"},
 					{"channel", "1"}
 				}
 			});
@@ -1611,10 +1611,8 @@ namespace Aether {
 			const size_t size = std::min(input.size()/2-1, output.size());
 
 			for (size_t i = 0; i < size; ++i) {
-				if (output[i] < input[i])
-					output[i] = std::lerp(output[i], input[i], std::min(16.f*dt, 1.f));
-				else
-					output[i] = std::lerp(output[i], input[i], std::min(8.f*dt, 1.f));
+				const float coef = (output[i] < input[i] ? 16 : 8) * dt;
+				output[i] = std::lerp(output[i], input[i], std::min(coef, 1.f));
 			}
 			std::fill(output.begin()+size, output.end(), 0.f);
 		};

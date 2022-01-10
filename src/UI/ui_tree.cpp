@@ -658,35 +658,54 @@ void ShaderRect::draw_impl() const {
 
 // Spectrum View
 
-void Spectrum::draw_impl() const {
+void Spectrum::calculate_layout_impl(Frame viewbox) {
+	Rect::calculate_layout_impl(viewbox);
+
 	const auto bin_size = m_root->audio_bin_size_hz;
 	const auto& channel = m_root->audio[std::strtoul(style.find("channel")->second.data(), nullptr, 10)];
-
-	const auto gain_to_y = [](float gain) {
-		const float db = 20.f*std::log10(gain);
-		return 1.f-std::clamp(db+60, 0.f, 60.f)/60.f;
-	};
 
 	constexpr float freq_lower = 15;
 	constexpr float freq_upper = 22'000;
 
-	const auto freq_to_x = [&](float freq){
-		return std::log(freq/freq_lower)/std::log(freq_upper/freq_lower);
+	const auto freq_to_x = [&](float freq) {
+		return std::log(freq/freq_lower) / std::log(freq_upper/freq_lower);
+	};
+	const auto gain_to_y = [](float gain) {
+		const float db = 20.f*std::log10(gain);
+		constexpr float db_min = -60;
+		constexpr float db_max = 0;
+		return 1 - std::clamp(db-db_min, 0.f, db_max-db_min) / (db_max-db_min);
 	};
 
+	m_points = {{freq_to_x(bin_size/2), 2}};
+
+	size_t i = 1;
+	while (i < channel.size()) {
+		size_t next_i = std::ceil(i*std::pow(freq_upper/freq_lower, 2.f/width()));
+		next_i = std::min(next_i, channel.size());
+		const float band_level = std::reduce(channel.begin() + i, channel.begin() + next_i) / (next_i-i);
+
+		m_points.push_back({freq_to_x(bin_size*i), gain_to_y(band_level)});
+
+		i = next_i;
+	}
+	m_points.push_back({freq_to_x(bin_size*i), 1});
+	i = std::ceil(i*std::pow(freq_upper/freq_lower, 2.f/width()));
+	m_points.push_back({freq_to_x(bin_size*i), 1});
+}
+
+void Spectrum::draw_impl() const {
 	const auto draw_path = [&](){
-		size_t i = 1;
-		while(i < channel.size()) {
-			const float x = freq_to_x(bin_size*i);
-
-			size_t next_i = std::ceil(i*std::pow(freq_upper/freq_lower, 3.f/width()));
-			next_i = std::min(next_i, channel.size());
-			const float band_level = std::reduce(channel.begin() + i, channel.begin() + next_i) / (next_i-i);
-			const float y = gain_to_y(band_level);
-
-			nvgLineTo(m_root->ctx->nvg_ctx, width()*x, height()*y);
-
-			i = next_i;
+		for (size_t i = 0; i+3 != m_points.size(); ++i) {
+			// draw curve from m_points[i+1] to m_points[i+2]
+			const auto p1 = m_points[i+1] + (m_points[i+2] - m_points[i]) / 6.f;
+			const auto p2 = m_points[i+2] - (m_points[i+3] - m_points[i+1]) / 6.f;
+			const auto p3 = m_points[i+2];
+			nvgBezierTo(m_root->ctx->nvg_ctx,
+			width()*p1.real(), height()*p1.imag(),
+			width()*p2.real(), height()*p2.imag(),
+			width()*p3.real(), height()*p3.imag()
+			);
 		}
 	};
 
@@ -695,15 +714,15 @@ void Spectrum::draw_impl() const {
 	nvgScissor(m_root->ctx->nvg_ctx, 0, 0, width(), height());
 
 	nvgBeginPath(m_root->ctx->nvg_ctx);
-	nvgMoveTo(m_root->ctx->nvg_ctx, freq_to_x(bin_size)*width(), height());
-	nvgLineTo(m_root->ctx->nvg_ctx, freq_to_x(bin_size)*width(), height()*gain_to_y(channel[1]));
+	nvgMoveTo(m_root->ctx->nvg_ctx, width()*m_points[0].real(), height());
+	nvgLineTo(m_root->ctx->nvg_ctx, width()*m_points[0].real(), height()*m_points[0].imag());
 	draw_path();
 	nvgLineTo(m_root->ctx->nvg_ctx, width(), height());
 	if (set_fill()) nvgFill(m_root->ctx->nvg_ctx);
 
 
 	nvgBeginPath(m_root->ctx->nvg_ctx);
-	nvgMoveTo(m_root->ctx->nvg_ctx, freq_to_x(bin_size)*width(), height()*gain_to_y(channel[1]));
+	nvgMoveTo(m_root->ctx->nvg_ctx, width()*m_points[0].real(), height()*m_points[0].imag());
 	draw_path();
 	if (set_stroke()) nvgStroke(m_root->ctx->nvg_ctx);
 }
