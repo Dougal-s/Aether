@@ -3,52 +3,57 @@
 
 #include <version>
 
-#ifdef __cpp_bit_ops
-
-#if __has_include(<bit>)
+#if __has_include (<bit>)
 	#include <bit>
 #endif
 
 namespace bits {
-	constexpr auto has_single_bit = std::has_single_bit;
-	constexpr auto bit_ceil = std::bit_ceil;
-	constexpr auto countr_zero = std::countr_zero;
-}
 
+#if __cpp_lib_int_pow2 == 202002L
+	template <class T>
+	constexpr bool has_single_bit(T x) {
+		return std::has_single_bit(static_cast<std::make_unsigned_t<T>>(x));
+	}
+
+	template <class T>
+	constexpr T bit_ceil(T x) {
+		return std::bit_ceil(static_cast<std::make_unsigned_t<T>>(x));
+	}
 #else
-
-namespace bits {
-
 	/*
 		from http://www.graphics.stanford.edu/~seander/bithacks.html
 	*/
 	template <class T>
-	bool has_single_bit(T x) {
+	constexpr bool has_single_bit(T x) {
 		return x && !(x & (x - 1));
 	}
 
 	template <class T>
-	T bit_ceil(T x) {
-		if (has_single_bit(x)) return x;
-		unsigned lead = 0;
-		while (x) {
-			++lead;
-			x >>= 1;
-		}
-		return 1 << lead;
+	constexpr T bit_ceil(T x) {
+		T y = 1;
+		while (y < x) y <<= 1;
+		return y;
 	}
 
+#endif
+
+
+#if __cpp_lib_bitops == 201907L
 	template <class T>
-	T countr_zero(T x) {
-		unsigned count = 0;
+	constexpr int countr_zero(T x) {
+		return std::countr_zero(static_cast<std::make_unsigned_t<T>>(x));
+	}
+#else
+	template <class T>
+	constexpr int countr_zero(T x) {
+		int count = 0;
 		while (1 ^ (x & 1)) {
 			x >>= 1;
 			++count;
 		}
 		return count;
 	}
-}
-
 #endif
+}
 
 #endif
