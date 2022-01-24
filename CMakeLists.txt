@@ -20,79 +20,35 @@ else()
 	message(FATAL_ERROR "Unrecognized Platform!")
 endif()
 
-if (MSVC)
-	add_compile_options(/arch:SSE2)
-else()
-	add_compile_options(-msse2)
-endif()
 
-add_library(aether_dsp MODULE
-	src/DSP/aether_dsp_lv2.cpp
-	src/DSP/aether_dsp.cpp
-	src/DSP/aether_dsp.hpp
-	src/DSP/delay.hpp
-	src/DSP/filters.hpp
-	src/DSP/diffuser.hpp
-	src/DSP/utils/lfo.hpp
-	src/DSP/utils/random.hpp
-	src/DSP/utils/ringbuffer.hpp
-)
+add_subdirectory(src/DSP)
 
-add_library(aether_ui MODULE
-	src/UI/aether_ui.cpp
-	src/UI/aether_ui_lv2.cpp
-	src/UI/aether_ui.hpp
-	src/UI/gl_helper.cpp
-	src/UI/gl_helper.hpp
-	src/UI/ui_tree.cpp
-	src/UI/ui_tree.hpp
-	src/common/parameters.hpp
-)
+option(BUILD_GUI "Build user interface" ON)
 
-include(TargetGlad)
-target_link_libraries(aether_ui PRIVATE glad)
-include(TargetPugl)
-target_link_libraries(aether_ui PRIVATE pugl)
-include(TargetNanoVG)
-target_link_libraries(aether_ui PRIVATE nanovg)
-
-set_target_properties(aether_dsp aether_ui
-	PROPERTIES
-	CXX_VISIBILITY_PRESET hidden
-	PREFIX "")
-
-if (DEFINED LV2_INCLUDE_PATH)
-	target_include_directories(aether_dsp SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
-	target_include_directories(aether_ui SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
-endif()
-
-if (MSVC)
-	target_compile_options(aether_dsp PRIVATE "$<$<CONFIG:DEBUG>:/W4>")
-	target_compile_options(aether_ui PRIVATE "$<$<CONFIG:DEBUG>:/W4>")
-else()
-	target_compile_options(aether_dsp PRIVATE
-		-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wunreachable-code -Wdouble-promotion
-		-Weffc++ -Wconversion -Wsign-conversion
-		"$<$<CONFIG:DEBUG>:-Og;-ggdb;-Werror>"
-	)
-	target_compile_options(aether_ui PRIVATE
-		-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wunreachable-code -Wdouble-promotion
-		"$<$<CONFIG:DEBUG>:-Og;-ggdb;-Werror>"
-	)
+if (BUILD_GUI)
+	add_subdirectory(src/UI)
 endif()
 
 
 # create Aether.lv2
 add_custom_target(copy_fonts ALL
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/fonts aether.lv2/fonts)
-add_custom_target(copy_binaries ALL
+
+add_custom_target(copy_dsp_binaries ALL
 	${CMAKE_COMMAND} -E copy "$<TARGET_FILE:aether_dsp>" aether.lv2/
-	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:aether_ui>" aether.lv2/
-	DEPENDS aether_dsp aether_ui
+	DEPENDS aether_dsp
 )
+
+if (BUILD_GUI)
+	add_custom_target(copy_ui_binaries ALL
+		${CMAKE_COMMAND} -E copy "$<TARGET_FILE:aether_ui>" aether.lv2/
+		DEPENDS aether_ui
+	)
+endif()
 
 configure_file(resources/manifest.ttl.in aether.lv2/manifest.ttl)
 configure_file(resources/aether.ttl.in aether.lv2/aether.ttl)
+
 
 # Tests
 option(BUILD_TESTS "Build tests" OFF)
