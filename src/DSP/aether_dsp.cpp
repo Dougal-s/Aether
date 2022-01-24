@@ -30,41 +30,44 @@ namespace Aether {
 		m_r_late_rev(rate, rng),
 		m_rate{rate}
 	{
-		for (size_t i = 6; float& param : params_arr)
+		for (size_t i = 6; float& param : param_targets)
 			param = parameter_infos[i++].dflt;
 
-		for (bool& modified : params_modified_arr)
+		for (size_t i = 6; float& param : params)
+			param = parameter_infos[i++].dflt;
+
+		for (bool& modified : params_modified)
 			modified = true;
 
 		apply_parameters();
 
-		param_smooth_named.mix = 50.f;
+		param_smooth.mix = 50.f;
 
-		param_smooth_named.dry_level = 50.f;
-		param_smooth_named.predelay_level = 50.f;
-		param_smooth_named.early_level = 50.f;
-		param_smooth_named.late_level = 50.f;
+		param_smooth.dry_level = 50.f;
+		param_smooth.predelay_level = 50.f;
+		param_smooth.early_level = 50.f;
+		param_smooth.late_level = 50.f;
 
-		param_smooth_named.width = 50.f;
-		param_smooth_named.predelay = 5000.f;
+		param_smooth.width = 50.f;
+		param_smooth.predelay = 5000.f;
 
-		param_smooth_named.early_tap_mix = 50.f;
-		param_smooth_named.early_tap_decay = 25.f;
-		param_smooth_named.early_tap_length = 4000.f;
+		param_smooth.early_tap_mix = 50.f;
+		param_smooth.early_tap_decay = 25.f;
+		param_smooth.early_tap_length = 4000.f;
 
-		param_smooth_named.early_diffusion_delay = 5000.f;
-		param_smooth_named.early_diffusion_mod_depth = 1000.f;
-		param_smooth_named.early_diffusion_feedback = 500.f;
+		param_smooth.early_diffusion_delay = 5000.f;
+		param_smooth.early_diffusion_mod_depth = 1000.f;
+		param_smooth.early_diffusion_feedback = 500.f;
 
-		param_smooth_named.late_delay = 5000.f;
-		param_smooth_named.late_delay_mod_depth = 1000.f;
-		param_smooth_named.late_delay_line_feedback = 50.f;
+		param_smooth.late_delay = 5000.f;
+		param_smooth.late_delay_mod_depth = 1000.f;
+		param_smooth.late_delay_line_feedback = 50.f;
 
-		param_smooth_named.late_diffusion_delay = 5000.f;
-		param_smooth_named.late_diffusion_mod_depth = 2000.f;
-		param_smooth_named.late_diffusion_feedback = 500.f;
+		param_smooth.late_diffusion_delay = 5000.f;
+		param_smooth.late_diffusion_mod_depth = 2000.f;
+		param_smooth.late_diffusion_feedback = 500.f;
 
-		param_smooth_named.seed_crossmix = 5000.f;
+		param_smooth.seed_crossmix = 5000.f;
 
 		for (float& smooth : param_smooth) {
 			constexpr float pi = constants::pi_v<float>;
@@ -127,6 +130,7 @@ namespace Aether {
 			peak_late_stage = {0,0},
 			peak_out = {0,0};
 
+		update_parameter_targets();
 		for (uint32_t sample = 0; sample < n_samples; ++sample) {
 			update_parameters();
 
@@ -323,24 +327,27 @@ namespace Aether {
 		}
 	}
 
-	void DSP::update_parameters() {
-		for (size_t p = 0; p < param_ports.size(); ++p) {
-			const float target = std::clamp(
+	void DSP::update_parameter_targets() noexcept {
+		for (size_t p = 0; p < param_targets.size(); ++p) {
+			param_targets[p] = std::clamp(
 				param_ports[p] ? *param_ports[p] : parameter_infos[p+6].dflt,
 				parameter_infos[p+6].min,
 				parameter_infos[p+6].max
 			);
+		}
+	}
 
-			const float new_value = target - param_smooth[p] * (target - params_arr[p]);
-
-			params_modified_arr[p] = (new_value != params_arr[p]);
-			params_arr[p] = new_value;
+	void DSP::update_parameters() noexcept {
+		for (size_t p = 0; p < param_ports.size(); ++p) {
+			const float new_value = param_targets[p] - param_smooth[p] * (param_targets[p] - params[p]);
+			params_modified[p] = (new_value != params[p]);
+			params[p] = new_value;
 		}
 
 		apply_parameters();
 	}
 
-	void DSP::apply_parameters() {
+	void DSP::apply_parameters() noexcept {
 		// Early Reflections
 
 		// Filters

@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+### Added
+* Windows support.
+* 32bit Linux support.
+
+### Changed
+* Some DSP optimizations.
+* Improved frequency spectrum display.
+
 ## [v1.2.1] - 2021-08-10
 ### Added
 * Added user manual.

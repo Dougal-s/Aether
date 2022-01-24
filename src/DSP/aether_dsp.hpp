@@ -115,25 +115,29 @@ namespace Aether {
 			// Distortion
 			T early_diffusion_drive;
 			T late_diffusion_drive;
+
+			T& operator[](size_t idx) noexcept { return data()[idx]; }
+			const T& operator[](size_t idx) const noexcept { return data()[idx]; }
+
+			T* data() noexcept { return reinterpret_cast<T*>(this); }
+			const T* data() const noexcept { return reinterpret_cast<const T*>(this); }
+
+			T* begin() noexcept { return data(); }
+			const T* begin() const noexcept { return data(); }
+
+			T* end() noexcept { return data() + size(); }
+			const T* end() const noexcept { return data() + size(); }
+
+			static constexpr size_t size() noexcept { return sizeof(Parameters<T>) / sizeof(T); }
 		};
 
 		Ports ports = {};
 
+		Parameters<float> params = {};
+		Parameters<float> param_targets = {};
+		Parameters<float> param_smooth = {};
+		Parameters<bool> params_modified = {};
 		std::array<const float*, 47> param_ports = {};
-		union {
-			Parameters<float> param_smooth_named;
-			std::array<float, 47> param_smooth = {};
-		};
-
-		union {
-			Parameters<float> params;
-			std::array<float, 47> params_arr = {};
-		};
-
-		union {
-			Parameters<bool> params_modified;
-			std::array<bool, 47> params_modified_arr = {};
-		};
 
 		/*
 			Member Functions
@@ -210,9 +214,11 @@ namespace Aether {
 			const float* r_samples
 		) noexcept;
 
+		// Updates param_targets
+		void update_parameter_targets() noexcept;
 		// Updates params & params_modified then calls apply_parameters
-		void update_parameters();
+		void update_parameters() noexcept;
 		// Applies changes in params & params_modified to internal state
-		void apply_parameters();
+		void apply_parameters() noexcept;
 	};
 }

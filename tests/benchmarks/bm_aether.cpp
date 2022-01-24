@@ -135,7 +135,7 @@ static void bm_aether_zeroes(benchmark::State& state) {
 	// So set parameter values directly so we dont have to wait for
 	// the changes to finish
 	for (size_t i = 0; i < dsp.param_ports.size(); ++i)
-		dsp.params_arr[i] = *dsp.param_ports[i];
+		dsp.params[i] = *dsp.param_ports[i];
 	dsp.process(1);
 
 	for (auto _ : state)
@@ -169,7 +169,7 @@ static void bm_aether_white_noise(benchmark::State& state) {
 
 	// process parameter changes
 	for (size_t i = 0; i < dsp.param_ports.size(); ++i)
-		dsp.params_arr[i] = *dsp.param_ports[i];
+		dsp.params[i] = *dsp.param_ports[i];
 	dsp.process(1);
 
 	for (auto _ : state)
