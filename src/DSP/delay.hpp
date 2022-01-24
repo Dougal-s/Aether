@@ -72,7 +72,7 @@ public:
 		float delay = std::max(m_delay + m_mod_depth*m_lfo.depth(), 0.f);
 		m_lfo.next();
 
-		uint32_t delay_floor = static_cast<uint32_t>(std::floor(delay));
+		uint32_t delay_floor = static_cast<uint32_t>(delay);
 		FpType t = static_cast<FpType>(delay - static_cast<float>(delay_floor));
 
 		size_t idx1 = m_buf.end - delay_floor

@@ -96,7 +96,7 @@ inline ModulatedAllpass<FpType>& ModulatedAllpass<FpType>::operator=(
 }
 
 template <class FpType>
-FpType soft_clip(FpType x, FpType drive) noexcept {
+inline FpType soft_clip(FpType x, FpType drive) noexcept {
 	x = std::clamp<FpType>(x*drive, -1, 1);
 	return (x-x*x*x/3)/drive;
 }
