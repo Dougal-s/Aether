@@ -20,10 +20,6 @@ set_target_properties(aether_ui
 
 # Dependencies
 
-if (DEFINED LV2_INCLUDE_PATH)
-	target_include_directories(aether_ui SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
-endif()
-
 include(TargetGlad)
 target_link_libraries(aether_ui PRIVATE glad)
 include(TargetPugl)
@@ -34,12 +30,12 @@ target_link_libraries(aether_ui PRIVATE nanovg)
 
 # Compile Options
 
-target_compile_definitions(aether_dsp PRIVATE "$<$<CONFIG:RELEASE>:NDEBUG>")
+target_compile_definitions(aether_ui PRIVATE "$<$<CONFIG:RELEASE>:NDEBUG>")
 
 # Platform
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-	target_compile_definitions(aether_ui NOMINMAX WIN32_LEAN_AND_MEAN)
+	target_compile_definitions(aether_ui PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
 endif()
 
 if (MSVC)

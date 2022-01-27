@@ -20,13 +20,6 @@ set_target_properties(aether_dsp
 	PREFIX ""
 )
 
-# Dependencies
-
-if (DEFINED LV2_INCLUDE_PATH)
-	target_include_directories(aether_dsp SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
-endif()
-
-
 # Compile Options
 
 target_compile_definitions(aether_dsp PRIVATE "$<$<CONFIG:RELEASE>:NDEBUG>")
@@ -44,7 +37,7 @@ endif()
 # Platform
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-	target_compile_definitions(aether_dsp NOMINMAX WIN32_LEAN_AND_MEAN)
+	target_compile_definitions(aether_dsp PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
 endif()
 
 if (MSVC)

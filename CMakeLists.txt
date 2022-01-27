@@ -30,6 +30,12 @@ if (BUILD_GUI)
 endif()
 
 
+if (DEFINED LV2_INCLUDE_PATH)
+	target_include_directories(aether_dsp SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
+	target_include_directories(aether_ui SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
+endif()
+
+
 # create Aether.lv2
 add_custom_target(copy_fonts ALL
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/fonts aether.lv2/fonts)
