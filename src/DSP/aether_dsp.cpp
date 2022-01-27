@@ -6,6 +6,7 @@
 #include <lv2/atom/util.h>
 
 #include "aether_dsp.hpp"
+#include "utils/math.hpp"
 #include "../common/parameters.hpp"
 #include "../common/utils.hpp"
 #include "../common/constants.hpp"
@@ -30,11 +31,8 @@ namespace Aether {
 		m_r_late_rev(rate, rng),
 		m_rate{rate}
 	{
-		for (size_t i = 6; float& param : param_targets)
-			param = parameter_infos[i++].dflt;
-
-		for (size_t i = 6; float& param : params)
-			param = parameter_infos[i++].dflt;
+		for (size_t i = 0; i != param_targets.size(); ++i)
+			param_targets[i] = params[i] = parameter_infos[i+6].dflt;
 
 		for (bool& modified : params_modified)
 			modified = true;
@@ -149,8 +147,8 @@ namespace Aether {
 			float predelay_right = dry_right;
 			{
 				float width = 0.5f-params.width/200.f;
-				predelay_left = std::lerp(dry_left, dry_right, width);
-				predelay_right = std::lerp(dry_right, dry_left, width);
+				predelay_left  = dry_left  + width * (dry_right - dry_left);
+				predelay_right = dry_right - width * (dry_right - dry_left);
 
 				// predelay in samples
 				uint32_t delay = static_cast<uint32_t>(params.predelay/1000.f*m_rate);
@@ -185,16 +183,15 @@ namespace Aether {
 					float multitap_right = m_r_early_multitap.push(early_right, taps, length);
 
 					float tap_mix = params.early_tap_mix/100.f;
-					early_left = std::lerp( early_left, multitap_left, tap_mix);
-					early_right = std::lerp(early_right, multitap_right, tap_mix);
+					early_left  += tap_mix * (multitap_left  - early_left );
+					early_right += tap_mix * (multitap_right - early_right);
 				}
 
 				{ // allpass diffuser
-					AllpassDiffuser<float>::PushInfo info = {
-						.stages = static_cast<uint32_t>(params.early_diffusion_stages),
-						.feedback = params.early_diffusion_feedback,
-						.interpolate = true
-					};
+					AllpassDiffuser<float>::PushInfo info = {};
+					info.stages = static_cast<uint32_t>(params.early_diffusion_stages);
+					info.feedback = params.early_diffusion_feedback;
+					info.interpolate = true;
 
 					early_left = m_l_early_diffuser.push(early_left, info);
 					early_right = m_r_early_diffuser.push(early_right, info);
@@ -209,19 +206,20 @@ namespace Aether {
 			float late_left = early_left;
 			float late_right = early_right;
 			{
-				Delayline::PushInfo push_info = {
-					.order = static_cast<Delayline::Order>(params.late_order),
-					.diffuser_info = {
-						.stages = static_cast<uint32_t>(params.late_diffusion_stages),
-						.feedback = params.late_diffusion_feedback,
-						.interpolate = params.interpolate > 0.f
-					},
-					.damping_info = {
-						.ls_enable = params.late_low_shelf_enabled > 0.f,
-						.hs_enable = params.late_high_shelf_enabled > 0.f,
-						.hc_enable = params.late_high_cut_enabled > 0.f
-					}
-				};
+				AllpassDiffuser<double>::PushInfo diffuser_info = {};
+				diffuser_info.stages = static_cast<uint32_t>(params.late_diffusion_stages);
+				diffuser_info.feedback = params.late_diffusion_feedback;
+				diffuser_info.interpolate = params.interpolate > 0;
+
+				Delayline::Filters::PushInfo damping_info = {};
+				damping_info.ls_enable = params.late_low_shelf_enabled > 0;
+				damping_info.hs_enable = params.late_high_shelf_enabled > 0;
+				damping_info.hc_enable = params.late_high_cut_enabled > 0;
+
+				Delayline::PushInfo push_info = {};
+				push_info.order = static_cast<Delayline::Order>(params.late_order);
+				push_info.diffuser_info = diffuser_info;
+				push_info.damping_info = damping_info;
 
 				late_left = m_l_late_rev.push(late_left, push_info);
 				late_right = m_r_late_rev.push(late_right, push_info);
@@ -231,8 +229,8 @@ namespace Aether {
 
 			{
 				float mix = params.mix/100.f;
-				ports.audio_out_left[sample] = std::lerp(dry_left, ports.audio_out_left[sample], mix);
-				ports.audio_out_right[sample] = std::lerp(dry_right, ports.audio_out_right[sample], mix);
+				ports.audio_out_left[sample] = math::lerp(dry_left, ports.audio_out_left[sample], mix);
+				ports.audio_out_right[sample] = math::lerp(dry_right, ports.audio_out_right[sample], mix);
 			}
 
 			if (notify_ui) {

@@ -184,7 +184,7 @@ inline void MultitapDelay::set_decay(float decay) noexcept {
 
 
 inline void MultitapDelay::generate_tap_delays() noexcept {
-	std::inclusive_scan(
+	std::partial_sum(
 		m_rand_vals.begin(), m_rand_vals.begin()+max_taps,
 		m_tap_delay.begin()
 	);

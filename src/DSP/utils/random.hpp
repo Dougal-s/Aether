@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include "math.hpp"
 
 namespace Random {
 
@@ -56,7 +57,7 @@ namespace Random {
 		Xorshift64s rng1(seed);
 		Xorshift64s rng2(~seed);
 		for (auto& val : container) {
-			val = std::lerp(
+			val = math::lerp(
 				static_cast<float>(rng1() >> 8) * 0x1.0p-24f,
 				static_cast<float>(rng2() >> 8) * 0x1.0p-24f,
 				cross_seed

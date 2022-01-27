@@ -11,6 +11,8 @@ add_library(aether_dsp MODULE
 	utils/ringbuffer.hpp
 )
 
+target_compile_features(aether_dsp PUBLIC cxx_std_17)
+
 set_target_properties(aether_dsp
 	PROPERTIES
 	CXX_VISIBILITY_PRESET hidden

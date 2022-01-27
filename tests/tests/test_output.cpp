@@ -111,6 +111,6 @@ TEST(output, silence) {
 
 	dsp.process(buffer_size);
 
-	EXPECT_FLOAT_EQ(std::reduce(l_buf.begin(), l_buf.end())/l_buf.size(), 0.f);
-	EXPECT_FLOAT_EQ(std::reduce(r_buf.begin(), r_buf.end())/r_buf.size(), 0.f);
+	EXPECT_FLOAT_EQ(std::accumulate(l_buf.begin(), l_buf.end(), 0.f), 0.f);
+	EXPECT_FLOAT_EQ(std::accumulate(r_buf.begin(), r_buf.end(), 0.f), 0.f);
 }

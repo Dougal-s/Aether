@@ -9,6 +9,8 @@ add_library(aether_ui MODULE
 	ui_tree.hpp
 )
 
+target_compile_features(aether_ui PUBLIC cxx_std_20)
+
 set_target_properties(aether_ui
 	PROPERTIES
 	CXX_VISIBILITY_PRESET hidden

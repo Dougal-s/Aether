@@ -1,6 +1,8 @@
 macro(create_benchmark BENCHMARK_NAME)
 	add_executable(bm_${BENCHMARK_NAME} ${ARGN})
 
+	target_compile_features(bm_${BENCHMARK_NAME} PUBLIC cxx_std_17)
+
 	if (MSVC)
 		target_compile_options(bm_${BENCHMARK_NAME} PRIVATE /O2)
 	else()

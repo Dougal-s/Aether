@@ -119,8 +119,9 @@ inline FpType ModulatedAllpass<FpType>::push(
 	size_t idx1 = m_buf.end - delay_floor + (m_buf.end < delay_floor ? m_buf.size : 0);
 	size_t idx2 = idx1-1 + (idx1 < 1 ? m_buf.size : 0);
 	FpType t = static_cast<FpType>(delay-static_cast<float>(delay_floor));
-	FpType delayed = interpolate ?
-		std::lerp(m_buf.buf[idx1], m_buf.buf[idx2], t) : m_buf.buf[idx1];
+	FpType delayed = interpolate
+		? m_buf.buf[idx1] + t * (m_buf.buf[idx2] - m_buf.buf[idx1])
+		: m_buf.buf[idx1];
 
 	FpType buffer_input = sample + delayed*static_cast<FpType>(feedback);
 	if (m_drive > 0.0001f)

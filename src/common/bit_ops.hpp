@@ -1,7 +1,9 @@
 #ifndef BIT_OPS_HPP
 #define BIT_OPS_HPP
 
-#include <version>
+#if __has_include (<version>)
+	#include <version>
+#endif
 
 #if __has_include (<bit>)
 	#include <bit>
