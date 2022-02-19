@@ -27,14 +27,15 @@
 #include <lv2/atom/util.h>
 #include <lv2/atom/forge.h>
 
+#include "../DSP/aether_dsp.hpp"
 #include "../common/bit_ops.hpp"
 #include "../common/parameters.hpp"
 #include "../common/utils.hpp"
 #include "aether_ui.hpp"
 #include "ui_tree.hpp"
 #include "utils/fft.hpp"
+#include "utils/strings.hpp"
 
-#include "../DSP/aether_dsp.hpp"
 
 namespace {
 
@@ -1329,8 +1330,8 @@ namespace Aether {
 						.style = "text",
 						.in_range = {parameter_infos[33].min, parameter_infos[33].max},
 						.out_range = {
-							std::to_string(parameter_infos[33].min),
-							std::to_string(parameter_infos[33].max)
+							strconv::to_str(parameter_infos[33].min),
+							strconv::to_str(parameter_infos[33].max)
 						},
 						.interpolate = interpolate_style<int>
 					}},
@@ -1818,7 +1819,7 @@ namespace Aether {
 					.in_range = {0.f, 1.3f},
 					.out_range = {},
 					.interpolate = [=](float t, auto) {
-						return std::to_string(100*level_meter_scale(t)) + "%";
+						return strconv::to_str(100*level_meter_scale(t)) + "%";
 					}
 				}
 			},
@@ -1841,7 +1842,7 @@ namespace Aether {
 					.in_range = {0.f, 1.3f},
 					.out_range = {},
 					.interpolate = [=](float t, auto) {
-						return std::to_string(100*level_meter_scale(t)) + "%";
+						return strconv::to_str(100*level_meter_scale(t)) + "%";
 					}
 				}
 			},
@@ -1859,7 +1860,7 @@ namespace Aether {
 				.out_range = {},
 				.interpolate = [=](float t, auto) {
 					float adjusted = 1.f-level_meter_scale(t);
-					return std::to_string(100*adjusted) + "%";
+					return strconv::to_str(100*adjusted) + "%";
 				}
 			}},
 			.style = {
@@ -2026,8 +2027,8 @@ namespace Aether {
 					dial_atan(info.param_id, info.curvature)
 			},
 			.style = {
-				{"cx", std::to_string(info.cx) + "sp"}, {"cy", std::to_string(info.cy) + "sp"},
-				{"r", std::to_string(info.radius) + "sp"},
+				{"cx", strconv::to_str(info.cx) + "sp"}, {"cy", strconv::to_str(info.cy) + "sp"},
+				{"r", strconv::to_str(info.radius) + "sp"},
 				{"center-fill", info.fill},
 				{"font-size", info.font_size},
 				{"label", info.label}
@@ -2048,8 +2049,8 @@ namespace Aether {
 			.base = {
 				.visible = true, .inert = true,
 				.style = {
-					{"x", std::to_string(x).substr(0,3) + "sp"},
-					{"y", std::to_string(y).substr(0,3) + "sp"},
+					{"x", strconv::to_str(x).substr(0,3) + "sp"},
+					{"y", strconv::to_str(y).substr(0,3) + "sp"},
 					{"width", "120sp"}, {"height", "50sp"}
 				},
 			},
@@ -2067,19 +2068,19 @@ namespace Aether {
 				"uniform float depth;\n"
 
 				"#define DELAY_MIN " +
-					std::to_string(parameter_infos[delay_idx].min) + "\n"
+					strconv::to_str(parameter_infos[delay_idx].min) + "\n"
 				"#define DELAY_RANGE " +
-					std::to_string(parameter_infos[delay_idx].range()) + "\n"
+					strconv::to_str(parameter_infos[delay_idx].range()) + "\n"
 
 				"#define RATE_MIN " +
-					std::to_string(parameter_infos[rate_idx].min) + "\n"
+					strconv::to_str(parameter_infos[rate_idx].min) + "\n"
 				"#define RATE_RANGE " +
-					std::to_string(parameter_infos[rate_idx].range()) + "\n"
+					strconv::to_str(parameter_infos[rate_idx].range()) + "\n"
 
 				"#define DEPTH_MIN " +
-					std::to_string(parameter_infos[depth_idx].min) + "\n"
+					strconv::to_str(parameter_infos[depth_idx].min) + "\n"
 				"#define DEPTH_RANGE " +
-					std::to_string(parameter_infos[depth_idx].range()) + "\n"
+					strconv::to_str(parameter_infos[depth_idx].range()) + "\n"
 
 				"#define BAR_WIDTH 0.04f\n"
 
@@ -2125,8 +2126,8 @@ namespace Aether {
 		auto eq = g->add_child<Group>({
 			.visible = true, .inert = false,
 			.style = {
-				{"x", std::to_string(x).substr(0,3) + "sp"}, {"width", "150sp"},
-				{"y", std::to_string(y).substr(0,3) + "sp"}, {"height", "130sp"}
+				{"x", strconv::to_str(x).substr(0,3) + "sp"}, {"width", "150sp"},
+				{"y", strconv::to_str(y).substr(0,3) + "sp"}, {"height", "130sp"}
 			}
 		});
 
@@ -2319,8 +2320,8 @@ namespace Aether {
 					}
 				}},
 				.style = {
-					{"x", std::to_string(i*(margin+box_size)).substr(0,3) + "sp"},
-					{"width", std::to_string(box_size).substr(0,4) + "sp"},
+					{"x", strconv::to_str(i*(margin+box_size)).substr(0,3) + "sp"},
+					{"width", strconv::to_str(box_size).substr(0,4) + "sp"},
 					{"bottom", "0sp"}, {"height", "20sp"}, {"r", "5sp"}
 				}
 			});
@@ -2336,8 +2337,8 @@ namespace Aether {
 					}
 				}},
 				.style = {
-					{"x", std::to_string(i*(margin+box_size)) + "sp"},
-					{"width", std::to_string(box_size) + "sp"},
+					{"x", strconv::to_str(i*(margin+box_size)) + "sp"},
+					{"width", strconv::to_str(box_size) + "sp"},
 					{"bottom", "0sp"}, {"line-height", "20sp"},
 					{"text-align", "center"}, {"vertical-align", "middle"},
 					{"font-family", "Roboto-Regular"}, {"font-size", "17.33333sp"},

@@ -25,6 +25,8 @@
 // NanoVG
 #include <nanovg.h>
 
+#include "utils/strings.hpp"
+
 #include "gl_helper.hpp"
 
 #include "style.hpp"
@@ -464,27 +466,27 @@ namespace Aether {
 		Dial(Root* root, CreateInfo create_info) noexcept :
 			Circle(root, create_info),
 			ring(root, {.visible = true, .inert = true, .style = {
-				{"cx", "0"}, {"cy", "0"}, {"r", std::to_string(dial_size) + '%'},
+				{"cx", "0"}, {"cy", "0"}, {"r", strconv::to_str(dial_size) + '%'},
 				{"a0", "-150grad"}, {"a1", "150grad"},
 				{"fill", "#1b1d23"},
 				{"transform", "rotate(-0.25turn)"}
 			}}),
 			ring_value(root, {.visible = true, .inert = true, .style = {
-				{"cx", "0"}, {"cy", "0"}, {"r", std::to_string(dial_size) + '%'},
+				{"cx", "0"}, {"cy", "0"}, {"r", strconv::to_str(dial_size) + '%'},
 				{"a0", "-150grad"},
 				{"fill", "#43444b"},
-				{"stroke", "#b6bfcc"}, {"stroke-width", std::to_string(strk_width) + '%'},
+				{"stroke", "#b6bfcc"}, {"stroke-width", strconv::to_str(strk_width) + '%'},
 				{"transform", "rotate(-0.25turn)"}
 			}}),
 			center_cover(root, {.visible = true, .inert = true, .style = {
-				{"cx", "0"}, {"cy", "0"}, {"r", std::to_string(20*dial_size/24) + '%'},
-				{"stroke", "#b6bfcc"}, {"stroke-width", std::to_string(strk_width) + '%'}
+				{"cx", "0"}, {"cy", "0"}, {"r", strconv::to_str(20*dial_size/24) + '%'},
+				{"stroke", "#b6bfcc"}, {"stroke-width", strconv::to_str(strk_width) + '%'}
 			}}),
 			thumb(root, {.visible = true, .inert = true, .style = {
-				{"x", std::to_string(-dial_size / 16.f) + '%'},
-				{"y", std::to_string(-dial_size) + '%'},
-				{"width" , std::to_string(dial_size / 8.f)   + '%'},
-				{"height", std::to_string(dial_size - strk_width/2.f) + '%'},
+				{"x", strconv::to_str(-dial_size / 16.f) + '%'},
+				{"y", strconv::to_str(-dial_size) + '%'},
+				{"width" , strconv::to_str(dial_size / 8.f)   + '%'},
+				{"height", strconv::to_str(dial_size - strk_width/2.f) + '%'},
 				{"r", "1sp"},
 				{"fill", "#b6bfcc"},
 				{"stroke-width", "2sp"}

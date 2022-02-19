@@ -13,19 +13,13 @@
 
 #include "../common/constants.hpp"
 
+#include "utils/strings.hpp"
+
 #include "ui_tree.hpp"
 
 using namespace Aether;
 
 namespace {
-
-	float strtof(std::string_view str) {
-		std::istringstream ss{std::string(str)};
-		ss.imbue(std::locale::classic());
-		float num;
-		ss >> num;
-		return num;
-	}
 
 	[[nodiscard]] constexpr static uint8_t hex_to_int(char hex_char) {
 		if (hex_char >= 'A')
@@ -662,7 +656,7 @@ void Spectrum::calculate_layout_impl(Frame viewbox) {
 	Rect::calculate_layout_impl(viewbox);
 
 	const auto bin_size = m_root->audio_bin_size_hz;
-	const auto& channel = m_root->audio[std::strtoul(style.find("channel")->second.data(), nullptr, 10)];
+	const auto& channel = m_root->audio[strconv::str_to_u32(style.find("channel")->second.data())];
 
 	constexpr float freq_lower = 15;
 	constexpr float freq_upper = 22'000;
@@ -797,10 +791,10 @@ void Text::set_text_styling() const {
 	nvgFontFaceId(m_root->ctx->nvg_ctx, m_root->get_font(std::string(font_face())));
 	nvgFontSize(m_root->ctx->nvg_ctx, font_size());
 	if (auto letter_spacing = style.find("letter-spacing"); letter_spacing)
-		nvgTextLetterSpacing(m_root->ctx->nvg_ctx, strtof(letter_spacing->second));
+		nvgTextLetterSpacing(m_root->ctx->nvg_ctx, strconv::str_to_f32(letter_spacing->second));
 	set_alignment();
 	if (auto line_height = style.find("line_height"); line_height)
-		nvgTextLineHeight(m_root->ctx->nvg_ctx, strtof(line_height->second));
+		nvgTextLineHeight(m_root->ctx->nvg_ctx, strconv::str_to_f32(line_height->second));
 	set_fill();
 }
 
@@ -929,9 +923,9 @@ void Dial::calculate_layout_impl(Frame viewbox) {
 	center_cover.style.insert_or_assign("fill", center_fill);
 	thumb.style.insert_or_assign("stroke", center_fill);
 
-	const auto val = strtof(get_style("value"));
-	ring_value.style.insert_or_assign("a1", std::to_string(std::lerp(-150.f, 150.f, val)) + "grad");
-	thumb.style.insert_or_assign("transform", "rotate(" + std::to_string(std::lerp(-150.f, 150.f, val)) + "grad)");
+	const auto val = strconv::str_to_f32(get_style("value"));
+	ring_value.style.insert_or_assign("a1", strconv::to_str(std::lerp(-150.f, 150.f, val)) + "grad");
+	thumb.style.insert_or_assign("transform", "rotate(" + strconv::to_str(std::lerp(-150.f, 150.f, val)) + "grad)");
 
 	const auto font_size = get_style("font-size");
 	label.style.insert_or_assign("font-size", font_size);
@@ -942,7 +936,7 @@ void Dial::calculate_layout_impl(Frame viewbox) {
 		label.style.insert_or_assign("text", "");
 
 	const float radius_sp = 1230.f * r() / (100*m_root->vw);
-	label.style.insert_or_assign("y", std::to_string(1.2f*radius_sp + 12) + "sp");
+	label.style.insert_or_assign("y", strconv::to_str(1.2f*radius_sp + 12) + "sp");
 
 	ring.calculate_layout(dial_viewbox);
 	ring_value.calculate_layout(dial_viewbox);
