@@ -33,6 +33,9 @@ endif()
 if (DEFINED LV2_INCLUDE_PATH)
 	target_include_directories(aether_dsp SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
 	target_include_directories(aether_ui SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
+else()
+	target_include_directories(aether_dsp SYSTEM PRIVATE extern/lv2)
+	target_include_directories(aether_ui SYSTEM PRIVATE extern/lv2)
 endif()
 
 
