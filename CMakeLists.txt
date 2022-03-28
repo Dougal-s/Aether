@@ -21,21 +21,20 @@ else()
 endif()
 
 
+if (DEFINED LV2_INCLUDE_PATH)
+	target_include_directories(aether_dsp SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
+	target_include_directories(aether_ui SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
+else()
+	include_directories(extern/lv2)
+endif()
+
+
 add_subdirectory(src/DSP)
 
 option(BUILD_GUI "Build user interface" ON)
 
 if (BUILD_GUI)
 	add_subdirectory(src/UI)
-endif()
-
-
-if (DEFINED LV2_INCLUDE_PATH)
-	target_include_directories(aether_dsp SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
-	target_include_directories(aether_ui SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
-else()
-	target_include_directories(aether_dsp SYSTEM PRIVATE extern/lv2)
-	target_include_directories(aether_ui SYSTEM PRIVATE extern/lv2)
 endif()
 
 

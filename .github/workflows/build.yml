@@ -21,9 +21,6 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Install Dependencies
-      run: brew install lv2
-
     - name: Set Archive Name
       run: echo "ARCHIVE_NAME=Aether-macos.tar.xz" >> "$GITHUB_ENV"
 
@@ -58,15 +55,20 @@ jobs:
 
     strategy:
       matrix:
-        compiler: [g++-10, clang++-10]
-
+        config:
+          - { compiler: GNU,  CC: gcc-10,   CXX: g++-10 }
+          - { compiler: LLVM, CC: clang-10, CXX: clang++-10 }
+          
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
 
+    - name: Update APT Lists
+      run: sudo apt-get update
+      
     - name: Install Dependencies
-      run: sudo apt install lv2-dev libgl1-mesa-dev libglu1-mesa-dev
+      run: sudo apt-get install libgl1-mesa-dev libglu1-mesa-dev
 
     - name: Set Archive Name
       run: echo "ARCHIVE_NAME=Aether-${{ matrix.compiler }}.tar.xz" >> "$GITHUB_ENV"
@@ -77,7 +79,8 @@ jobs:
     - name: Build Plugin
       working-directory: ${{github.workspace}}/build
       env:
-        CXX: ${{ matrix.compiler }}
+        CC: ${{ matrix.config.CC }}
+        CXX: ${{ matrix.config.CXX }}
       run: |
         cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_TESTS="on"
         cmake --build . --config $BUILD_TYPE
@@ -105,9 +108,6 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Install Dependencies
-      run: git clone https://gitlab.com/lv2/lv2.git
-
     - name: Set Archive Name
       run: echo "ARCHIVE_NAME=Aether-windows.zip" >> "$GITHUB_ENV"
 
@@ -116,7 +116,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -G "Visual Studio 16 2019" .. -DLV2_INCLUDE_PATH="lv2"
+        cmake -G "Visual Studio 16 2019" ..
         cmake --build . --config=release
 
     - name: Create Archive
