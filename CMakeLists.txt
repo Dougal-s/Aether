@@ -21,12 +21,7 @@ else()
 endif()
 
 
-if (DEFINED LV2_INCLUDE_PATH)
-	target_include_directories(aether_dsp SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
-	target_include_directories(aether_ui SYSTEM PRIVATE ${LV2_INCLUDE_PATH})
-else()
-	include_directories(extern/lv2)
-endif()
+include_directories(SYSTEM extern/lv2)
 
 
 add_subdirectory(src/DSP)

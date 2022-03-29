@@ -45,25 +45,21 @@ Binaries from the latest release can be found under [releases](https://github.co
 
 | Library | Deb Package  |
 | ------- | ------------ |
-| Lv2     | `lv2-dev`    |
 | X11     | `libx11-dev` |
 | OpenGL  | `libgl1-mesa-dev` `libglu1-mesa-dev` |
 
 **Ubuntu/Debian**
 ```bash
-sudo apt install cmake g++-10 lv2-dev libx11-dev libgl1-mesa-dev libglu1-mesa-dev
+sudo apt install cmake g++-10 libx11-dev libgl1-mesa-dev libglu1-mesa-dev
 ```
 
 **MacOS**
-```bash
-brew install cmake lv2
-```
+* Should work as it is.
 
 **Windows**
 * Install Visual Studio Community from: https://visualstudio.microsoft.com/vs/community/
 * Install CMake from: https://cmake.org/download/
 * Install Git from: https://git-scm.com/download/win
-* LV2 development files can be used without installation by cloning https://gitlab.com/lv2/lv2.git and passing `-DLV2_INCLUDE_PATH="path/to/lv2"` to cmake.
 
 ### Compiling
 
@@ -85,7 +81,7 @@ make -j4
 
 **Windows**
 ```bash
-cmake -G "Visual Studio 16 2019" .. # -DLV2_INCLUDE_PATH="path/to/lv2"
+cmake -G "Visual Studio 16 2019" ..
 cmake --build . --config=release -j4
 ```
 
@@ -97,7 +93,6 @@ cmake --build . --config=release -j4
 | BUILD_TESTS | Build unit tests. The tests can be run using `make test` and individual tests can be found in `builds/tests/tests`. | `on` / `off` |
 | BUILD_BENCHMARKS | Build benchmarks. The benchmarks can be run using `make test` and individual benchmarks can be found in `builds/tests/benchmarks`. | `on` / `off` |
 | CMAKE_BUILD_TYPE | Debug adds runtime checks and debug information. Release enables additional optimizations. Can also be set using the `--config` flag when running cmake.  | `debug` / `release` |
-| LV2_INCLUDE_PATH | Path to lv2 install location. Used when the lv2 development files are installed to a custom location.  | `path/to/lv2` |
 
 ### Installing
 
