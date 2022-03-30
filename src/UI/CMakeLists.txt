@@ -14,7 +14,7 @@ target_compile_features(aether_ui PUBLIC cxx_std_20)
 set_target_properties(aether_ui
 	PROPERTIES
 	CXX_VISIBILITY_PRESET hidden
-	INTERPROCEDURAL_OPTIMIZATION TRUE
+	INTERPROCEDURAL_OPTIMIZATION "$<$<CONFIG:RELEASE>:TRUE:FALSE>"
 	PREFIX ""
 )
 
@@ -47,7 +47,7 @@ else()
 	target_compile_options(aether_ui PRIVATE
 		-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing
 		-Wunreachable-code -Wdouble-promotion
-		"$<$<CONFIG:DEBUG>:-Og;-ggdb;-Werror>"
+		"$<$<CONFIG:DEBUG>:-O2;-g;-Werror>"
 		"$<$<CONFIG:RELEASE>:-O3>"
 	)
 endif()

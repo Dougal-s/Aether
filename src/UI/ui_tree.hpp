@@ -261,7 +261,7 @@ namespace Aether {
 		Circle(Root* root, CreateInfo create_info) noexcept :
 			UIElement(root, create_info) {}
 
-		virtual std::string name() const { return "Circle"; }
+		virtual std::string name() const override { return "Circle"; }
 	protected:
 
 		[[nodiscard]] float cx() const noexcept { return m_cx; }
@@ -284,7 +284,7 @@ namespace Aether {
 		Arc(Root* root, CreateInfo create_info) noexcept :
 			Circle(root, create_info) {}
 
-		virtual std::string name() const { return "Arc"; }
+		virtual std::string name() const override { return "Arc"; }
 	protected:
 
 		[[nodiscard]] float a0() const noexcept { return m_a0; }
@@ -307,7 +307,7 @@ namespace Aether {
 		Path(Root* root, CreateInfo create_info) noexcept :
 			UIElement(root, create_info) {}
 
-		virtual std::string name() const { return "Path"; }
+		virtual std::string name() const override { return "Path"; }
 
 		[[nodiscard]] std::string_view path() const;
 	protected:
@@ -326,7 +326,7 @@ namespace Aether {
 		Rect(Root* root, CreateInfo create_info) noexcept :
 			UIElement(root, create_info) {}
 
-		virtual std::string name() const { return "Rect"; }
+		virtual std::string name() const override { return "Rect"; }
 		/*
 			returns the position of the top left corner in pixels
 		*/
@@ -376,7 +376,7 @@ namespace Aether {
 			m_uniforms{create_info.uniform_infos}
 		{}
 
-		virtual std::string name() const { return "ShaderRect"; }
+		virtual std::string name() const override { return "ShaderRect"; }
 
 	protected:
 
@@ -412,7 +412,7 @@ namespace Aether {
 			Rect(root, create_info)
 		{}
 
-		virtual std::string name() const { return "Spectrum"; }
+		virtual std::string name() const override { return "Spectrum"; }
 	protected:
 
 		/*
@@ -430,7 +430,7 @@ namespace Aether {
 		Text(Root* root, CreateInfo create_info) noexcept :
 			Rect(root, create_info) {}
 
-		virtual std::string name() const { return "Text"; }
+		virtual std::string name()  const override { return "Text"; }
 	protected:
 
 		[[nodiscard]] std::string_view font_face() const;
@@ -498,7 +498,7 @@ namespace Aether {
 			}})
 		{}
 
-		virtual std::string name() const { return "Dial"; }
+		virtual std::string name() const override { return "Dial"; }
 	protected:
 		/*
 			Virtual functions
@@ -526,7 +526,7 @@ namespace Aether {
 		Group(Root* root, CreateInfo create_info) noexcept :
 			Rect(root, create_info) {}
 
-		virtual std::string name() const { return "Group"; }
+		virtual std::string name() const override { return "Group"; }
 
 		/*
 			modifiers
