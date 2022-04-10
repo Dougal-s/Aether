@@ -5,7 +5,7 @@
 
 #include "DSP/aether_dsp.hpp"
 
-#include "truncate_denormals.hpp"
+#include "../../src/DSP/architecture.hpp"
 
 struct Ports {
 	float mix = 100.f;
@@ -111,7 +111,7 @@ struct Ports {
 };
 
 static void bm_aether_zeroes(benchmark::State& state) {
-	truncate_denormals_to_zero();
+	disable_denormals();
 
 	static constexpr size_t buffer_size = 1024;
 	float* in_buf = new float[buffer_size];
@@ -146,7 +146,7 @@ static void bm_aether_zeroes(benchmark::State& state) {
 }
 
 static void bm_aether_white_noise(benchmark::State& state) {
-	truncate_denormals_to_zero();
+	disable_denormals();
 
 	static constexpr size_t buffer_size = 1024;
 	float* in_buf = new float[buffer_size];

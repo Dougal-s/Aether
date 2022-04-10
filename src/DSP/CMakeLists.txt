@@ -29,7 +29,7 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64)|(i386)|(i686)|(AMD64)")
 	if (MSVC)
 		target_compile_options(aether_dsp PRIVATE /arch:SSE2)
 	else()
-		target_compile_options(aether_dsp PRIVATE -msse2)
+		target_compile_options(aether_dsp PRIVATE -msse3)
 	endif()
 endif()
 
