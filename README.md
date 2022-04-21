@@ -93,6 +93,7 @@ cmake --build . --config=release -j4
 | BUILD_TESTS | Build unit tests. The tests can be run using `make test` and individual tests can be found in `builds/tests/tests`. | `on` / `off` |
 | BUILD_BENCHMARKS | Build benchmarks. The benchmarks can be run using `make test` and individual benchmarks can be found in `builds/tests/benchmarks`. | `on` / `off` |
 | CMAKE_BUILD_TYPE | Debug adds runtime checks and debug information. Release enables additional optimizations. Can also be set using the `--config` flag when running cmake.  | `debug` / `release` |
+| FORCE_DISABLE_DENORMALS | Disables denormal floating point numbers at the beginning of every processing block. This is usually redundant as the plugin host should already do this. Defaults to `on`. | `on` / `off` |
 
 ### Installing
 

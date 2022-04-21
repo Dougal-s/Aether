@@ -11,7 +11,10 @@
 #include <lv2/log/logger.h>
 
 #include "aether_dsp.hpp"
-#include "architecture.hpp"
+
+#ifdef FORCE_DISABLE_DENORMALS
+	#include "architecture.hpp"
+#endif
 
 // LV2 Functions
 static LV2_Handle instantiate(
@@ -59,15 +62,20 @@ static void connect_port(LV2_Handle instance, uint32_t port, void* data) {
 static void activate(LV2_Handle) {}
 
 static void run(LV2_Handle instance, uint32_t n_samples) {
-	std::fenv_t fe_state;
-	std::feholdexcept(&fe_state);
 
-	disable_denormals();
+	#ifdef FORCE_DISABLE_DENORMALS
+		std::fenv_t fe_state;
+		std::feholdexcept(&fe_state);
+
+		disable_denormals();
+	#endif
 
 	static_cast<Aether::DSP*>(instance)->process(n_samples);
 
-	// restore previous floating point state
-	std::feupdateenv(&fe_state);
+	#ifdef FORCE_DISABLE_DENORMALS
+		// restore previous floating point state
+		std::feupdateenv(&fe_state);
+	#endif
 }
 
 static void deactivate(LV2_Handle) {}

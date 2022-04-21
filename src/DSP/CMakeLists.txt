@@ -22,10 +22,18 @@ set_target_properties(aether_dsp
 
 # Compile Options
 
-target_compile_definitions(aether_dsp PRIVATE "$<$<CONFIG:RELEASE>:NDEBUG>")
+option(FORCE_DISABLE_DENORMALS "Disable denormal numbers before processing" ON)
+target_compile_definitions(aether_dsp
+	PRIVATE
+	"$<$<CONFIG:RELEASE>:NDEBUG>"
+	"$<$<BOOL:${FORCE_DISABLE_DENORMALS}>:FORCE_DISABLE_DENORMALS>"
+)
 
 # Architecture
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64)|(i386)|(i686)|(AMD64)")
+if (
+	FORCE_DISABLE_DENORMALS
+	AND CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64)|(i386)|(i686)|(AMD64)"
+)
 	if (MSVC)
 		target_compile_options(aether_dsp PRIVATE /arch:SSE2)
 	else()
