@@ -71,7 +71,7 @@ jobs:
       run: sudo apt-get install libgl1-mesa-dev libglu1-mesa-dev
 
     - name: Set Archive Name
-      run: echo "ARCHIVE_NAME=Aether-${{ matrix.config.compiler }}.tar.xz" >> "$GITHUB_ENV"
+      run: echo "ARCHIVE_NAME=Aether-linux-${{ matrix.config.compiler }}.tar.xz" >> "$GITHUB_ENV"
 
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build
