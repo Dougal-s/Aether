@@ -10,6 +10,29 @@ env:
   BUILD_TYPE: Release
 
 jobs:
+  create-source-archive:
+    runs-on: ubuntu-20.04
+
+    outputs:
+        artifact-name: ${{ env.ARCHIVE_NAME }}
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        path: aether
+        submodules: recursive
+
+    - name: Set Archive Name
+      run: echo "ARCHIVE_NAME=Aether-source-code.tar.xz" >> "$GITHUB_ENV"
+
+    - name: Create Archive
+      run: tar -cJf ${{ env.ARCHIVE_NAME }} aether
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.ARCHIVE_NAME }}
+        path: ${{ env.ARCHIVE_NAME }}
+
   build-macos:
     runs-on: macos-latest
 
