@@ -33,7 +33,7 @@ jobs:
         CXX: clang++
       run: |
         cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_TESTS="on"
-        cmake --build . --config $BUILD_TYPE
+        cmake --build . --config $BUILD_TYPE -j3
 
     - name: Test
       working-directory: ${{github.workspace}}/build
@@ -83,7 +83,7 @@ jobs:
         CXX: ${{ matrix.config.CXX }}
       run: |
         cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_TESTS="on"
-        cmake --build . --config $BUILD_TYPE
+        cmake --build . --config $BUILD_TYPE -j2
 
     - name: Test
       working-directory: ${{github.workspace}}/build
@@ -120,7 +120,7 @@ jobs:
         mkdir build
         cd build
         cmake -G "Visual Studio 16 2019" ..
-        cmake --build . --config=release
+        cmake --build . --config=release -j2
 
     - name: Create Archive
       working-directory: ${{github.workspace}}/build
