@@ -143,15 +143,15 @@ jobs:
         cmake -G "Visual Studio 16 2019" ..
         cmake --build . --config=release -j2
 
-      - name: Prepare Artifact for Upload
-        run: |
-          cmake -E make_directory artifact
-          cmake -E rename build/aether.lv2 artifact/aether.lv2
+    - name: Prepare Artifact for Upload
+      run: |
+        cmake -E make_directory artifact
+        cmake -E rename build/aether.lv2 artifact/aether.lv2
 
-      - uses: actions/upload-artifact@v2
-        with:
-          name: ${{ env.ARCHIVE_NAME }}
-          path: ${{github.workspace}}/artifact
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.ARCHIVE_NAME }}
+        path: ${{github.workspace}}/artifact
 
   validate-ttl:
     runs-on: ubuntu-20.04
@@ -206,4 +206,5 @@ jobs:
 
     - uses: softprops/action-gh-release@v1
       with:
-        files: *.zip
+        files: |
+          *.zip
