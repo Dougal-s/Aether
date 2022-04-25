@@ -182,3 +182,28 @@ jobs:
         find -name 'aether.lv2' -exec sh -c ' \
           sord_validate $(find lv2 -name "*.ttl") $(find $0 -name "*.ttl") \
         ' {} \;
+
+  release:
+    runs-on: ubuntu-20.04
+    if: ${{ github.ref_type == 'tag'}}
+
+    needs:
+      - create-source-archive
+      - build-macos
+      - build-ubuntu
+      - build-windows
+
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Create Archives
+      run: |
+        (cd aether-source-code; zip -r ../aether-${{ github.ref_name }}-source-code.zip aether.lv2)
+        (cd aether-macos;       zip -r ../aether-${{ github.ref_name }}-macos-amd64.zip aether.lv2)
+        (cd aether-linux-GNU;   zip -r ../aether-${{ github.ref_name }}-linux-amd64.zip aether.lv2)
+        (cd aether-windows;     zip -r ../aether-${{ github.ref_name }}-windows-amd64.zip aether.lv2)
+
+    - uses: softprops/action-gh-release@v1
+      with:
+        files: *.zip
