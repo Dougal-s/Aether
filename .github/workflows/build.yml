@@ -59,10 +59,15 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: ctest -C $BUILD_TYPE
 
+    - name: Prepare Artifact for Upload
+      run: |
+        cmake -E make_directory artifact
+        cmake -E rename build/aether.lv2 artifact/aether.lv2
+
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ env.ARCHIVE_NAME }}
-        path: ${{github.workspace}}/build/aether.lv2
+        path: ${{github.workspace}}/artifact
 
   build-ubuntu:
     runs-on: ubuntu-20.04
@@ -106,10 +111,15 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: ctest -C $BUILD_TYPE
 
+    - name: Prepare Artifact for Upload
+      run: |
+        cmake -E make_directory artifact
+        cmake -E rename build/aether.lv2 artifact/aether.lv2
+
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ env.ARCHIVE_NAME }}
-        path: ${{github.workspace}}/build/aether.lv2
+        path: ${{github.workspace}}/artifact
 
   build-windows:
     runs-on: windows-2019
@@ -123,7 +133,7 @@ jobs:
         submodules: recursive
 
     - name: Set Archive Name
-      run: echo "ARCHIVE_NAME=aether-windows.zip" >> "$GITHUB_ENV"
+      run: echo "ARCHIVE_NAME=aether-windows" >> "$GITHUB_ENV"
 
     - name: Build Plugin
       shell: bash
@@ -133,10 +143,15 @@ jobs:
         cmake -G "Visual Studio 16 2019" ..
         cmake --build . --config=release -j2
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: ${{ env.ARCHIVE_NAME }}
-        path: ${{github.workspace}}/build/aether.lv2
+      - name: Prepare Artifact for Upload
+        run: |
+          cmake -E make_directory artifact
+          cmake -E rename build/aether.lv2 artifact/aether.lv2
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.ARCHIVE_NAME }}
+          path: ${{github.workspace}}/artifact
 
   validate-ttl:
     runs-on: ubuntu-20.04
