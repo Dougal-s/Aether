@@ -69,7 +69,7 @@ jobs:
         name: ${{ env.ARCHIVE_NAME }}
         path: ${{github.workspace}}/artifact
 
-  build-ubuntu:
+  build-ubuntu-amd64:
     runs-on: ubuntu-20.04
 
     outputs:
@@ -93,7 +93,7 @@ jobs:
       run: sudo apt-get install libgl1-mesa-dev libglu1-mesa-dev
 
     - name: Set Archive Name
-      run: echo "ARCHIVE_NAME=aether-linux-${{ matrix.config.compiler }}" >> "$GITHUB_ENV"
+      run: echo "ARCHIVE_NAME=aether-linux-amd64-${{ matrix.config.compiler }}" >> "$GITHUB_ENV"
 
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build
@@ -103,6 +103,57 @@ jobs:
       env:
         CC: ${{ matrix.config.CC }}
         CXX: ${{ matrix.config.CXX }}
+      run: |
+        cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_TESTS="on"
+        cmake --build . --config $BUILD_TYPE -j2
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C $BUILD_TYPE
+
+    - name: Prepare Artifact for Upload
+      run: |
+        cmake -E make_directory artifact
+        cmake -E rename build/aether.lv2 artifact/aether.lv2
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.ARCHIVE_NAME }}
+        path: ${{github.workspace}}/artifact
+
+  build-ubuntu-i686:
+    runs-on: ubuntu-20.04
+
+    outputs:
+        artifact-name: ${{ env.ARCHIVE_NAME }}
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: add i386 architecture
+      run: sudo dpkg --add-architecture i386
+
+    - name: Update APT Lists
+      run: sudo apt-get update
+
+    - name: Install Dependencies
+      run: sudo apt-get install g++-10-multilib libgl1-mesa-dev:i386 libglu1-mesa-dev:i386
+
+    - name: Set Archive Name
+      run: echo "ARCHIVE_NAME=aether-linux-i686" >> "$GITHUB_ENV"
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{github.workspace}}/build
+
+    - name: Build Plugin
+      working-directory: ${{github.workspace}}/build
+      env:
+        CC: gcc-10
+        CXX: g++-10
+        CFLAGS: -m32
+        CXXFLAGS: -m32
       run: |
         cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_TESTS="on"
         cmake --build . --config $BUILD_TYPE -j2
@@ -158,7 +209,8 @@ jobs:
 
     needs:
       - build-macos
-      - build-ubuntu
+      - build-ubuntu-amd64
+      - build-ubuntu-i686
       - build-windows
 
     steps:
@@ -190,7 +242,8 @@ jobs:
     needs:
       - create-source-archive
       - build-macos
-      - build-ubuntu
+      - build-ubuntu-amd64
+      - build-ubuntu-i686
       - build-windows
 
     steps:
@@ -199,10 +252,11 @@ jobs:
 
     - name: Create Archives
       run: |
-        (cd aether-source-code; zip -r ../aether-${{ github.ref_name }}-source-code.zip aether.lv2)
-        (cd aether-macos;       zip -r ../aether-${{ github.ref_name }}-macos-amd64.zip aether.lv2)
-        (cd aether-linux-GNU;   zip -r ../aether-${{ github.ref_name }}-linux-amd64.zip aether.lv2)
-        (cd aether-windows;     zip -r ../aether-${{ github.ref_name }}-windows-amd64.zip aether.lv2)
+        (cd aether-source-code;     zip -r ../aether-${{ github.ref_name }}-source-code.zip aether.lv2)
+        (cd aether-macos;           zip -r ../aether-${{ github.ref_name }}-macos-amd64.zip aether.lv2)
+        (cd aether-linux-amd64-GNU; zip -r ../aether-${{ github.ref_name }}-linux-amd64.zip aether.lv2)
+        (cd aether-linux-i686;      zip -r ../aether-${{ github.ref_name }}-linux-i686.zip aether.lv2)
+        (cd aether-windows;         zip -r ../aether-${{ github.ref_name }}-windows-amd64.zip aether.lv2)
 
     - uses: softprops/action-gh-release@v1
       with:
