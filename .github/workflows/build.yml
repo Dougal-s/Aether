@@ -252,7 +252,7 @@ jobs:
 
     - name: Create Archives
       run: |
-        (cd aether-source-code;     zip -r ../aether-${{ github.ref_name }}-source-code.zip aether.lv2)
+        (cd aether-source-code;     zip -r ../aether-${{ github.ref_name }}-source-code.zip src)
         (cd aether-macos;           zip -r ../aether-${{ github.ref_name }}-macos-amd64.zip aether.lv2)
         (cd aether-linux-amd64-GNU; zip -r ../aether-${{ github.ref_name }}-linux-amd64.zip aether.lv2)
         (cd aether-linux-i686;      zip -r ../aether-${{ github.ref_name }}-linux-i686.zip aether.lv2)
