@@ -25,7 +25,7 @@ jobs:
     - name: Set Archive Name
       run: echo "ARCHIVE_NAME=aether-source-code" >> "$GITHUB_ENV"
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3.1.2
       with:
         name: ${{ env.ARCHIVE_NAME }}
         path: aether/
@@ -64,7 +64,7 @@ jobs:
         cmake -E make_directory artifact
         cmake -E rename build/aether.lv2 artifact/aether.lv2
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3.1.2
       with:
         name: ${{ env.ARCHIVE_NAME }}
         path: ${{github.workspace}}/artifact
@@ -116,7 +116,7 @@ jobs:
         cmake -E make_directory artifact
         cmake -E rename build/aether.lv2 artifact/aether.lv2
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3.1.2
       with:
         name: ${{ env.ARCHIVE_NAME }}
         path: ${{github.workspace}}/artifact
@@ -167,7 +167,7 @@ jobs:
         cmake -E make_directory artifact
         cmake -E rename build/aether.lv2 artifact/aether.lv2
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3.1.2
       with:
         name: ${{ env.ARCHIVE_NAME }}
         path: ${{github.workspace}}/artifact
@@ -199,7 +199,7 @@ jobs:
         cmake -E make_directory artifact
         cmake -E rename build/aether.lv2 artifact/aether.lv2
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3.1.2
       with:
         name: ${{ env.ARCHIVE_NAME }}
         path: ${{github.workspace}}/artifact
