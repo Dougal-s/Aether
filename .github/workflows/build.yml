@@ -17,7 +17,7 @@ jobs:
         artifact-name: ${{ env.ARCHIVE_NAME }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.3.0
       with:
         path: aether
         submodules: recursive
@@ -37,7 +37,7 @@ jobs:
         artifact-name: ${{ env.ARCHIVE_NAME }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.3.0
       with:
         submodules: recursive
 
@@ -82,7 +82,7 @@ jobs:
           - { compiler: LLVM, CC: clang-10, CXX: clang++-10 }
           
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.3.0
       with:
         submodules: recursive
 
@@ -128,7 +128,7 @@ jobs:
         artifact-name: ${{ env.ARCHIVE_NAME }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.3.0
       with:
         submodules: recursive
 
@@ -179,7 +179,7 @@ jobs:
         artifact-name: ${{ env.ARCHIVE_NAME }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.3.0
       with:
         submodules: recursive
 
@@ -218,7 +218,7 @@ jobs:
       uses: actions/download-artifact@v3
 
     - name: Clone lv2
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3.3.0
       with:
         repository: lv2/lv2
         path: lv2
