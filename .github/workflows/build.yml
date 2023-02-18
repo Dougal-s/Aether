@@ -17,7 +17,7 @@ jobs:
         artifact-name: ${{ env.ARCHIVE_NAME }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.3.0
       with:
         path: aether
         submodules: recursive
@@ -25,7 +25,7 @@ jobs:
     - name: Set Archive Name
       run: echo "ARCHIVE_NAME=aether-source-code" >> "$GITHUB_ENV"
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3.1.2
       with:
         name: ${{ env.ARCHIVE_NAME }}
         path: aether/
@@ -37,7 +37,7 @@ jobs:
         artifact-name: ${{ env.ARCHIVE_NAME }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.3.0
       with:
         submodules: recursive
 
@@ -64,7 +64,7 @@ jobs:
         cmake -E make_directory artifact
         cmake -E rename build/aether.lv2 artifact/aether.lv2
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3.1.2
       with:
         name: ${{ env.ARCHIVE_NAME }}
         path: ${{github.workspace}}/artifact
@@ -82,7 +82,7 @@ jobs:
           - { compiler: LLVM, CC: clang-10, CXX: clang++-10 }
           
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.3.0
       with:
         submodules: recursive
 
@@ -116,7 +116,7 @@ jobs:
         cmake -E make_directory artifact
         cmake -E rename build/aether.lv2 artifact/aether.lv2
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3.1.2
       with:
         name: ${{ env.ARCHIVE_NAME }}
         path: ${{github.workspace}}/artifact
@@ -128,7 +128,7 @@ jobs:
         artifact-name: ${{ env.ARCHIVE_NAME }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.3.0
       with:
         submodules: recursive
 
@@ -167,7 +167,7 @@ jobs:
         cmake -E make_directory artifact
         cmake -E rename build/aether.lv2 artifact/aether.lv2
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3.1.2
       with:
         name: ${{ env.ARCHIVE_NAME }}
         path: ${{github.workspace}}/artifact
@@ -179,7 +179,7 @@ jobs:
         artifact-name: ${{ env.ARCHIVE_NAME }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.3.0
       with:
         submodules: recursive
 
@@ -199,7 +199,7 @@ jobs:
         cmake -E make_directory artifact
         cmake -E rename build/aether.lv2 artifact/aether.lv2
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3.1.2
       with:
         name: ${{ env.ARCHIVE_NAME }}
         path: ${{github.workspace}}/artifact
@@ -218,7 +218,7 @@ jobs:
       uses: actions/download-artifact@v3
 
     - name: Clone lv2
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3.3.0
       with:
         repository: lv2/lv2
         path: lv2
@@ -252,7 +252,7 @@ jobs:
 
     - name: Create Archives
       run: |
-        (cd aether-source-code;     zip -r ../aether-${{ github.ref_name }}-source-code.zip aether.lv2)
+        (cd aether-source-code;     zip -r ../aether-${{ github.ref_name }}-source-code.zip *)
         (cd aether-macos;           zip -r ../aether-${{ github.ref_name }}-macos-amd64.zip aether.lv2)
         (cd aether-linux-amd64-GNU; zip -r ../aether-${{ github.ref_name }}-linux-amd64.zip aether.lv2)
         (cd aether-linux-i686;      zip -r ../aether-${{ github.ref_name }}-linux-i686.zip aether.lv2)
